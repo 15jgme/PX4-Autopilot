@@ -53,7 +53,9 @@
 
 #include <uORB/topics/differential_pressure.h>
 #include <uORB/topics/airspeed_multi_record.h>
+#include <uORB/topics/airspeed.h>
 #include <uORB/topics/esc_status.h>
+#include <uORB/topics/rc_channels.h>
 
 __EXPORT int airspeed_slipstream_record_main(int argc, char *argv[]);
 
@@ -65,9 +67,17 @@ int airspeed_slipstream_record_main(int argc, char *argv[])
 	int sensor_sub_fd = orb_subscribe(ORB_ID(differential_pressure));
 	/* subscribe to esc rpm topic */
 	int esc_sub_fd = orb_subscribe(ORB_ID(esc_status));
-	/* limit the update rate to 5 Hz */
-	orb_set_interval(sensor_sub_fd, 200);
-	orb_set_interval(esc_sub_fd, 200);
+	/* subscribe to airspeed topic */
+	int asp_sub_fd = orb_subscribe(ORB_ID(airspeed));
+	/* subscribe to rc topic */
+	int rc_sub_fd = orb_subscribe(ORB_ID(rc_channels));
+	/* limit the update rate to 20 Hz */
+	orb_set_interval(sensor_sub_fd, 50);
+	orb_set_interval(esc_sub_fd, 50);
+	orb_set_interval(asp_sub_fd, 50);
+
+	orb_set_interval(rc_sub_fd, 250); //4 Hz for radio update
+
 
 	/* advertise attitude topic */
 	struct airspeed_multi_record_s airspeed_multi_data;
@@ -78,6 +88,8 @@ int airspeed_slipstream_record_main(int argc, char *argv[])
 	px4_pollfd_struct_t fds[] = {
 		{ .fd = sensor_sub_fd,   .events = POLLIN },
 		{ .fd = esc_sub_fd,   .events = POLLIN },
+		{ .fd = asp_sub_fd,   .events = POLLIN },
+		{ .fd = rc_sub_fd,   .events = POLLIN },
 	};
 
 	int error_counter = 0;
@@ -94,16 +106,29 @@ int airspeed_slipstream_record_main(int argc, char *argv[])
 
 	/* Slipstream sensor */
 	uint sensID_2 = 4748809; //Sensor ID for slipstream airspeed sensor
-	bool sens_2_active = true;
+	bool sens_2_active = false;
 	struct differential_pressure_s diff_pres_ID_2; //Struct to store data for slipstream sensor
 	diff_pres_ID_2.error_count = 0;
 	PX4_INFO("crap -> \t%8.4f", (double)diff_pres_ID_2.error_count);
 	float airspeed_ID_2 = 0.0f; //For storing calculated airspeed, m/s
 
-	while(true)
+	bool errFlag = false; //This flag finds a critical error, logs a message, then terminates the program
+
+	/* Structs for later use */
+	struct differential_pressure_s diff_pres;
+	struct esc_status_s esc_stat;
+	struct airspeed_s airspeed;
+	struct rc_channels_s rc_chan;
+
+	//Poll return declare
+	int poll_ret = 0;
+
+
+	while(!errFlag) //While the error flag isn't thrown
 	{
+
 		/* wait for sensor update of 1 file descriptor for 1000 ms (1 second) */
-		int poll_ret = px4_poll(fds, 1, 1000);
+		poll_ret = px4_poll(fds, 1, 1000);
 
 		/* handle the poll result */
 		if (poll_ret == 0) {
@@ -120,47 +145,58 @@ int airspeed_slipstream_record_main(int argc, char *argv[])
 			error_counter++;
 
 		} else {
+			// orb_copy(ORB_ID(rc_channels), rc_sub_fd, &rc_chan);
+			if (fds[0].revents & POLLIN){// & (int)rc_chan.channels[7] == 1) {
 
-			if (fds[0].revents & POLLIN) {
 				/* obtained data for the first file descriptor */
 
-				struct differential_pressure_s diff_pres;
-				struct esc_status_s esc_stat;
+
 				/* copy sensors raw data into local buffer */
 
 				/* Copy message and assign it to device struct depending on ID */
-				orb_copy(ORB_ID(differential_pressure), sensor_sub_fd, &diff_pres);
-				if(diff_pres.device_id == sensID_1 && sens_1_active){
-					diff_pres_ID_1 = diff_pres;
-				} else if (diff_pres.device_id == sensID_2 && sens_2_active) {
-					diff_pres_ID_2 = diff_pres;
-					PX4_INFO("secondary");
-				} else if (sens_1_active || sens_2_active) {
-					PX4_ERR("Incorrect airspeed sensor ID detected, please check");
+				orb_copy(ORB_ID(rc_channels), rc_sub_fd, &rc_chan);
+				if((int)rc_chan.channels[7] == 1)	//RECORD!
+				{
+					orb_copy(ORB_ID(differential_pressure), sensor_sub_fd, &diff_pres);
+					if(diff_pres.device_id == sensID_1 && sens_1_active){
+						diff_pres_ID_1 = diff_pres;
+					} else if (diff_pres.device_id == sensID_2 && sens_2_active) {
+						diff_pres_ID_2 = diff_pres;
+						PX4_INFO("secondary");
+					} else if (sens_1_active || sens_2_active) {
+						//Not good, correct device id's arent set
+						PX4_ERR("Incorrect airspeed sensor ID detected, please check");
+						errFlag = true;
+					}
+
+
+					orb_copy(ORB_ID(esc_status), esc_sub_fd, &esc_stat);
+					orb_copy(ORB_ID(airspeed), asp_sub_fd, &airspeed);
+
+					//Put system IAS in message
+					airspeed_multi_data.vehicle_ias = airspeed.indicated_airspeed_m_s; //Set airspeed from system to msg airspeed (for faster logging)
+
+					//CALCULATE AIRSPEED HERE AND PUBLISH
+					airspeed_ID_1 = diff_pres.differential_pressure_filtered_pa;
+					airspeed_ID_2 = 4.0f;
+
+					airspeed_multi_data.primary_airspeed_ms = airspeed_ID_1;
+					airspeed_multi_data.secondary_airspeed_ms = airspeed_ID_2;
+
+					airspeed_multi_data.rpm_sens = esc_stat.esc[0].esc_rpm;
+					// airspeed_multi_data.rpm_sens = 5;
+
+					airspeed_multi_data.timestamp = hrt_absolute_time();
+
+					orb_publish(ORB_ID(airspeed_multi_record), att_pub, &airspeed_multi_data);
 				}
-
-
-				orb_copy(ORB_ID(esc_status), esc_sub_fd, &esc_stat);
-
-				//CALCULATE AIRSPEED HERE AND PUBLISH
-				airspeed_ID_1 = diff_pres.differential_pressure_filtered_pa;
-				airspeed_ID_2 = 4.0f;
-
-				airspeed_multi_data.primary_airspeed_ms = airspeed_ID_1;
-				airspeed_multi_data.secondary_airspeed_ms = airspeed_ID_2;
-
-				airspeed_multi_data.rpm_sens = esc_stat.esc[0].esc_rpm;
-				// airspeed_multi_data.rpm_sens = 5;
-
-				airspeed_multi_data.timestamp = hrt_absolute_time();
-
-				orb_publish(ORB_ID(airspeed_multi_record), att_pub, &airspeed_multi_data);
+				// }else{
+				// 	usleep(200); //sleep this thread;
+				// }
 			}
 
-			/* there could be more file descriptors here, in the form like:
-			 * if (fds[1..n].revents & POLLIN) {}
-			 */
 		}
+		usleep(2000);
 	}
 
 	PX4_INFO("exiting");

@@ -47,12 +47,12 @@ void LoggedTopics::add_default_topics()
 	add_topic("actuator_armed");
 	add_topic("actuator_controls_0", 100);
 	add_topic("actuator_controls_1", 100);
-	add_topic("airspeed", 1000);
+	add_topic("airspeed", 2000); //Used to be 1000
 	add_topic("airspeed_validated", 1000);
 	add_topic("camera_capture");
 	add_topic("camera_trigger");
 	add_topic("camera_trigger_secondary");
-	add_topic("cellular_status", 200);
+	add_topic("cellular_status", 1000);
 	add_topic("commander_state");
 	add_topic("cpuload");
 	add_topic("ekf_gps_drift");
@@ -63,12 +63,12 @@ void LoggedTopics::add_default_topics()
 	add_topic("estimator_sensor_bias", 1000);
 	add_topic("estimator_status", 200);
 	add_topic("home_position");
-	add_topic("hover_thrust_estimate", 100);
+	add_topic("hover_thrust_estimate", 1000);
 	add_topic("input_rc", 500);
 	add_topic("manual_control_setpoint", 200);
 	add_topic("mission");
 	add_topic("mission_result");
-	add_topic("offboard_control_mode", 100);
+	add_topic("offboard_control_mode", 1000);
 	add_topic("onboard_computer_status", 10);
 	add_topic("position_controller_status", 500);
 	add_topic("position_setpoint_triplet", 200);
@@ -104,7 +104,7 @@ void LoggedTopics::add_default_topics()
 	add_topic("yaw_estimator_status", 200);
 
 	// Jackson's topics
-	add_topic("airspeed_multi_record", 100);
+	add_topic("airspeed_multi_record", 50);
 
 	// multi topics
 	add_topic_multi("actuator_outputs", 100);

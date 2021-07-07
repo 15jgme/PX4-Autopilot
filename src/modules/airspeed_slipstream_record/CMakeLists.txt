@@ -35,7 +35,7 @@ px4_add_module(
 	MODULE modules__airspeed_slipstream_record
 	MAIN airspeed_slipstream_record
 	COMPILE_FLAGS
-	STACK_MAX 600
+	# STACK_MAX 600
 	SRCS
 		airspeed_slipstream_record.c
 	DEPENDS

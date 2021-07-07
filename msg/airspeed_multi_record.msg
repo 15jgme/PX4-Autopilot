@@ -1,5 +1,7 @@
 uint64 timestamp				# time since system start (microseconds)
 
+float32 vehicle_ias					#Indicated airspeed from sensors module (Primary airspeed)
+
 							# PRIMARY SENSOR
 uint64 primary_error_count				# Number of errors detected by driver
 float32 primary_differential_pressure_raw_pa		# Raw differential pressure reading (may be negative)
