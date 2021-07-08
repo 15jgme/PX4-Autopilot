@@ -32,7 +32,7 @@
 ############################################################################
 
 px4_add_module(
-	MODULE airspeed_slipstream_record
+	MODULE modules__airspeed_slipstream_record
 	MAIN airspeed_slipstream_record
 	SRCS
 		airspeed_slipstream_record.cpp
