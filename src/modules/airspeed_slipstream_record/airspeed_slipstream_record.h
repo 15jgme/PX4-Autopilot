@@ -31,6 +31,9 @@
  *
  ****************************************************************************/
 
+#ifndef AIRSPEED_SLIPSTREAM_RECORD_H
+#define AIRSPEED_SLIPSTREAM_RECORD_H
+
 #pragma once
 
 #include <px4_platform_common/module.h>
@@ -44,21 +47,22 @@
 #include <uORB/topics/rc_channels.h>
 #include <uORB/SubscriptionInterval.hpp>
 
-extern "C" __EXPORT int template_module_main(int argc, char *argv[]);
+
+extern "C" __EXPORT int airspeed_slipstream_record_main(int argc, char *argv[]);
 
 
-class TemplateModule : public ModuleBase<TemplateModule>, public ModuleParams
+class airspeed_slipstream_record :  public ModuleBase<airspeed_slipstream_record> , public ModuleParams
 {
 public:
-	TemplateModule(int example_param, bool example_flag);
+	airspeed_slipstream_record(int example_param, bool example_flag);
 
-	virtual ~TemplateModule() = default;
+	virtual ~airspeed_slipstream_record() = default;
 
 	/** @see ModuleBase */
 	static int task_spawn(int argc, char *argv[]);
 
 	/** @see ModuleBase */
-	static TemplateModule *instantiate(int argc, char *argv[]);
+	static airspeed_slipstream_record *instantiate(int argc, char *argv[]);
 
 	/** @see ModuleBase */
 	static int custom_command(int argc, char *argv[]);
@@ -67,12 +71,24 @@ public:
 	static int print_usage(const char *reason = nullptr);
 
 	/** @see ModuleBase::run() */
-	void run() override;
+	void run();
 
 	/** @see ModuleBase::print_status() */
-	int print_status() override;
+	int print_status();
+
+	// static int _task_id;
 
 private:
+
+	uint sensID_1 = 4923657; //Sensor ID for primary airspeed sensor
+	bool sens_1_active = true;
+	uint sensID_2 = 4748809; //Sensor ID for slipstream airspeed sensor
+	bool sens_2_active = false;
+
+	bool errFlag = false;
+
+	float airspeed_ID_1; //Float for storing airspeed calculated
+	float airspeed_ID_2; //Float for storing airspeed calculated
 
 	/**
 	 * Check for parameter changes and update them if needed.
@@ -88,7 +104,7 @@ private:
 	)
 
 	// Subscriptions
-	uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 50; // PARAMS
+	uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 50}; // PARAMS
 	uORB::SubscriptionInterval _sensor_update_sub{ORB_ID(differential_pressure), 50}; //DIFF PRESSURE
 	uORB::SubscriptionInterval _esc_update_sub{ORB_ID(esc_status), 50}; //ESC
 	uORB::SubscriptionInterval _asp_update_sub{ORB_ID(airspeed), 50}; //AIRSPEED
@@ -96,3 +112,5 @@ private:
 
 
 };
+
+#endif

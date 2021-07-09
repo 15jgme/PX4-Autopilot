@@ -37,3 +37,4 @@ px4_add_module(
 	SRCS
 		airspeed_slipstream_record.cpp
 	)
+

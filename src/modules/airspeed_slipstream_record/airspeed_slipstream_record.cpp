@@ -42,7 +42,7 @@
 #include <uORB/uORB.h>
 
 
-int TemplateModule::print_status()
+int airspeed_slipstream_record::print_status()
 {
 	PX4_INFO("Running");
 	// TODO: print additional runtime information about the state of the module
@@ -50,7 +50,7 @@ int TemplateModule::print_status()
 	return 0;
 }
 
-int TemplateModule::custom_command(int argc, char *argv[])
+int airspeed_slipstream_record::custom_command(int argc, char *argv[])
 {
 	/*
 	if (!is_running()) {
@@ -68,7 +68,7 @@ int TemplateModule::custom_command(int argc, char *argv[])
 }
 
 
-int TemplateModule::task_spawn(int argc, char *argv[])
+int airspeed_slipstream_record::task_spawn(int argc, char *argv[])
 {
 	_task_id = px4_task_spawn_cmd("module",
 				      SCHED_DEFAULT,
@@ -85,7 +85,7 @@ int TemplateModule::task_spawn(int argc, char *argv[])
 	return 0;
 }
 
-TemplateModule *TemplateModule::instantiate(int argc, char *argv[])
+airspeed_slipstream_record *airspeed_slipstream_record::instantiate(int argc, char *argv[])
 {
 	int example_param = 0;
 	bool example_flag = false;
@@ -121,7 +121,7 @@ TemplateModule *TemplateModule::instantiate(int argc, char *argv[])
 		return nullptr;
 	}
 
-	TemplateModule *instance = new TemplateModule(example_param, example_flag);
+	airspeed_slipstream_record *instance = new airspeed_slipstream_record(example_param, example_flag);
 
 	if (instance == nullptr) {
 		PX4_ERR("alloc failed");
@@ -130,12 +130,12 @@ TemplateModule *TemplateModule::instantiate(int argc, char *argv[])
 	return instance;
 }
 
-TemplateModule::TemplateModule(int example_param, bool example_flag)
+airspeed_slipstream_record::airspeed_slipstream_record(int example_param, bool example_flag)
 	: ModuleParams(nullptr)
 {
 }
 
-void TemplateModule::run()
+void airspeed_slipstream_record::run()
 {
 	/* advertise attitude topic */
 	struct airspeed_multi_record_s airspeed_multi_data;
@@ -241,7 +241,7 @@ void TemplateModule::run()
 	orb_unsubscribe(sensor_combined_sub);
 }
 
-void TemplateModule::parameters_update(bool force)
+void airspeed_slipstream_record::parameters_update(bool force)
 {
 	// check for parameter updates
 	if (_parameter_update_sub.updated() || force) {
@@ -254,7 +254,7 @@ void TemplateModule::parameters_update(bool force)
 	}
 }
 
-int TemplateModule::print_usage(const char *reason)
+int airspeed_slipstream_record::print_usage(const char *reason)
 {
 	if (reason) {
 		PX4_WARN("%s\n", reason);
@@ -272,7 +272,7 @@ CLI usage example:
 $ module start -f -p 42
 )DESCR_STR");
 
-	PRINT_MODULE_USAGE_NAME("module", "template");
+	PRINT_MODULE_USAGE_NAME("module", "airspeed_slipstream_record");
 	PRINT_MODULE_USAGE_COMMAND("start");
 	PRINT_MODULE_USAGE_PARAM_FLAG('f', "Optional example flag", true);
 	PRINT_MODULE_USAGE_PARAM_INT('p', 0, 0, 1000, "Optional example parameter", true);
@@ -281,7 +281,7 @@ $ module start -f -p 42
 	return 0;
 }
 
-int template_module_main(int argc, char *argv[])
+int airspeed_slipstream_record_main(int argc, char *argv[])
 {
-	return TemplateModule::main(argc, argv);
+	return airspeed_slipstream_record::main(argc, argv);
 }
