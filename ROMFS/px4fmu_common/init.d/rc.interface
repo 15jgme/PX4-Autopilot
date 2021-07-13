@@ -163,6 +163,8 @@ then
 	if [ $OUTPUT_MODE = uavcan_esc ]
 	then
 		set OUTPUT_DEV /dev/uavcan/esc
+		set OUTPUT_AUX_DEV /dev/pwm_output0
+		# set OUTPUT_AUX_DEV /dev/pwm_output0
 	fi
 
 	if [ $OUTPUT_MODE = tap_esc ]

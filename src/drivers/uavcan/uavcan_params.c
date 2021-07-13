@@ -77,11 +77,20 @@ PARAM_DEFINE_INT32(UAVCAN_NODE_ID, 1);
  */
 PARAM_DEFINE_INT32(UAVCAN_BITRATE, 1000000);
 
+// /**
+//  * UAVCAN ESC will spin at idle throttle when armed, even if the mixer outputs zero setpoints.
+//  *
+//  * @boolean
+//  * @reboot_required true
+//  * @group UAVCAN
+//  */
+// PARAM_DEFINE_INT32(UAVCAN_ESC_IDLT, 1);
+
 /**
- * UAVCAN ESC will spin at idle throttle when armed, even if the mixer outputs zero setpoints.
+ * UAVCAN will be enabled for the thruster only, servos will still be sent PWM messages
  *
  * @boolean
  * @reboot_required true
  * @group UAVCAN
  */
-PARAM_DEFINE_INT32(UAVCAN_ESC_IDLT, 1);
+PARAM_DEFINE_INT32(UAVCAN_TRST_ONLY, 0);
