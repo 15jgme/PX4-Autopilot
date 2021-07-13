@@ -45,7 +45,18 @@
 #include <uORB/topics/airspeed.h>
 #include <uORB/topics/esc_status.h>
 #include <uORB/topics/rc_channels.h>
+#include <uORB/topics/vehicle_air_data.h>
+#include <parameters/param.h>
 #include <uORB/SubscriptionInterval.hpp>
+
+#include <airspeed/airspeed.h>
+#include <drivers/drv_sensor.h>
+
+/**
+ * HACK - true temperature is much less than indicated temperature in baro,
+ * subtract 5 degrees in an attempt to account for the electrical upheating of the PCB
+ */
+#define PCB_TEMP_ESTIMATE_DEG		5.0f
 
 
 extern "C" __EXPORT int airspeed_slipstream_record_main(int argc, char *argv[]);
@@ -79,6 +90,12 @@ public:
 	// static int _task_id;
 
 private:
+	enum AIRSPEED_SENSOR_MODEL smodel; // I dunno what this does
+
+	/* Paramater storage */
+	float air_tube_diameter_mm;
+	float air_tube_length;
+	int32_t air_cmodel;
 
 	uint sensID_1 = 4923657; //Sensor ID for primary airspeed sensor FMU
 	// uint sensID_1 = 0;
@@ -90,7 +107,9 @@ private:
 	bool errFlag = false;
 
 	float airspeed_ID_1 = 4; //Float for storing airspeed calculated
+	float air_temperature_1_celsius;
 	float airspeed_ID_2 = 4; //Float for storing airspeed calculated
+	float air_temperature_2_celsius;
 
 	bool error_sent = false; //Have we already sent the error message?
 
@@ -100,6 +119,16 @@ private:
 	 * @param force for a parameter update
 	 */
 	void parameters_update(bool force = false);
+
+	/* Structs */
+
+	struct differential_pressure_s diff_pres_ID_1; //Struct to store data for primary sensor
+	struct differential_pressure_s diff_pres_ID_2; //Struct to store data for slipstream sensor
+	struct differential_pressure_s diff_pres;
+	struct esc_status_s esc_stat;
+	struct airspeed_s airspeed;
+	struct rc_channels_s rc_chan;
+	struct vehicle_air_data_s airdat;
 
 
 	DEFINE_PARAMETERS(
@@ -113,6 +142,7 @@ private:
 	uORB::SubscriptionInterval _esc_update_sub{ORB_ID(esc_status), 50}; //ESC
 	uORB::SubscriptionInterval _asp_update_sub{ORB_ID(airspeed), 50}; //AIRSPEED
 	uORB::SubscriptionInterval _rc_update_sub{ORB_ID(rc_channels), 50}; //RC
+	uORB::SubscriptionInterval _airdat_update_sub{ORB_ID(vehicle_air_data), 50}; //Airdata
 
 
 };

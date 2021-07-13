@@ -73,7 +73,7 @@ int airspeed_slipstream_record::task_spawn(int argc, char *argv[])
 	_task_id = px4_task_spawn_cmd("module",
 				      SCHED_DEFAULT,
 				      SCHED_PRIORITY_DEFAULT,
-				      1024*2,
+				      1676,
 				      (px4_main_t)&run_trampoline,
 				      (char *const *)argv);
 
@@ -154,6 +154,8 @@ void airspeed_slipstream_record::run()
 	int asp_sub_fd = orb_subscribe(ORB_ID(airspeed));
 	/* subscribe to rc topic */
 	int rc_sub_fd = orb_subscribe(ORB_ID(rc_channels));
+	/* subscribe to airdata topic */
+	int airdat_sub_fd = orb_subscribe(ORB_ID(vehicle_air_data));
 
 		px4_pollfd_struct_t fds[] = {
 		{ .fd = sensor_combined_sub,   .events = POLLIN },
@@ -161,11 +163,34 @@ void airspeed_slipstream_record::run()
 		{ .fd = esc_sub_fd,   .events = POLLIN },
 		{ .fd = asp_sub_fd,   .events = POLLIN },
 		{ .fd = rc_sub_fd,   .events = POLLIN },
+		{ .fd = airdat_sub_fd, .events = POLLIN},
 	};
+
+	//Handle compensation models
+	switch ((sensID_1 >> 16) & 0xFF) {
+	case DRV_DIFF_PRESS_DEVTYPE_SDP31:
+
+	/* fallthrough */
+	case DRV_DIFF_PRESS_DEVTYPE_SDP32:
+
+	/* fallthrough */
+	case DRV_DIFF_PRESS_DEVTYPE_SDP33:
+		/* fallthrough */
+		smodel = AIRSPEED_SENSOR_MODEL_SDP3X;
+		break;
+
+	default:
+		smodel = AIRSPEED_SENSOR_MODEL_MEMBRANE;
+		break;
+	}
 
 
 	// initialize parameters
 	parameters_update(true);
+
+	param_get(param_find("air_cmodel"), &air_cmodel);
+	param_get(param_find("air_tube_length"), &air_tube_length);
+	param_get(param_find("air_tube_diameter_mm"), &air_tube_diameter_mm);
 
 	while (!should_exit()) {
 
@@ -186,13 +211,6 @@ void airspeed_slipstream_record::run()
 			struct sensor_combined_s sensor_combined;
 			orb_copy(ORB_ID(sensor_combined), sensor_combined_sub, &sensor_combined);
 			// TODO: do something with the data...
-
-			struct differential_pressure_s diff_pres_ID_1; //Struct to store data for primary sensor
-			struct differential_pressure_s diff_pres_ID_2; //Struct to store data for slipstream sensor
-			struct differential_pressure_s diff_pres;
-			struct esc_status_s esc_stat;
-			struct airspeed_s airspeed;
-			struct rc_channels_s rc_chan;
 
 
 
@@ -215,28 +233,52 @@ void airspeed_slipstream_record::run()
 
 				orb_copy(ORB_ID(esc_status), esc_sub_fd, &esc_stat);
 				orb_copy(ORB_ID(airspeed), asp_sub_fd, &airspeed);
+				orb_copy(ORB_ID(vehicle_air_data), airdat_sub_fd, &airdat);
 
 				//Put system IAS in message
 				airspeed_multi_data.vehicle_ias = airspeed.indicated_airspeed_m_s; //Set airspeed from system to msg airspeed (for faster logging)
 
-				//CALCULATE AIRSPEED HERE AND PUBLISH
-				airspeed_ID_1 = diff_pres.differential_pressure_filtered_pa;
-				airspeed_ID_2 = 4.0f;
+				/* <------------------------->SENSOR 1<--------------------->*/
+				airspeed_multi_data.primary_differential_pressure_filtered_pa = diff_pres_ID_1.differential_pressure_filtered_pa;
+				airspeed_multi_data.primary_differential_pressure_raw_pa = diff_pres_ID_1.differential_pressure_raw_pa;
+				airspeed_multi_data.primary_temperature = diff_pres_ID_1.temperature;
+				airspeed_multi_data.primary_device_id = diff_pres_ID_1.device_id;
 
-				airspeed_multi_data.primary_airspeed_ms = airspeed_ID_1;
-				airspeed_multi_data.secondary_airspeed_ms = airspeed_ID_2;
+				air_temperature_1_celsius = (diff_pres.temperature > -300.0f) ? diff_pres.temperature :
+									(airdat.baro_temp_celcius - PCB_TEMP_ESTIMATE_DEG);
 
+				airspeed_multi_data.primary_airspeed_ms = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
+										air_cmodel,
+										smodel, air_tube_length, air_tube_diameter_mm,
+										diff_pres_ID_1.differential_pressure_filtered_pa, airdat.baro_pressure_pa,
+										air_temperature_1_celsius);
+
+
+				/* <------------------------->SENSOR 2<--------------------->*/
+				airspeed_multi_data.primary_differential_pressure_filtered_pa = diff_pres_ID_2.differential_pressure_filtered_pa;
+				airspeed_multi_data.primary_differential_pressure_raw_pa = diff_pres_ID_2.differential_pressure_raw_pa;
+				airspeed_multi_data.primary_temperature = diff_pres_ID_2.temperature;
+				airspeed_multi_data.primary_device_id = diff_pres_ID_2.device_id;
+
+				air_temperature_1_celsius = (diff_pres.temperature > -300.0f) ? diff_pres.temperature :
+									(airdat.baro_temp_celcius - PCB_TEMP_ESTIMATE_DEG);
+
+				airspeed_multi_data.primary_airspeed_ms = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
+										air_cmodel,
+										smodel, air_tube_length, air_tube_diameter_mm,
+										diff_pres_ID_2.differential_pressure_filtered_pa, airdat.baro_pressure_pa,
+										air_temperature_1_celsius);
+
+				/* <--------------------------->ESC<----------------------->*/
 				airspeed_multi_data.rpm_sens = esc_stat.esc[0].esc_rpm;
-				// airspeed_multi_data.rpm_sens = 5;
 
-				airspeed_multi_data.timestamp = hrt_absolute_time();
 
-				orb_publish(ORB_ID(airspeed_multi_record), att_pub, &airspeed_multi_data);
+				airspeed_multi_data.timestamp = hrt_absolute_time(); //Set timestamp
+
+				orb_publish(ORB_ID(airspeed_multi_record), att_pub, &airspeed_multi_data); //Publish
 			}else{
 				px4_usleep(1000000); //sleep for one second
 			}
-
-
 
 		}
 
