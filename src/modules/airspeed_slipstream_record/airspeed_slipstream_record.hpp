@@ -31,8 +31,8 @@
  *
  ****************************************************************************/
 
-#ifndef AIRSPEED_SLIPSTREAM_RECORD_H
-#define AIRSPEED_SLIPSTREAM_RECORD_H
+#ifndef AIRSPEED_SLIPSTREAM_RECORD_HPP
+#define AIRSPEED_SLIPSTREAM_RECORD_HPP
 
 #pragma once
 
@@ -80,15 +80,19 @@ public:
 
 private:
 
-	uint sensID_1 = 4923657; //Sensor ID for primary airspeed sensor
+	uint sensID_1 = 4923657; //Sensor ID for primary airspeed sensor FMU
+	// uint sensID_1 = 0;
 	bool sens_1_active = true;
-	uint sensID_2 = 4748809; //Sensor ID for slipstream airspeed sensor
+	// uint sensID_2 = 4748809; //Sensor ID for slipstream airspeed sensor FMU
+	uint sensID_2 = 0;
 	bool sens_2_active = false;
 
 	bool errFlag = false;
 
-	float airspeed_ID_1; //Float for storing airspeed calculated
-	float airspeed_ID_2; //Float for storing airspeed calculated
+	float airspeed_ID_1 = 4; //Float for storing airspeed calculated
+	float airspeed_ID_2 = 4; //Float for storing airspeed calculated
+
+	bool error_sent = false; //Have we already sent the error message?
 
 	/**
 	 * Check for parameter changes and update them if needed.

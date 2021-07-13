@@ -31,7 +31,7 @@
  *
  ****************************************************************************/
 
-#include "airspeed_slipstream_record.h"
+#include "airspeed_slipstream_record.hpp"
 
 #include <px4_platform_common/getopt.h>
 #include <px4_platform_common/log.h>
@@ -73,7 +73,7 @@ int airspeed_slipstream_record::task_spawn(int argc, char *argv[])
 	_task_id = px4_task_spawn_cmd("module",
 				      SCHED_DEFAULT,
 				      SCHED_PRIORITY_DEFAULT,
-				      1024,
+				      1024*2,
 				      (px4_main_t)&run_trampoline,
 				      (char *const *)argv);
 
@@ -99,7 +99,8 @@ airspeed_slipstream_record *airspeed_slipstream_record::instantiate(int argc, ch
 	while ((ch = px4_getopt(argc, argv, "p:f", &myoptind, &myoptarg)) != EOF) {
 		switch (ch) {
 		case 'p':
-			example_param = (int)strtol(myoptarg, nullptr, 10);
+			// example_param = (int)strtol(myoptarg, nullptr, 10);
+			example_flag = true;
 			break;
 
 		case 'f':
@@ -196,7 +197,7 @@ void airspeed_slipstream_record::run()
 
 
 			orb_copy(ORB_ID(rc_channels), rc_sub_fd, &rc_chan);
-			if((int)rc_chan.channels[7] == 1)	//RECORD!
+			if((int)rc_chan.channels[7] == 1)// || true)	//RECORD!
 			{
 				orb_copy(ORB_ID(differential_pressure), sensor_sub_fd, &diff_pres);
 				if(diff_pres.device_id == sensID_1 && sens_1_active){
@@ -204,10 +205,11 @@ void airspeed_slipstream_record::run()
 				} else if (diff_pres.device_id == sensID_2 && sens_2_active) {
 					diff_pres_ID_2 = diff_pres;
 					PX4_INFO("secondary");
-				} else if (sens_1_active || sens_2_active) {
+				} else if ((sens_1_active || sens_2_active) && !error_sent) {
 					//Not good, correct device id's arent set
 					PX4_ERR("Incorrect airspeed sensor ID detected, please check");
 					errFlag = true;
+					error_sent = true;
 				}
 
 
@@ -230,14 +232,19 @@ void airspeed_slipstream_record::run()
 				airspeed_multi_data.timestamp = hrt_absolute_time();
 
 				orb_publish(ORB_ID(airspeed_multi_record), att_pub, &airspeed_multi_data);
+			}else{
+				px4_usleep(1000000); //sleep for one second
 			}
+
 
 
 		}
 
-		parameters_update();
 	}
-
+	orb_unsubscribe(sensor_sub_fd);
+	orb_unsubscribe(esc_sub_fd);
+	orb_unsubscribe(asp_sub_fd);
+	orb_unsubscribe(rc_sub_fd);
 	orb_unsubscribe(sensor_combined_sub);
 }
 
