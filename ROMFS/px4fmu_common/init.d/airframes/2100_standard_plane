@@ -30,7 +30,13 @@ then
 	param set PWM_RATE 50
 fi
 
+# set MIXER AETRFG
+
+# from https://discuss.px4.io/t/uavcan-esc-and-pwm-out/10973/3
 set MIXER AETRFG
+set MIXER_AUX AETRFG
+
+set PWM_OUT 1234
 
 # Rate must be set by group (see pwm info).
 # Throttle is in the same group as servos.
