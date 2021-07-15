@@ -138,6 +138,25 @@ airspeed_slipstream_record::airspeed_slipstream_record(int example_param, bool e
 
 void airspeed_slipstream_record::run()
 {
+
+	/* Initialize */
+
+	/* Init first struct */
+	diff_pres_ID_1.timestamp = 0;				// time since system start (microseconds)
+	diff_pres_ID_1.error_count = 0;				// Number of errors detected by driver
+	diff_pres_ID_1.differential_pressure_raw_pa = 0;	// Raw differential pressure reading (may be negative)
+	diff_pres_ID_1.differential_pressure_filtered_pa = 0;	// Low pass filtered differential pressure reading
+	diff_pres_ID_1.temperature = 0;				// Temperature provided by sensor, -1000.0f if unknown
+	diff_pres_ID_1.device_id = 0;				// unique device ID for the sensor that does not change between power cycles
+
+	/* Init second struct */
+	diff_pres_ID_2.timestamp = 0;				// time since system start (microseconds)
+	diff_pres_ID_2.error_count = 0;				// Number of errors detected by driver
+	diff_pres_ID_2.differential_pressure_raw_pa = 0;	// Raw differential pressure reading (may be negative)
+	diff_pres_ID_2.differential_pressure_filtered_pa = 0;	// Low pass filtered differential pressure reading
+	diff_pres_ID_2.temperature = 0;				// Temperature provided by sensor, -1000.0f if unknown
+	diff_pres_ID_2.device_id = 0;
+
 	/* advertise attitude topic */
 	struct airspeed_multi_record_s airspeed_multi_data;
 	memset(&airspeed_multi_data, 0, sizeof(airspeed_multi_data));
@@ -166,31 +185,15 @@ void airspeed_slipstream_record::run()
 		{ .fd = airdat_sub_fd, .events = POLLIN},
 	};
 
-	//Handle compensation models
-	switch ((sensID_1 >> 16) & 0xFF) {
-	case DRV_DIFF_PRESS_DEVTYPE_SDP31:
-
-	/* fallthrough */
-	case DRV_DIFF_PRESS_DEVTYPE_SDP32:
-
-	/* fallthrough */
-	case DRV_DIFF_PRESS_DEVTYPE_SDP33:
-		/* fallthrough */
-		smodel = AIRSPEED_SENSOR_MODEL_SDP3X;
-		break;
-
-	default:
-		smodel = AIRSPEED_SENSOR_MODEL_MEMBRANE;
-		break;
-	}
-
 
 	// initialize parameters
 	parameters_update(true);
 
-	param_get(param_find("air_cmodel"), &air_cmodel);
-	param_get(param_find("air_tube_length"), &air_tube_length);
-	param_get(param_find("air_tube_diameter_mm"), &air_tube_diameter_mm);
+	// param_get(param_find("air_cmodel"), &air_cmodel);
+	// param_get(param_find("air_tube_length"), &air_tube_length);
+	// param_get(param_find("air_tube_diameter_mm"), &air_tube_diameter_mm);
+
+	// PX4_INFO("cmode -> %i",air_cmodel);
 
 	while (!should_exit()) {
 
@@ -207,6 +210,25 @@ void airspeed_slipstream_record::run()
 			continue;
 
 		} else if (fds[0].revents & POLLIN) {
+
+			enum AIRSPEED_SENSOR_MODEL smodel;
+
+			switch ((4923657 >> 16) & 0xFF) {
+			case DRV_DIFF_PRESS_DEVTYPE_SDP31:
+
+			/* fallthrough */
+			case DRV_DIFF_PRESS_DEVTYPE_SDP32:
+
+			/* fallthrough */
+			case DRV_DIFF_PRESS_DEVTYPE_SDP33:
+				/* fallthrough */
+				smodel = AIRSPEED_SENSOR_MODEL_SDP3X;
+				break;
+
+			default:
+				smodel = AIRSPEED_SENSOR_MODEL_MEMBRANE;
+				break;
+			}
 
 			struct sensor_combined_s sensor_combined;
 			orb_copy(ORB_ID(sensor_combined), sensor_combined_sub, &sensor_combined);
@@ -244,26 +266,39 @@ void airspeed_slipstream_record::run()
 				airspeed_multi_data.primary_temperature = diff_pres_ID_1.temperature;
 				airspeed_multi_data.primary_device_id = diff_pres_ID_1.device_id;
 
+
+
+				// airspeed_multi_data.primary_differential_pressure_filtered_pa = -0.0032f;
+				// airspeed_multi_data.primary_differential_pressure_raw_pa = -0.0032f;
+				// airspeed_multi_data.primary_temperature = 22.7750f;
+				// airspeed_multi_data.primary_device_id = 4923657;
+
 				air_temperature_1_celsius = (diff_pres.temperature > -300.0f) ? diff_pres.temperature :
 									(airdat.baro_temp_celcius - PCB_TEMP_ESTIMATE_DEG);
 
+				airspeed_multi_data.air_temperature_celsius = air_temperature_1_celsius;
+
+				// airspeed_multi_data.primary_airspeed_ms = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
+				// 						air_cmodel,
+				// 						smodel, air_tube_length, air_tube_diameter_mm,
+				// 						diff_pres_ID_1.differential_pressure_filtered_pa, airdat.baro_pressure_pa,
+				// 						air_temperature_1_celsius);
 				airspeed_multi_data.primary_airspeed_ms = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
 										air_cmodel,
 										smodel, air_tube_length, air_tube_diameter_mm,
 										diff_pres_ID_1.differential_pressure_filtered_pa, airdat.baro_pressure_pa,
 										air_temperature_1_celsius);
 
-
 				/* <------------------------->SENSOR 2<--------------------->*/
-				airspeed_multi_data.primary_differential_pressure_filtered_pa = diff_pres_ID_2.differential_pressure_filtered_pa;
-				airspeed_multi_data.primary_differential_pressure_raw_pa = diff_pres_ID_2.differential_pressure_raw_pa;
-				airspeed_multi_data.primary_temperature = diff_pres_ID_2.temperature;
-				airspeed_multi_data.primary_device_id = diff_pres_ID_2.device_id;
+				airspeed_multi_data.secondary_differential_pressure_filtered_pa = diff_pres_ID_2.differential_pressure_filtered_pa;
+				airspeed_multi_data.secondary_differential_pressure_raw_pa = diff_pres_ID_2.differential_pressure_raw_pa;
+				airspeed_multi_data.secondary_temperature = diff_pres_ID_2.temperature;
+				airspeed_multi_data.secondary_device_id = diff_pres_ID_2.device_id;
 
 				air_temperature_1_celsius = (diff_pres.temperature > -300.0f) ? diff_pres.temperature :
 									(airdat.baro_temp_celcius - PCB_TEMP_ESTIMATE_DEG);
 
-				airspeed_multi_data.primary_airspeed_ms = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
+				airspeed_multi_data.secondary_airspeed_ms = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
 										air_cmodel,
 										smodel, air_tube_length, air_tube_diameter_mm,
 										diff_pres_ID_2.differential_pressure_filtered_pa, airdat.baro_pressure_pa,

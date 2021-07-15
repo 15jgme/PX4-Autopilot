@@ -20,3 +20,4 @@ float32 secondary_airspeed_ms				# Calculated airspeed for secondary sensor (m/s
 
 							# RPM RECORD
 float32 rpm_sens 							#recorded rpm
+float32 air_temperature_celsius

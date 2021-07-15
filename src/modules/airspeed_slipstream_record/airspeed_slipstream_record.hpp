@@ -90,12 +90,11 @@ public:
 	// static int _task_id;
 
 private:
-	enum AIRSPEED_SENSOR_MODEL smodel; // I dunno what this does
 
 	/* Paramater storage */
-	float air_tube_diameter_mm;
-	float air_tube_length;
-	int32_t air_cmodel;
+	float air_tube_diameter_mm=1.5;
+	float air_tube_length=0.656;
+	int32_t air_cmodel = 0;
 
 	uint sensID_1 = 4923657; //Sensor ID for primary airspeed sensor FMU
 	// uint sensID_1 = 0;

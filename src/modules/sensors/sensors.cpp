@@ -325,6 +325,7 @@ void Sensors::diff_pres_poll()
 		airspeed.true_airspeed_m_s = calc_TAS_from_EAS(airspeed.indicated_airspeed_m_s, air_data.baro_pressure_pa,
 					     air_temperature_celsius); // assume that EAS = IAS as we don't have an EAS-scale here
 
+		// airspeed.air_temperature_celsius = air_temperature_celsius;
 		airspeed.air_temperature_celsius = air_temperature_celsius;
 
 		if (PX4_ISFINITE(airspeed.indicated_airspeed_m_s) && PX4_ISFINITE(airspeed.true_airspeed_m_s)) {
