@@ -47,7 +47,7 @@ using namespace time_literals;
 extern "C" __EXPORT int fw_att_control_main(int argc, char *argv[]);
 
 FixedwingAttitudeControl::FixedwingAttitudeControl() :
-	WorkItem(MODULE_NAME, px4::wq_configurations::att_pos_ctrl),
+	WorkItem(MODULE_NAME, px4::wq_configurations::attitude_ctrl),
 	_loop_perf(perf_alloc(PC_ELAPSED, "fw_att_control: cycle"))
 {
 	// check if VTOL first
@@ -411,9 +411,12 @@ FixedwingAttitudeControl::vehicle_land_detected_poll()
 float FixedwingAttitudeControl::get_airspeed_and_update_scaling()
 {
 	_airspeed_sub.update();
+	// const bool airspeed_valid = PX4_ISFINITE(_airspeed_sub.get().indicated_airspeed_m_s)
+	// 			    && (hrt_elapsed_time(&_airspeed_sub.get().timestamp) < 1_s)
+	// 			    && !_vehicle_status.aspd_use_inhibit;
 	const bool airspeed_valid = PX4_ISFINITE(_airspeed_sub.get().indicated_airspeed_m_s)
-				    && (hrt_elapsed_time(&_airspeed_sub.get().timestamp) < 1_s)
-				    && !_vehicle_status.aspd_use_inhibit;
+				&& (hrt_elapsed_time(&_airspeed_sub.get().timestamp) < 1_s)
+				&& true;
 
 	// if no airspeed measurement is available out best guess is to use the trim airspeed
 	float airspeed = _parameters.airspeed_trim;
