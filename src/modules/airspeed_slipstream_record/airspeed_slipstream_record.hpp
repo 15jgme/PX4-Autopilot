@@ -99,9 +99,9 @@ private:
 	uint sensID_1 = 4923657; //Sensor ID for primary airspeed sensor FMU
 	// uint sensID_1 = 0;
 	bool sens_1_active = true;
-	// uint sensID_2 = 4748809; //Sensor ID for slipstream airspeed sensor FMU
-	uint sensID_2 = 0;
-	bool sens_2_active = false;
+	uint sensID_2 = 466305; //Sensor ID for slipstream airspeed sensor FMU
+	// uint sensID_2 = 0;
+	bool sens_2_active = true;
 
 	bool errFlag = false;
 
@@ -142,6 +142,7 @@ private:
 	uORB::SubscriptionInterval _asp_update_sub{ORB_ID(airspeed), 50}; //AIRSPEED
 	uORB::SubscriptionInterval _rc_update_sub{ORB_ID(rc_channels), 50}; //RC
 	uORB::SubscriptionInterval _airdat_update_sub{ORB_ID(vehicle_air_data), 50}; //Airdata
+
 
 
 };

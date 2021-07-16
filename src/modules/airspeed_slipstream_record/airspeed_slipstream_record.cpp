@@ -165,8 +165,11 @@ void airspeed_slipstream_record::run()
 	// Example: run the loop synchronized to the sensor_combined topic publication
 	int sensor_combined_sub = orb_subscribe(ORB_ID(sensor_combined)); // OOP way --> https://github.com/PX4/PX4-Autopilot/blob/master/src/modules/mavlink/mavlink_receiver.h
 
-	/* subscribe to vehicle_acceleration topic */
-	int sensor_sub_fd = orb_subscribe(ORB_ID(differential_pressure));
+	/* subscribe to diff pressure topic */
+	int sensor_sub_fd[2];
+	sensor_sub_fd[0] = orb_subscribe_multi(ORB_ID(differential_pressure), 0);
+	sensor_sub_fd[1] = orb_subscribe_multi(ORB_ID(differential_pressure), 1);
+
 	/* subscribe to esc rpm topic */
 	int esc_sub_fd = orb_subscribe(ORB_ID(esc_status));
 	/* subscribe to airspeed topic */
@@ -178,7 +181,8 @@ void airspeed_slipstream_record::run()
 
 		px4_pollfd_struct_t fds[] = {
 		{ .fd = sensor_combined_sub,   .events = POLLIN },
-		{ .fd = sensor_sub_fd,   .events = POLLIN },
+		{ .fd = sensor_sub_fd[0],   .events = POLLIN },
+		{ .fd = sensor_sub_fd[1],   .events = POLLIN },
 		{ .fd = esc_sub_fd,   .events = POLLIN },
 		{ .fd = asp_sub_fd,   .events = POLLIN },
 		{ .fd = rc_sub_fd,   .events = POLLIN },
@@ -230,27 +234,37 @@ void airspeed_slipstream_record::run()
 				break;
 			}
 
-			struct sensor_combined_s sensor_combined;
-			orb_copy(ORB_ID(sensor_combined), sensor_combined_sub, &sensor_combined);
-			// TODO: do something with the data...
-
+			differential_pressure_s diff_pres_A{};
+			differential_pressure_s diff_pres_B{};
 
 
 			orb_copy(ORB_ID(rc_channels), rc_sub_fd, &rc_chan);
 			if((int)rc_chan.channels[7] == 1)// || true)	//RECORD!
 			{
-				orb_copy(ORB_ID(differential_pressure), sensor_sub_fd, &diff_pres);
-				if(diff_pres.device_id == sensID_1 && sens_1_active){
-					diff_pres_ID_1 = diff_pres;
-				} else if (diff_pres.device_id == sensID_2 && sens_2_active) {
-					diff_pres_ID_2 = diff_pres;
-					PX4_INFO("secondary");
-				} else if ((sens_1_active || sens_2_active) && !error_sent) {
-					//Not good, correct device id's arent set
-					PX4_ERR("Incorrect airspeed sensor ID detected, please check");
-					errFlag = true;
-					error_sent = true;
+				orb_copy(ORB_ID(differential_pressure), sensor_sub_fd[0], &diff_pres_A);
+				orb_copy(ORB_ID(differential_pressure), sensor_sub_fd[1], &diff_pres_A);
+
+				/* --------------------- Sensor 1 assignment --------------------*/
+				if(diff_pres_A.device_id == sensID_1 && sens_1_active){
+					diff_pres_ID_1 = diff_pres_A;
+				} else if (diff_pres_B.device_id == sensID_1 && sens_1_active) {
+					diff_pres_ID_1 = diff_pres_B;
 				}
+
+				/* --------------------- Sensor 2 assignment --------------------*/
+				if(diff_pres_A.device_id == sensID_2 && sens_2_active){
+					diff_pres_ID_2 = diff_pres_A;
+				} else if (diff_pres_B.device_id == sensID_2 && sens_2_active) {
+					diff_pres_ID_2 = diff_pres_B;
+				}
+
+
+				// else if ((sens_1_active || sens_2_active) && !error_sent) {
+				// 	//Not good, correct device id's arent set
+				// 	PX4_ERR("Incorrect airspeed sensor ID detected, please check");
+				// 	errFlag = true;
+				// 	error_sent = true;
+				// }
 
 
 				orb_copy(ORB_ID(esc_status), esc_sub_fd, &esc_stat);
@@ -327,7 +341,8 @@ void airspeed_slipstream_record::run()
 		}
 
 	}
-	orb_unsubscribe(sensor_sub_fd);
+	orb_unsubscribe(sensor_sub_fd[0]);
+	orb_unsubscribe(sensor_sub_fd[1]);
 	orb_unsubscribe(esc_sub_fd);
 	orb_unsubscribe(asp_sub_fd);
 	orb_unsubscribe(rc_sub_fd);
