@@ -283,11 +283,17 @@ void airspeed_slipstream_record::run()
 				// 						smodel, air_tube_length, air_tube_diameter_mm,
 				// 						diff_pres_ID_1.differential_pressure_filtered_pa, airdat.baro_pressure_pa,
 				// 						air_temperature_1_celsius);
-				airspeed_multi_data.primary_airspeed_ms = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
+
+				// Finite check
+				airspeed_ID_1  = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
 										air_cmodel,
 										smodel, air_tube_length, air_tube_diameter_mm,
 										diff_pres_ID_1.differential_pressure_filtered_pa, airdat.baro_pressure_pa,
 										air_temperature_1_celsius);
+				if(PX4_ISFINITE(airspeed_ID_1 )){
+					airspeed_multi_data.primary_airspeed_ms = airspeed_ID_1;
+				}
+
 
 				/* <------------------------->SENSOR 2<--------------------->*/
 				airspeed_multi_data.secondary_differential_pressure_filtered_pa = diff_pres_ID_2.differential_pressure_filtered_pa;
@@ -298,11 +304,14 @@ void airspeed_slipstream_record::run()
 				air_temperature_1_celsius = (diff_pres.temperature > -300.0f) ? diff_pres.temperature :
 									(airdat.baro_temp_celcius - PCB_TEMP_ESTIMATE_DEG);
 
-				airspeed_multi_data.secondary_airspeed_ms = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
+				airspeed_ID_2 = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
 										air_cmodel,
 										smodel, air_tube_length, air_tube_diameter_mm,
 										diff_pres_ID_2.differential_pressure_filtered_pa, airdat.baro_pressure_pa,
 										air_temperature_1_celsius);
+				if(PX4_ISFINITE(airspeed_ID_2)){
+					airspeed_multi_data.secondary_airspeed_ms = airspeed_ID_2;
+				}
 
 				/* <--------------------------->ESC<----------------------->*/
 				airspeed_multi_data.rpm_sens = esc_stat.esc[0].esc_rpm;
