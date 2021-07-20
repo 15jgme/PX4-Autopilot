@@ -68,6 +68,7 @@
 #include <uORB/topics/juan_attitude_variables.h> //JUAN
 #include <uORB/topics/vehicle_local_position_setpoint.h> //JUAN
 #include <uORB/topics/vehicle_local_position.h> //JUAN
+#include <uORB/topics/wind_estimate.h> //JACKSON
 
 using matrix::Eulerf;
 using matrix::Quatf;
@@ -110,6 +111,10 @@ private:
 	uORB::Subscription _vehicle_land_detected_sub{ORB_ID(vehicle_land_detected)};	/**< vehicle land detected subscription */
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};			/**< vehicle status subscription */
 	uORB::Subscription _vehicle_rates_sub{ORB_ID(vehicle_angular_velocity)};
+
+	//JACKSON
+	uORB::Subscription _wind_estimate_sub{ORB_ID(wind_estimate)};
+
 	//JUAN
 	uORB::Subscription _vehicle_local_position_setpoint_sub{ORB_ID(vehicle_local_position_setpoint)};
 	uORB::Subscription _juan_attitude_variables_sub{ORB_ID(juan_attitude_variables)}; //JUAN
@@ -139,6 +144,11 @@ private:
 	vehicle_global_position_s		_global_pos {};		/**< global position */
 	vehicle_rates_setpoint_s		_rates_sp {};		/* attitude rates setpoint */
 	vehicle_status_s			_vehicle_status {};	/**< vehicle status */
+
+	//JACKSON
+	wind_estimate_s				_wind {};		/**< wind */
+
+
 	//JUAN
 	vehicle_local_position_setpoint_s _local_pos_sp{}; //local position setpoint
 	juan_attitude_variables_s _juan_att_var{}; // JUAN custom attitude control variables
@@ -205,7 +215,7 @@ private:
 	matrix::Dcmf C_bi;
 	matrix::Dcmf C_ri_pos;
 	float _error_heading_int{0.0f};
-	int _JUAN_flight_mode{0};
+	int _JUAN_flight_mode{1};
 	matrix::Vector3f _omega_reference_body;
 	float _throttle_out;
 	matrix::Dcmf C_ri;
@@ -213,6 +223,17 @@ private:
 	float _advance_ratio{0.5f};
 	matrix::Vector3f _alpha_reference_body;
 	float _global_jar;
+
+	/* ------ Jackson's stuff -----*/
+	float t_turn_left = NULL;
+	float t_slow = 0; //time in slowdown phase
+	float _pos_x_end{0.0f};
+	float _pos_y_end{0.0f};
+	float _pos_z_end{0.0f};
+	matrix::Dcmf R_wind; //Feedforward rotation
+	int trackCounter = 0;
+
+	bool feedforward_flag = false; //If true wind feedforward on position is enabled
 
 
 	struct {
@@ -379,6 +400,10 @@ private:
 	void		vehicle_land_detected_poll();
 
 	float 		get_airspeed_and_update_scaling();
+
+	//JACKSON'S poll fn
+	void	wind_estimate_poll();
+	void 	wind_ff_rot_update();
 
 	//JUAN additional functions
 	void    JUAN_position_control();
