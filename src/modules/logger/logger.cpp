@@ -550,13 +550,14 @@ void Logger::add_default_topics()
 	add_topic("vehicle_status", 200);
 	add_topic("vehicle_status_flags");
 	add_topic("vtol_vehicle_status", 200);
+	add_topic("juan_attitude_variables",20); //JUAN
 
 	add_topic_multi("actuator_outputs", 100);
 	add_topic_multi("battery_status", 500);
 	add_topic_multi("distance_sensor", 100);
 	add_topic_multi("telemetry_status");
 	add_topic_multi("vehicle_gps_position");
-	add_topic_multi("wind_estimate", 200);
+	add_topic_multi("wind_estimate", 100);
 
 #ifdef CONFIG_ARCH_BOARD_PX4_SITL
 
