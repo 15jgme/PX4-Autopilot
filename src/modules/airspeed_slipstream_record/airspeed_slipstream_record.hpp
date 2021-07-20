@@ -52,6 +52,16 @@
 #include <airspeed/airspeed.h>
 #include <drivers/drv_sensor.h>
 
+
+#include "airspeed_slipstream_record.hpp"
+
+#include <px4_platform_common/getopt.h>
+#include <px4_platform_common/log.h>
+#include <px4_platform_common/posix.h>
+
+#include <uORB/topics/sensor_combined.h>
+#include <uORB/uORB.h>
+
 /**
  * HACK - true temperature is much less than indicated temperature in baro,
  * subtract 5 degrees in an attempt to account for the electrical upheating of the PCB
@@ -99,7 +109,7 @@ private:
 	uint sensID_1 = 4923657; //Sensor ID for primary airspeed sensor FMU
 	// uint sensID_1 = 0;
 	bool sens_1_active = true;
-	uint sensID_2 = 466305; //Sensor ID for slipstream airspeed sensor FMU
+	uint sensID_2 = 4663305; //Sensor ID for slipstream airspeed sensor FMU
 	// uint sensID_2 = 0;
 	bool sens_2_active = true;
 
@@ -129,20 +139,15 @@ private:
 	struct rc_channels_s rc_chan;
 	struct vehicle_air_data_s airdat;
 
+	differential_pressure_s diff_pres_A{};
+	differential_pressure_s diff_pres_B{};
 
 	DEFINE_PARAMETERS(
 		(ParamInt<px4::params::SYS_AUTOSTART>) _param_sys_autostart,   /**< example parameter */
 		(ParamInt<px4::params::SYS_AUTOCONFIG>) _param_sys_autoconfig  /**< another parameter */
 	)
-
 	// Subscriptions
-	uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 50}; // PARAMS
-	uORB::SubscriptionInterval _sensor_update_sub{ORB_ID(differential_pressure), 50}; //DIFF PRESSURE
-	uORB::SubscriptionInterval _esc_update_sub{ORB_ID(esc_status), 50}; //ESC
-	uORB::SubscriptionInterval _asp_update_sub{ORB_ID(airspeed), 50}; //AIRSPEED
-	uORB::SubscriptionInterval _rc_update_sub{ORB_ID(rc_channels), 50}; //RC
-	uORB::SubscriptionInterval _airdat_update_sub{ORB_ID(vehicle_air_data), 50}; //Airdata
-
+	uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 1000};
 
 
 };

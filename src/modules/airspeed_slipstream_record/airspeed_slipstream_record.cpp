@@ -30,16 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
-
 #include "airspeed_slipstream_record.hpp"
-
-#include <px4_platform_common/getopt.h>
-#include <px4_platform_common/log.h>
-#include <px4_platform_common/posix.h>
-
-#include <uORB/topics/parameter_update.h>
-#include <uORB/topics/sensor_combined.h>
-#include <uORB/uORB.h>
 
 
 int airspeed_slipstream_record::print_status()
@@ -72,7 +63,7 @@ int airspeed_slipstream_record::task_spawn(int argc, char *argv[])
 {
 	_task_id = px4_task_spawn_cmd("module",
 				      SCHED_DEFAULT,
-				      SCHED_PRIORITY_DEFAULT,
+				      SCHED_PRIORITY_MIN,
 				      1676,
 				      (px4_main_t)&run_trampoline,
 				      (char *const *)argv);
@@ -161,12 +152,11 @@ void airspeed_slipstream_record::run()
 	struct airspeed_multi_record_s airspeed_multi_data;
 	memset(&airspeed_multi_data, 0, sizeof(airspeed_multi_data));
 	orb_advert_t att_pub = orb_advertise(ORB_ID(airspeed_multi_record), &airspeed_multi_data);
-
-	// Example: run the loop synchronized to the sensor_combined topic publication
+			// Example: run the loop synchronized to the sensor_combined topic publication
 	int sensor_combined_sub = orb_subscribe(ORB_ID(sensor_combined)); // OOP way --> https://github.com/PX4/PX4-Autopilot/blob/master/src/modules/mavlink/mavlink_receiver.h
 
 	/* subscribe to diff pressure topic */
-	int sensor_sub_fd[2];
+	int sensor_sub_fd[2] = {};
 	sensor_sub_fd[0] = orb_subscribe_multi(ORB_ID(differential_pressure), 0);
 	sensor_sub_fd[1] = orb_subscribe_multi(ORB_ID(differential_pressure), 1);
 
@@ -179,7 +169,33 @@ void airspeed_slipstream_record::run()
 	/* subscribe to airdata topic */
 	int airdat_sub_fd = orb_subscribe(ORB_ID(vehicle_air_data));
 
-		px4_pollfd_struct_t fds[] = {
+
+
+	// /* subscribe to vehicle_acceleration topic */
+	// int sensor_sub_fd = orb_subscribe(ORB_ID(vehicle_acceleration));
+	// /* limit the update rate to 5 Hz */
+	// orb_set_interval(sensor_sub_fd, 200);
+
+
+	// Subscriptions
+	// orb_set_interval(_parameter_update_sub, 50);
+	orb_set_interval(sensor_sub_fd[0], 50);
+	orb_set_interval(sensor_sub_fd[1], 50);
+	orb_set_interval(esc_sub_fd, 50);
+	orb_set_interval(asp_sub_fd, 50);
+	orb_set_interval(rc_sub_fd, 500);
+	orb_set_interval(airdat_sub_fd, 50);
+
+	// uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 50}; // PARAMS
+	// uORB::SubscriptionInterval sensor_sub_fd{ORB_ID(differential_pressure), 50}; //DIFF PRESSURE
+	// uORB::SubscriptionInterval esc_sub_fd{ORB_ID(esc_status), 50}; //ESC
+	// uORB::SubscriptionInterval asp_sub_fd{ORB_ID(airspeed), 50}; //AIRSPEED
+	// uORB::SubscriptionInterval rc_sub_fd{ORB_ID(rc_channels), 50}; //RC
+	// uORB::SubscriptionInterval airdat_sub_fd{ORB_ID(vehicle_air_data), 50}; //Airdata
+
+
+
+	px4_pollfd_struct_t fds[] = {
 		{ .fd = sensor_combined_sub,   .events = POLLIN },
 		{ .fd = sensor_sub_fd[0],   .events = POLLIN },
 		{ .fd = sensor_sub_fd[1],   .events = POLLIN },
@@ -199,10 +215,49 @@ void airspeed_slipstream_record::run()
 
 	// PX4_INFO("cmode -> %i",air_cmodel);
 
+	enum AIRSPEED_SENSOR_MODEL smodel_1;
+
+	switch ((sensID_1 >> 16) & 0xFF) {
+		case DRV_DIFF_PRESS_DEVTYPE_SDP31:
+
+		/* fallthrough */
+		case DRV_DIFF_PRESS_DEVTYPE_SDP32:
+
+		/* fallthrough */
+		case DRV_DIFF_PRESS_DEVTYPE_SDP33:
+			/* fallthrough */
+			smodel_1 = AIRSPEED_SENSOR_MODEL_SDP3X;
+			break;
+
+		default:
+			smodel_1 = AIRSPEED_SENSOR_MODEL_MEMBRANE;
+			break;
+	}
+
+	enum AIRSPEED_SENSOR_MODEL smodel_2;
+
+	switch ((sensID_2 >> 16) & 0xFF) {
+		case DRV_DIFF_PRESS_DEVTYPE_SDP31:
+
+		/* fallthrough */
+		case DRV_DIFF_PRESS_DEVTYPE_SDP32:
+
+		/* fallthrough */
+		case DRV_DIFF_PRESS_DEVTYPE_SDP33:
+			/* fallthrough */
+			smodel_2 = AIRSPEED_SENSOR_MODEL_SDP3X;
+			break;
+
+		default:
+			smodel_2 = AIRSPEED_SENSOR_MODEL_MEMBRANE;
+			break;
+	}
+
 	while (!should_exit()) {
+		px4_usleep(1);
 
 		// wait for up to 1000ms for data
-		int pret = px4_poll(fds, (sizeof(fds) / sizeof(fds[0])), 1000);
+		int pret = px4_poll(fds, 7, 1000);
 
 		if (pret == 0) {
 			// Timeout: let the loop run anyway, don't do `continue` here
@@ -213,58 +268,32 @@ void airspeed_slipstream_record::run()
 			px4_usleep(50000);
 			continue;
 
-		} else if (fds[0].revents & POLLIN) {
-
-			enum AIRSPEED_SENSOR_MODEL smodel;
-
-			switch ((4923657 >> 16) & 0xFF) {
-			case DRV_DIFF_PRESS_DEVTYPE_SDP31:
-
-			/* fallthrough */
-			case DRV_DIFF_PRESS_DEVTYPE_SDP32:
-
-			/* fallthrough */
-			case DRV_DIFF_PRESS_DEVTYPE_SDP33:
-				/* fallthrough */
-				smodel = AIRSPEED_SENSOR_MODEL_SDP3X;
-				break;
-
-			default:
-				smodel = AIRSPEED_SENSOR_MODEL_MEMBRANE;
-				break;
-			}
-
-			differential_pressure_s diff_pres_A{};
-			differential_pressure_s diff_pres_B{};
+		} else if (fds[1].revents & fds[2].revents & fds[3].revents & fds[4].revents & fds[6].revents & POLLIN) {
 
 
 			orb_copy(ORB_ID(rc_channels), rc_sub_fd, &rc_chan);
 			if((int)rc_chan.channels[7] == 1)// || true)	//RECORD!
 			{
 				orb_copy(ORB_ID(differential_pressure), sensor_sub_fd[0], &diff_pres_A);
-				orb_copy(ORB_ID(differential_pressure), sensor_sub_fd[1], &diff_pres_A);
+				orb_copy(ORB_ID(differential_pressure), sensor_sub_fd[1], &diff_pres_B);
 
 				/* --------------------- Sensor 1 assignment --------------------*/
 				if(diff_pres_A.device_id == sensID_1 && sens_1_active){
 					diff_pres_ID_1 = diff_pres_A;
+					// PX4_INFO("sens1 found");
 				} else if (diff_pres_B.device_id == sensID_1 && sens_1_active) {
 					diff_pres_ID_1 = diff_pres_B;
+					// PX4_INFO("sens1 found");
 				}
 
 				/* --------------------- Sensor 2 assignment --------------------*/
 				if(diff_pres_A.device_id == sensID_2 && sens_2_active){
 					diff_pres_ID_2 = diff_pres_A;
+					// PX4_INFO("sens2 found");
 				} else if (diff_pres_B.device_id == sensID_2 && sens_2_active) {
 					diff_pres_ID_2 = diff_pres_B;
+					// PX4_INFO("sens2 found");
 				}
-
-
-				// else if ((sens_1_active || sens_2_active) && !error_sent) {
-				// 	//Not good, correct device id's arent set
-				// 	PX4_ERR("Incorrect airspeed sensor ID detected, please check");
-				// 	errFlag = true;
-				// 	error_sent = true;
-				// }
 
 
 				orb_copy(ORB_ID(esc_status), esc_sub_fd, &esc_stat);
@@ -281,27 +310,16 @@ void airspeed_slipstream_record::run()
 				airspeed_multi_data.primary_device_id = diff_pres_ID_1.device_id;
 
 
-
-				// airspeed_multi_data.primary_differential_pressure_filtered_pa = -0.0032f;
-				// airspeed_multi_data.primary_differential_pressure_raw_pa = -0.0032f;
-				// airspeed_multi_data.primary_temperature = 22.7750f;
-				// airspeed_multi_data.primary_device_id = 4923657;
-
 				air_temperature_1_celsius = (diff_pres.temperature > -300.0f) ? diff_pres.temperature :
 									(airdat.baro_temp_celcius - PCB_TEMP_ESTIMATE_DEG);
 
 				airspeed_multi_data.air_temperature_celsius = air_temperature_1_celsius;
 
-				// airspeed_multi_data.primary_airspeed_ms = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
-				// 						air_cmodel,
-				// 						smodel, air_tube_length, air_tube_diameter_mm,
-				// 						diff_pres_ID_1.differential_pressure_filtered_pa, airdat.baro_pressure_pa,
-				// 						air_temperature_1_celsius);
 
 				// Finite check
 				airspeed_ID_1  = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
 										air_cmodel,
-										smodel, air_tube_length, air_tube_diameter_mm,
+										smodel_1, air_tube_length, air_tube_diameter_mm,
 										diff_pres_ID_1.differential_pressure_filtered_pa, airdat.baro_pressure_pa,
 										air_temperature_1_celsius);
 				if(PX4_ISFINITE(airspeed_ID_1 )){
@@ -320,7 +338,7 @@ void airspeed_slipstream_record::run()
 
 				airspeed_ID_2 = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
 										air_cmodel,
-										smodel, air_tube_length, air_tube_diameter_mm,
+										smodel_2, air_tube_length, air_tube_diameter_mm,
 										diff_pres_ID_2.differential_pressure_filtered_pa, airdat.baro_pressure_pa,
 										air_temperature_1_celsius);
 				if(PX4_ISFINITE(airspeed_ID_2)){
