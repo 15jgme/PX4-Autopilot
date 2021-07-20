@@ -1542,15 +1542,15 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	float _gravity_const = 9.81f;
 	float _mass_const = 0.45f;
 	// Position Control Gains
-	float KpX = 2*0.75f*0.6f*1.0f*3*0.1f*1.8f;
-	float KpY = 2*0.75f*0.6f*1.0f*3*0.1f*1.8f;
-	float KpZ =  2*0.75f*0.7f*6*0.1f*6.0f;
-	float KdX = 2*0.7f*0.9f*1.0f*0.5f*0.42f;
-	float KdY = 2*0.7f*0.9f*1.0f*0.5f*0.42f;
-	float KdZ = 2*0.7f*0.9f*1.0f*0.5f*0.21f;
-	float KiX = 2*0.25f*0.0008f;
-	float KiY = 2*0.25f*0.0008f;
-	float KiZ = 2*0.25f*0.0004f;
+	float KpX = 0.75f*0.6f*1.0f*3*0.1f*1.8f;
+	float KpY = 0.75f*0.6f*1.0f*3*0.1f*1.8f;
+	float KpZ =  0.75f*0.7f*6*0.1f*6.0f;
+	float KdX = 0.7f*0.9f*1.0f*0.5f*0.42f;
+	float KdY = 0.7f*0.9f*1.0f*0.5f*0.42f;
+	float KdZ = 0.7f*0.9f*1.0f*0.5f*0.21f;
+	float KiX = 0.25f*0.0008f;
+	float KiY = 0.25f*0.0008f;
+	float KiZ = 0.25f*0.0004f;
 	// Added roll gains
 	float k_roll_p = 35*0.005f*4.32f;
 	float k_roll_y = 0.5f*0.7f*0.02f*0.4f;
@@ -1777,8 +1777,8 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	{
 	// if (time_elapsed <= time_stage1)
 	// {
-			float t_man = _time_elapsed;
-			float Vel_track1 = 10.0f;
+	float t_man = _time_elapsed;
+	float Vel_track1 = 10.0f;
 	    _vel_x_ref = Vel_track1*cosf(_initial_heading);
 	    _vel_y_ref = Vel_track1*sinf(_initial_heading);
 	    _vel_z_ref = 0.0f;
@@ -1846,17 +1846,33 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 		float t_init = 2.0;
 		float t_stop = 4.0f;
 		float a_slow = -V_i/t_stop;
+
+		float spinTime = 2.0f; //time to do 180 spin
 		if (t_man < t_turns*4)
 		{
 			_vel_x_ref = V_i*cosf(_initial_heading);
 			_vel_y_ref = V_i*sinf(_initial_heading);
 			_vel_z_ref = 0.0f;
 
-			_pos_x_ref = _pos_x_initial+V_i*cosf(_initial_heading)*t_man;
-			_pos_y_ref = _pos_y_initial+V_i*sinf(_initial_heading)*t_man;
+			_pos_x_ref = _pos_x_initial + V_i*cosf(_initial_heading)*(t_man - t_last) + _pos_x_accumulated;
+			_pos_y_ref = _pos_y_initial + V_i*sinf(_initial_heading)*(t_man - t_last) + _pos_y_accumulated;
 			_pos_z_ref = _pos_z_initial;
 
 			// t_turn_left -= t_man;
+
+			if(spinning)
+			{
+				PX4_INFO("delT:\t%8.4f",(double)(_initial_heading));
+				if(t_man - spinStart - 15.0*trackCounter< 2.0f) //spin THIS IS BAD
+				{
+					_initial_heading += (PI_f/spinTime) * _delta_time_attitude;
+				}
+				else //stop spinning
+				{
+					spinning = false;
+				}
+
+			}
 
 			//If the time to allow turning has elapsed switch direction
 			if(t_man - t_turn_left > t_turns)
@@ -1864,10 +1880,21 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 				// PX4_INFO("Switching direction");
 				// PX4_INFO("Heading:\t%8.4f",(double)_initial_heading);
 				PX4_INFO("t_turns_left:\t%8.4f",(double)t_turn_left);
-				_initial_heading+=PI_f; //rotate 180 deg
+				// _initial_heading+=PI_f; //rotate 180 deg
+				spinning = true;
+				PX4_INFO("spinning:\t%8.4f",(double)spinning);
+				float spinStart = t_man;
+				PX4_INFO("delT2:\t%8.4f",(double)(t_man - spinStart ));
+
 				t_turn_left = t_man;
 				trackCounter ++;
 				if(trackCounter >= 2){feedforward_flag == true;} //enable feedforward
+
+				/* ---- reset init positions ---- */
+				_pos_x_accumulated += _vel_x_ref * t_turns;
+				_pos_y_accumulated += _vel_y_ref * t_turns;
+
+				t_last = t_man;
 
 			}
 			_pos_x_end = _pos_x_ref;
@@ -1876,56 +1903,33 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 			t_slow = t_man;
 		}
 		else { //Go into hover
-			PX4_INFO("Path exiting");
+			if(!exitMsgSent)
+			{
+				PX4_INFO("Path exiting");
+				exitMsgSent = true;
+			}
+
 
 			/* ---- just keep swimming ---- */
 			_vel_x_ref = V_i*cosf(_initial_heading);
 			_vel_y_ref = V_i*sinf(_initial_heading);
 			_vel_z_ref = 0.0f;
 
-			_pos_x_ref = _pos_x_initial+V_i*cosf(_initial_heading)*t_man;
-			_pos_y_ref = _pos_y_initial+V_i*sinf(_initial_heading)*t_man;
+			_pos_x_ref = _pos_x_initial + V_i*cosf(_initial_heading)*(t_man-t_last) + _pos_x_accumulated;
+			_pos_y_ref = _pos_y_initial + V_i*sinf(_initial_heading)*(t_man-t_last) + _pos_y_accumulated;
 			_pos_z_ref = _pos_z_initial;
+
+			/* -- for resetting path -- */
+			_pos_x_accumulated += 0.0f;
+			_pos_y_accumulated += 0.0f;
+
+			t_slow = 0.0f;
+
 
 			/* ---- reset feedforward stuff ---- */
 			feedforward_flag = false;
 			trackCounter == 0;
 
-			// if(false)//t_man - t_slow < 5.0f) //allow five seconds to slow down
-			// {
-			// 	V_i = V_i / abs(t_man - t_slow);
-
-			// 	_vel_x_ref = V_i*cosf(_initial_heading);
-			// 	_vel_y_ref = V_i*sinf(_initial_heading);
-			// 	_vel_z_ref = 0.0f;
-
-			// 	_pos_x_ref = _pos_x_end+V_i*cosf(_initial_heading)*t_man;
-			// 	_pos_y_ref = _pos_y_end+V_i*sinf(_initial_heading)*t_man;
-			// 	_pos_z_ref = _pos_z_end;
-
-			// 	// _pos_x_end = _pos_x_ref;
-			// 	// _pos_y_end = _pos_y_ref;
-			// 	// _pos_z_end = _pos_z_ref;
-			// }
-			// else
-			// {
-			// 	_vel_x_ref = 0.0f;
-			// 	_vel_y_ref = 0.0f;
-			// 	_vel_z_ref = 0.0f;
-
-			// 	_pos_x_ref = _pos_x_end;
-			// 	_pos_y_ref = _pos_y_end;
-			// 	_pos_z_ref = _pos_z_end;
-			// }
-			// _vel_x_ref = 0.0f;
-			// _vel_y_ref = 0.0f;
-			// _vel_z_ref = 0.0f;
-
-			// float pos_mag = a_slow/2*t_stop*t_stop	+	V_i*t_stop	+	V_i*t_init;
-			// PX4_INFO("pos_mag:\t%8.4f",(double)pos_mag);
-			// _pos_x_ref = pos_mag*cosf(_initial_heading)+_pos_x_end;
-			// _pos_y_ref = pos_mag*sinf(_initial_heading)+_pos_y_end;
-			// _pos_z_ref = _pos_z_end;
 		}
 	}
 

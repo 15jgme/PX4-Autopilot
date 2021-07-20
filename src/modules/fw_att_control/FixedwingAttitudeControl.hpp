@@ -226,10 +226,17 @@ private:
 
 	/* ------ Jackson's stuff -----*/
 	float t_turn_left = NULL;
-	float t_slow = 0; //time in slowdown phase
+	float t_last = 0.0f;
+	float t_slow = 0.0f; //time in slowdown phase
 	float _pos_x_end{0.0f};
 	float _pos_y_end{0.0f};
 	float _pos_z_end{0.0f};
+	float _pos_x_accumulated{0.0f};
+	float _pos_y_accumulated{0.0f};
+	float _pos_z_accumulated{0.0f};
+	bool spinning = false;
+	float spinStart = 0.0f;
+	bool exitMsgSent = false;
 	matrix::Dcmf R_wind; //Feedforward rotation
 	int trackCounter = 0;
 
