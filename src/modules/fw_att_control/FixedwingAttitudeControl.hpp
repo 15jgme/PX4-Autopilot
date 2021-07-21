@@ -227,18 +227,16 @@ private:
 	/* ------ Jackson's stuff -----*/
 	float t_turn_left = NULL;
 	float t_last = 0.0f;
-	float t_slow = 0.0f; //time in slowdown phase
-	float _pos_x_end{0.0f};
-	float _pos_y_end{0.0f};
-	float _pos_z_end{0.0f};
-	float _pos_x_accumulated{0.0f};
-	float _pos_y_accumulated{0.0f};
-	float _pos_z_accumulated{0.0f};
-	bool spinning = false;
-	float spinStart = 0.0f;
+
+	float t_last_vertex{0.0f};
+
+	float _pos_x_last_vtx{0.0f}; //Positions of last vertex reletive to _pos_init
+	float _pos_y_last_vtx{0.0f};
+	int turnCount{0}; //Number of turns of the box performed
+	bool completeFlag = false; //flag showing that the desired path is complete
 	bool exitMsgSent = false;
 	matrix::Dcmf R_wind; //Feedforward rotation
-	int trackCounter = 0;
+
 
 	bool feedforward_flag = false; //If true wind feedforward on position is enabled
 
