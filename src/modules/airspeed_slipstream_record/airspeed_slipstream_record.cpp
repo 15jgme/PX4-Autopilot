@@ -304,8 +304,8 @@ void airspeed_slipstream_record::run()
 				airspeed_multi_data.vehicle_ias = airspeed.indicated_airspeed_m_s; //Set airspeed from system to msg airspeed (for faster logging)
 
 				/* <------------------------->SENSOR 1<--------------------->*/
-				airspeed_multi_data.primary_differential_pressure_filtered_pa = diff_pres_ID_1.differential_pressure_filtered_pa;
-				airspeed_multi_data.primary_differential_pressure_raw_pa = diff_pres_ID_1.differential_pressure_raw_pa;
+				airspeed_multi_data.primary_differential_pressure_filtered_pa = diff_pres_ID_1.differential_pressure_filtered_pa + ID_1_cal;
+				airspeed_multi_data.primary_differential_pressure_raw_pa = diff_pres_ID_1.differential_pressure_raw_pa + ID_1_cal;
 				airspeed_multi_data.primary_temperature = diff_pres_ID_1.temperature;
 				airspeed_multi_data.primary_device_id = diff_pres_ID_1.device_id;
 
@@ -320,7 +320,7 @@ void airspeed_slipstream_record::run()
 				airspeed_ID_1  = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
 										air_cmodel,
 										smodel_1, air_tube_length, air_tube_diameter_mm,
-										diff_pres_ID_1.differential_pressure_filtered_pa, airdat.baro_pressure_pa,
+										diff_pres_ID_1.differential_pressure_filtered_pa + ID_1_cal, airdat.baro_pressure_pa,
 										air_temperature_1_celsius);
 				if(PX4_ISFINITE(airspeed_ID_1 )){
 					airspeed_multi_data.primary_airspeed_ms = airspeed_ID_1;
@@ -328,8 +328,8 @@ void airspeed_slipstream_record::run()
 
 
 				/* <------------------------->SENSOR 2<--------------------->*/
-				airspeed_multi_data.secondary_differential_pressure_filtered_pa = diff_pres_ID_2.differential_pressure_filtered_pa;
-				airspeed_multi_data.secondary_differential_pressure_raw_pa = diff_pres_ID_2.differential_pressure_raw_pa;
+				airspeed_multi_data.secondary_differential_pressure_filtered_pa = diff_pres_ID_2.differential_pressure_filtered_pa + ID_2_cal;
+				airspeed_multi_data.secondary_differential_pressure_raw_pa = diff_pres_ID_2.differential_pressure_raw_pa + ID_2_cal;
 				airspeed_multi_data.secondary_temperature = diff_pres_ID_2.temperature;
 				airspeed_multi_data.secondary_device_id = diff_pres_ID_2.device_id;
 
@@ -339,7 +339,7 @@ void airspeed_slipstream_record::run()
 				airspeed_ID_2 = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
 										air_cmodel,
 										smodel_2, air_tube_length, air_tube_diameter_mm,
-										diff_pres_ID_2.differential_pressure_filtered_pa, airdat.baro_pressure_pa,
+										(diff_pres_ID_2.differential_pressure_filtered_pa + ID_2_cal), airdat.baro_pressure_pa,
 										air_temperature_1_celsius);
 				if(PX4_ISFINITE(airspeed_ID_2)){
 					airspeed_multi_data.secondary_airspeed_ms = airspeed_ID_2;

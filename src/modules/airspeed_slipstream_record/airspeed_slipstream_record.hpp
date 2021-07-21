@@ -109,10 +109,11 @@ private:
 	uint sensID_1 = 4923657; //Sensor ID for primary airspeed sensor FMU
 	// uint sensID_1 = 0;
 	bool sens_1_active = true;
+	float ID_1_cal = 175.9189f; //Pa
 	uint sensID_2 = 4663305; //Sensor ID for slipstream airspeed sensor FMU
 	// uint sensID_2 = 0;
 	bool sens_2_active = true;
-
+	float ID_2_cal = -171.3403f; //Pa
 	bool errFlag = false;
 
 	float airspeed_ID_1 = 4; //Float for storing airspeed calculated
