@@ -1846,7 +1846,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	else if (_maneuver_type == 3) //Jackson's path, zigzag
 	{
 		float t_man = _time_elapsed;
-		float t_turns = 10.0f; //time allowed for each sucessive straight run
+		float t_turns = 5.0f; //time allowed for each sucessive straight run
 
 		float V_i = 10.0f;
 		float t_init = 2.0;
