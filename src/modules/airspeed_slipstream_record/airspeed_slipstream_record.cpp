@@ -310,7 +310,7 @@ void airspeed_slipstream_record::run()
 				airspeed_multi_data.primary_device_id = diff_pres_ID_1.device_id;
 
 
-				air_temperature_1_celsius = (diff_pres.temperature > -300.0f) ? diff_pres.temperature :
+				air_temperature_1_celsius = (diff_pres_ID_1.temperature > -300.0f) ? diff_pres_ID_1.temperature :
 									(airdat.baro_temp_celcius - PCB_TEMP_ESTIMATE_DEG);
 
 				airspeed_multi_data.air_temperature_celsius = air_temperature_1_celsius;
@@ -333,14 +333,14 @@ void airspeed_slipstream_record::run()
 				airspeed_multi_data.secondary_temperature = diff_pres_ID_2.temperature;
 				airspeed_multi_data.secondary_device_id = diff_pres_ID_2.device_id;
 
-				air_temperature_1_celsius = (diff_pres.temperature > -300.0f) ? diff_pres.temperature :
+				air_temperature_2_celsius = (diff_pres_ID_2.temperature > -300.0f) ? diff_pres_ID_2.temperature :
 									(airdat.baro_temp_celcius - PCB_TEMP_ESTIMATE_DEG);
 
 				airspeed_ID_2 = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
 										air_cmodel,
 										smodel_2, air_tube_length, air_tube_diameter_mm,
 										(diff_pres_ID_2.differential_pressure_filtered_pa + ID_2_cal), airdat.baro_pressure_pa,
-										air_temperature_1_celsius);
+										air_temperature_2_celsius);
 				if(PX4_ISFINITE(airspeed_ID_2)){
 					airspeed_multi_data.secondary_airspeed_ms = airspeed_ID_2;
 				}
