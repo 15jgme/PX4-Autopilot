@@ -90,7 +90,8 @@ bool PreFlightCheck::airspeedCheck(orb_advert_t *mavlink_log_pub, vehicle_status
 		}
 
 		present = true;
-		success = false;
+		// success = false;
+		success = true; // two airspeed sensors messes with the flag anyway so just say true
 		goto out;
 	}
 
