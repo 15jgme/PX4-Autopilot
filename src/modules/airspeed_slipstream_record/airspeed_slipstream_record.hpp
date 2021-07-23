@@ -99,7 +99,17 @@ public:
 
 	// static int _task_id;
 
+	/** Calibration for airspeed sensors */
+	int diff_pressure_calib();
+
 private:
+
+	/* ---- calibration ---- */
+	bool calib_flag = false;
+	int maxSamp = 200; //samples used for calibration
+
+	bool sensID_1_cal_flag = false;
+	bool sensID_2_cal_flag = false;
 
 	/* Paramater storage */
 	float air_tube_diameter_mm=1.5;
@@ -109,17 +119,19 @@ private:
 	uint sensID_1 = 4923657; //Sensor ID for primary airspeed sensor FMU
 	// uint sensID_1 = 0;
 	bool sens_1_active = true;
-	float ID_1_cal = 175.9189f; //Pa
+	float ID_1_cal = 0; //Pa
+
+
 	uint sensID_2 = 4663305; //Sensor ID for slipstream airspeed sensor FMU
 	// uint sensID_2 = 0;
 	bool sens_2_active = true;
-	float ID_2_cal = -171.3403f; //Pa
+	float ID_2_cal = 0; //Pa
 	bool errFlag = false;
 
-	float airspeed_ID_1 = 4; //Float for storing airspeed calculated
-	float air_temperature_1_celsius;
-	float airspeed_ID_2 = 4; //Float for storing airspeed calculated
-	float air_temperature_2_celsius;
+	float airspeed_ID_1 = 0; //Float for storing airspeed calculated
+	float air_temperature_1_celsius = 0.0f;
+	float airspeed_ID_2 = 0; //Float for storing airspeed calculated
+	float air_temperature_2_celsius = 0.0f;
 
 	bool error_sent = false; //Have we already sent the error message?
 

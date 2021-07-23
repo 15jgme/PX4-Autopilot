@@ -36,5 +36,6 @@ px4_add_module(
 	MAIN airspeed_slipstream_record
 	SRCS
 		airspeed_slipstream_record.cpp
+		airspeed_slipstream_record.hpp
 	)
 

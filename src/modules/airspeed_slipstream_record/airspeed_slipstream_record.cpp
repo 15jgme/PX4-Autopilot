@@ -148,6 +148,11 @@ void airspeed_slipstream_record::run()
 	diff_pres_ID_2.temperature = 0;				// Temperature provided by sensor, -1000.0f if unknown
 	diff_pres_ID_2.device_id = 0;
 
+	if (!calib_flag) //not calibrated
+	{
+		calib_flag = diff_pressure_calib(); //calibrate
+	}
+
 	/* advertise attitude topic */
 	struct airspeed_multi_record_s airspeed_multi_data;
 	memset(&airspeed_multi_data, 0, sizeof(airspeed_multi_data));
@@ -310,7 +315,7 @@ void airspeed_slipstream_record::run()
 				airspeed_multi_data.primary_device_id = diff_pres_ID_1.device_id;
 
 
-				air_temperature_1_celsius = (diff_pres.temperature > -300.0f) ? diff_pres.temperature :
+				air_temperature_1_celsius = (diff_pres_ID_1.temperature > -300.0f) ? diff_pres.temperature :
 									(airdat.baro_temp_celcius - PCB_TEMP_ESTIMATE_DEG);
 
 				airspeed_multi_data.air_temperature_celsius = air_temperature_1_celsius;
@@ -333,20 +338,27 @@ void airspeed_slipstream_record::run()
 				airspeed_multi_data.secondary_temperature = diff_pres_ID_2.temperature;
 				airspeed_multi_data.secondary_device_id = diff_pres_ID_2.device_id;
 
-				air_temperature_1_celsius = (diff_pres.temperature > -300.0f) ? diff_pres.temperature :
+				air_temperature_2_celsius = (diff_pres_ID_2.temperature > -300.0f) ? diff_pres_ID_2.temperature :
 									(airdat.baro_temp_celcius - PCB_TEMP_ESTIMATE_DEG);
 
 				airspeed_ID_2 = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
 										air_cmodel,
 										smodel_2, air_tube_length, air_tube_diameter_mm,
 										(diff_pres_ID_2.differential_pressure_filtered_pa + ID_2_cal), airdat.baro_pressure_pa,
-										air_temperature_1_celsius);
+										air_temperature_2_celsius);
 				if(PX4_ISFINITE(airspeed_ID_2)){
 					airspeed_multi_data.secondary_airspeed_ms = airspeed_ID_2;
 				}
 
-				/* <--------------------------->ESC<----------------------->*/
+				/* <--------------------------->ESC<-----------------------> */
 				airspeed_multi_data.rpm_sens = esc_stat.esc[0].esc_rpm;
+
+				/* <------------------------>CALIBRATIOn<------------------> */
+				airspeed_multi_data.primary_calibrated = sensID_1_cal_flag;
+				airspeed_multi_data.secondary_calibrated = sensID_2_cal_flag;
+				airspeed_multi_data.primary_calib_offset_pa = ID_1_cal;
+				airspeed_multi_data.secondary_calib_offset_pa = ID_2_cal;
+
 
 
 				airspeed_multi_data.timestamp = hrt_absolute_time(); //Set timestamp
@@ -410,4 +422,79 @@ $ module start -f -p 42
 int airspeed_slipstream_record_main(int argc, char *argv[])
 {
 	return airspeed_slipstream_record::main(argc, argv);
+}
+
+int airspeed_slipstream_record::diff_pressure_calib()
+{
+
+	/* subscribe to diff pressure topic */
+	int sensor_sub_fd[2] = {};
+	sensor_sub_fd[0] = orb_subscribe_multi(ORB_ID(differential_pressure), 0);
+	sensor_sub_fd[1] = orb_subscribe_multi(ORB_ID(differential_pressure), 1);
+
+	orb_set_interval(sensor_sub_fd[0], 50);
+	orb_set_interval(sensor_sub_fd[1], 50);
+
+	px4_pollfd_struct_t fds[] = {
+		{ .fd = sensor_sub_fd[0],   .events = POLLIN },
+		{ .fd = sensor_sub_fd[1],   .events = POLLIN },
+	};
+
+	int i = 0;
+	while(i < maxSamp)
+	{
+		int pret = px4_poll(fds, 2, 1000);
+		/* update uorb messages */
+		if (pret == 0) {
+			// Timeout: let the loop run anyway, don't do `continue` here
+
+		} else if (pret < 0) {
+			// this is undesirable but not much we can do
+			PX4_ERR("poll error %d, %d", pret, errno);
+			px4_usleep(50000);
+			continue;
+
+		} else if (fds[0].revents & fds[1].revents & POLLIN) {
+
+			orb_copy(ORB_ID(differential_pressure), sensor_sub_fd[0], &diff_pres_A);
+			orb_copy(ORB_ID(differential_pressure), sensor_sub_fd[1], &diff_pres_B);
+
+			/*--------- Sort sensors ---------*/
+			/* --------------------- Sensor 1 assignment --------------------*/
+			if(diff_pres_A.device_id == sensID_1 && sens_1_active){
+				diff_pres_ID_1 = diff_pres_A;
+				// PX4_INFO("sens1 found");
+			} else if (diff_pres_B.device_id == sensID_1 && sens_1_active) {
+				diff_pres_ID_1 = diff_pres_B;
+				// PX4_INFO("sens1 found");
+			}
+			/* --------------------- Sensor 2 assignment --------------------*/
+			if(diff_pres_A.device_id == sensID_2 && sens_2_active){
+				diff_pres_ID_2 = diff_pres_A;
+				// PX4_INFO("sens2 found");
+			} else if (diff_pres_B.device_id == sensID_2 && sens_2_active) {
+				diff_pres_ID_2 = diff_pres_B;
+				// PX4_INFO("sens2 found");
+			}
+
+			ID_1_cal -= diff_pres_ID_1.differential_pressure_filtered_pa / maxSamp;
+			ID_2_cal -= diff_pres_ID_2.differential_pressure_filtered_pa / maxSamp;
+
+			i++;
+
+		}
+
+	}
+
+	sensID_1_cal_flag = true;
+	sensID_2_cal_flag = true;
+
+	orb_unsubscribe(sensor_sub_fd[0]);
+	orb_unsubscribe(sensor_sub_fd[1]);
+
+	PX4_INFO("Differential pressure calibration complete");
+
+	return 1;
+
+
 }
