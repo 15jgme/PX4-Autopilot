@@ -58,6 +58,7 @@ float32 crab_angle_ff #Angle of FF crab rotation matrix (R_wind)
 bool feedforward_on #true if ff is on
 
 float32[9] r_wind_rows #Rows of R_wind_mtx
+float32[9] c_ri_pre_ff
 
 float32 v_tild_n #Relative wind north N
 float32 v_tild_e #Relative wind east E

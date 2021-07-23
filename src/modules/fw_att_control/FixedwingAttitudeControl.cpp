@@ -797,6 +797,18 @@ void FixedwingAttitudeControl::Run()
 				t_last = 0; //Reset final time
 				turnCount = 0;
 
+				/* -- for resetting path -- */
+				_pos_x_last_vtx = 0.0f;
+				_pos_y_last_vtx = 0.0f;
+
+				t_last_vertex = 0.0f;
+				turnCount = 0;
+
+
+				/* ---- reset feedforward stuff ---- */
+				feedforward_flag = true;
+				_juan_att_var.feedforward_on = true;
+
 
 				_vel_x_ref = _local_pos.vx;
 				_vel_y_ref = _local_pos.vy;
@@ -1007,6 +1019,16 @@ void FixedwingAttitudeControl::Run()
 					{
 						JUAN_position_control();
 						C_ri = C_ri_pos.transpose();
+
+						_juan_att_var.c_ri_pre_ff[0] =  C_ri(0,0);
+						_juan_att_var.c_ri_pre_ff[1] =  C_ri(0,1);
+						_juan_att_var.c_ri_pre_ff[2] =  C_ri(0,2);
+						_juan_att_var.c_ri_pre_ff[3] =  C_ri(1,0);
+						_juan_att_var.c_ri_pre_ff[4] =  C_ri(1,1);
+						_juan_att_var.c_ri_pre_ff[5] =  C_ri(1,2);
+						_juan_att_var.c_ri_pre_ff[6] =  C_ri(2,0);
+						_juan_att_var.c_ri_pre_ff[7] =  C_ri(2,1);
+						_juan_att_var.c_ri_pre_ff[8] =  C_ri(2,2);
 
 						if (feedforward_flag)
 						{
@@ -1846,7 +1868,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	else if (_maneuver_type == 3) //Jackson's path, zigzag
 	{
 		float t_man = _time_elapsed;
-		float t_turns = 5.0f; //time allowed for each sucessive straight run
+		float t_turns = 7.5f; //time allowed for each sucessive straight run
 
 		float V_i = 10.0f;
 		float t_init = 2.0;
@@ -1865,7 +1887,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 
 				PX4_INFO("turn %i", turnCount);
 
-				if(turnCount == 4){feedforward_flag = true;} //turn ff on
+				if(turnCount == 4){feedforward_flag = false;} //turn ff on
 			}
 			_vel_x_ref = V_i*cosf(_initial_heading);
 			_vel_y_ref = V_i*sinf(_initial_heading);
@@ -1906,8 +1928,8 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 
 
 			/* ---- reset feedforward stuff ---- */
-			feedforward_flag = false;
-			_juan_att_var.feedforward_on = false;
+			feedforward_flag = true;
+			_juan_att_var.feedforward_on = true;
 
 		}
 	}
