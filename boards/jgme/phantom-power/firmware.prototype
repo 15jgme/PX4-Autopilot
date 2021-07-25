@@ -1,0 +1,13 @@
+{
+    "board_id": 14,
+    "magic": "phantom-power",
+    "description": "Firmware for the phantom-power",
+    "image": "",
+    "build_time": 0,
+    "summary": "phantom-power",
+    "version": "0.1",
+    "image_size": 0,
+    "image_maxsize": 1032192,
+    "git_identity": "",
+    "board_revision": 0
+}
