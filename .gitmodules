@@ -67,3 +67,6 @@
 	path = src/drivers/uavcan_v1/legacy_data_types
 	url = https://github.com/px4/public_regulated_data_types/
 	branch = legacy
+[submodule "src/drivers/imu/bno055/BNO055_driver"]
+	path = src/drivers/imu/bno055/BNO055_driver
+	url = https://github.com/BoschSensortec/BNO055_driver
