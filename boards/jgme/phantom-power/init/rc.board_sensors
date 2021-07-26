@@ -6,9 +6,11 @@
 board_adc start
 
 # Internal I2C bus
-bmp280 -I -a 0x77 -f 400 start
-bmi088_i2c -A -R 0 -I -a 0x18 start
-bmi088_i2c -G -R 0 -I -a 0x69 start
+bmp280 -X -a 0x76 -f 400 start
+# bmi088_i2c -A -R 0 -X -a 0x18 start
+# bmi088_i2c -G -R 0 -X -a 0x68 start
+bmi055
+bmm150 -X start
 
 # Optical flow deck
 # vl53l1x start -X

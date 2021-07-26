@@ -31,47 +31,64 @@
  *
  ****************************************************************************/
 
+#include "bno055.hpp"
+
 #include <px4_platform_common/getopt.h>
 #include <px4_platform_common/module.h>
 
-#include "BMI055.hpp"
+/**
+ * @file bno055_main.cpp
+ *
+ * This driver does not use the built-in sensor fusion mcu of this
+ * IMU (only fetches the sensor values).
+ *
+ * TODOs:
+ *  - i2c only for now
+ *  - read temperature as well
+ *  - this module can call usleep, although it uses WorkItem
+ *  - the chip has an accel, gyro and mag; all are implemented here, which means that
+ *    this fits neither in imu/ nor compass/
+ *  - this is based on the bmi160 driver, not sure if this is a good thing
+ *  - the default BNO055_I2C_ADDR1 will always be used, regardless of input
+ *  - maybe move away from Bosch library?
+ *
+ */
 
-void BMI055::print_usage()
+
+void BNO055::print_usage()
 {
-	PRINT_MODULE_USAGE_NAME("bmi055", "driver");
+	PRINT_MODULE_USAGE_NAME("bno055", "driver");
 	PRINT_MODULE_USAGE_SUBCATEGORY("imu");
 	PRINT_MODULE_USAGE_COMMAND("start");
-	PRINT_MODULE_USAGE_PARAM_FLAG('A', "Accel", true);
-	PRINT_MODULE_USAGE_PARAM_FLAG('G', "Gyro", true);
 	PRINT_MODULE_USAGE_PARAMS_I2C_SPI_DRIVER(true, false);
-	PRINT_MODULE_USAGE_PARAM_INT('R', 0, 0, 35, "Rotation", true);
 	PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
 }
 
-extern "C" int bmi055_main(int argc, char *argv[])
+I2CSPIDriverBase *BNO055::instantiate(const BusCLIArguments &cli, const BusInstanceIterator &iterator,
+				      int runtime_instance)
 {
-	int ch;
-	using ThisDriver = BMI055;
-	BusCLIArguments cli{true, false};
-	cli.type = 0;
-	cli.default_spi_frequency = 10000000;
+	BNO055 *instance = new BNO055(iterator.configuredBusOption(), iterator.bus(), cli.bus_frequency);
 
-	while ((ch = cli.getopt(argc, argv, "AGR:")) != EOF) {
-		switch (ch) {
-		case 'A':
-			cli.type = DRV_ACC_DEVTYPE_BMI055;
-			break;
-
-		case 'G':
-			cli.type = DRV_GYR_DEVTYPE_BMI055;
-			break;
-
-		case 'R':
-			cli.rotation = (enum Rotation)atoi(cli.optarg());
-			break;
-		}
+	if (!instance) {
+		PX4_ERR("alloc failed");
+		return nullptr;
 	}
 
+	if (OK != instance->init()) {
+		delete instance;
+		return nullptr;
+	}
+
+	return instance;
+}
+
+extern "C" int bno055_main(int argc, char *argv[])
+{
+	using ThisDriver = BNO055;
+	BusCLIArguments cli{true, false};
+	cli.default_i2c_frequency = 400000;
+
+	cli.getopt(argc, argv, "");
 	const char *verb = cli.optarg();
 
 	if (!verb) {
@@ -79,7 +96,7 @@ extern "C" int bmi055_main(int argc, char *argv[])
 		return -1;
 	}
 
-	BusInstanceIterator iterator(MODULE_NAME, cli, cli.type);
+	BusInstanceIterator iterator(MODULE_NAME, cli, DRV_IMU_DEVTYPE_BNO055);
 
 	if (!strcmp(verb, "start")) {
 		return ThisDriver::module_start(cli, iterator);
