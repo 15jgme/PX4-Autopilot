@@ -66,6 +66,8 @@ px4_add_board(
 		fw_pos_control_l1
 		gyro_calibration
 		gyro_fft
+		juan_position_control
+		juan_reference_generator
 		land_detector
 		landing_target_estimator
 		load_mon
