@@ -32,10 +32,10 @@
 ############################################################################
 
 px4_add_module(
-	MODULE modules__juan_position_control
-	MAIN juan_position_control
+	MODULE modules__pwm_act_out
+	MAIN pwm_act_out
 	SRCS
-		juan_position_control.cpp
-		juan_position_control.hpp
+		pwm_act_out.cpp
+		pwm_act_out.hpp
 	)
 
