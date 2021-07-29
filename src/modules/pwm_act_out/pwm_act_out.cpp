@@ -133,7 +133,12 @@ void pwm_act_out::run()
 
 	while(!should_exit())
 	{
+		//Get actuator outputs
 		_actuator_sub.update(&act);
+		
+		//Mix if we need
+		
+		//Write to pwm output @Zihao here for the command \/
 
 
 
