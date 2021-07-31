@@ -15,7 +15,7 @@ px4_add_board(
 		distance_sensor/vl53l1x
 		gps
 		imu/bosch/bmi088/bmi088_i2c
-		optical_flow/pmw3901
+		# optical_flow/pmw3901
 		pwm_out
 	MODULES
 		attitude_estimator_q
