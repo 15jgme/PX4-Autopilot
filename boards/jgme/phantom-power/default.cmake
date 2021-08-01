@@ -17,6 +17,7 @@ px4_add_board(
 		gps
 		imu/bosch/bmi088/bmi088_i2c
 		pwm_out
+		adc/board_adc #get this working
 		# telemetry
 	MODULES
 		attitude_estimator_q

@@ -115,8 +115,13 @@
  *
  * These are the channel numbers of the ADCs of the microcontroller that can be used by the Px4 Firmware in the adc driver
  */
-#define ADC_CHANNELS 0
+#define ADC_CHANNELS (1 << 3)
 
+/* ADC defines to be used in sensors.cpp to read from a particular channel. */
+#define ADC_BATTERY_VOLTAGE_CHANNEL  3
+
+/* Define Battery 1 Voltage Divider and A per V. */
+#define BOARD_BATTERY1_V_DIV         (13.653333333f)
 
 /* Tone alarm output : These are only applicable when the buzzer deck is attached */
 #define TONE_ALARM_TIMER	5	/* timer 5 */
