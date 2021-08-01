@@ -10,13 +10,14 @@ px4_add_board(
 	CONSTRAINED_MEMORY
 	ROMFSROOT px4fmu_common
 	CONSTRAINED_FLASH
+	# SERIAL_PORTS
+	# 	TEL4:/dev/ttyS3
 	DRIVERS
-		barometer/bmp388
-		distance_sensor/vl53l1x
+		barometer/bmp280
 		gps
 		imu/bosch/bmi088/bmi088_i2c
-		# optical_flow/pmw3901
 		pwm_out
+		# telemetry
 	MODULES
 		attitude_estimator_q
 		#camera_feedback
@@ -24,7 +25,7 @@ px4_add_board(
 		dataman
 		ekf2
 		events
-		flight_mode_manager
+		# flight_mode_manager
 		#gyro_fft
 		land_detector
 		landing_target_estimator
@@ -33,9 +34,9 @@ px4_add_board(
 		logger
 		mavlink
 		mc_att_control
-		mc_hover_thrust_estimator
+		# mc_hover_thrust_estimator
 		mc_pos_control
-		mc_rate_control
+		# mc_rate_control
 		navigator
 		rc_update
 		sensors

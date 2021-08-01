@@ -94,7 +94,7 @@
 
 #define PX4_I2C_BUS_MTD	1
 
-#define BOARD_NUMBER_I2C_BUSES  3
+#define BOARD_NUMBER_I2C_BUSES  1
 #define BOARD_I2C_BUS_CLOCK_INIT {PX4_I2C_BUS_ONBOARD_HZ, 400000, PX4_I2C_BUS_EXPANSION_HZ}
 
 
@@ -116,6 +116,7 @@
  * These are the channel numbers of the ADCs of the microcontroller that can be used by the Px4 Firmware in the adc driver
  */
 #define ADC_CHANNELS 0
+
 
 /* Tone alarm output : These are only applicable when the buzzer deck is attached */
 #define TONE_ALARM_TIMER	5	/* timer 5 */
