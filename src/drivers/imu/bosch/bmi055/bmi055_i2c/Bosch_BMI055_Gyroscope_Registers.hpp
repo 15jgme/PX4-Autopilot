@@ -33,7 +33,7 @@
 
 #pragma once
 
-namespace Bosch::BMI055::Accelerometer
+namespace Bosch::BMI055::Gyroscope
 {
 
 // TODO: move to a central header
@@ -47,44 +47,39 @@ static constexpr uint8_t Bit6 = (1 << 6);
 static constexpr uint8_t Bit7 = (1 << 7);
 
 static constexpr uint32_t SPI_SPEED = 10 * 1000 * 1000; // 10MHz SPI serial interface
+
+static constexpr uint32_t I2C_400_SPEED = 400 * 1000; // 400kHz I2C interface
+static constexpr uint32_t I2C_200_SPEED = 200 * 1000; // 200kHz I2C interface
+static constexpr uint32_t I2C_100_SPEED = 100 * 1000; // 100kHz I2C interface
+
+
 static constexpr uint8_t DIR_READ = 0x80;
 
-static constexpr uint8_t chip_id = 0b11111010;
+static constexpr uint8_t chip_id = 0x0F;
+
+static constexpr uint8_t GYRO_I2C_ADDR_PRIMARY = 0x68;
+static constexpr uint8_t GYRO_I2C_ADDR_SECONDARY = 0x69;
 
 enum class Register : uint8_t {
-	BGW_CHIPID    = 0x00,
+	CHIP_ID        = 0x00,
 
+	FIFO_STATUS    = 0x0E,
+	RANGE          = 0x0F,
 
-	FIFO_LENGTH_0      = 0x24,
-	FIFO_LENGTH_1      = 0x25,
+	RATE_HBW       = 0x13,
+	BGW_SOFTRESET  = 0x14,
+	INT_EN_0       = 0x15,
+	INT_EN_1       = 0x16,
 
-	ACCD_TEMP     = 0x08,
+	INT_MAP_1      = 0x18,
 
-	INT_STATUS_1  = 0x0A,
+	FIFO_WM_ENABLE = 0x1E,
 
-	FIFO_STATUS   = 0x0E,
-	PMU_RANGE     = 0x0F,
-
-	ACCD_HBW      = 0x13,
-	BGW_SOFTRESET = 0x14,
-
-	INT_EN_1      = 0x17,
-
-	INT_MAP_1     = 0x1A,
-
-	INT_OUT_CTRL  = 0x20,
-
-	FIFO_CONFIG_0 = 0x30,
-
-	FIFO_CONFIG_1 = 0x3E,
-	FIFO_DATA     = 0x3F,
-};
-
-// INT_STATUS_1
-enum INT_STATUS_1_BIT : uint8_t {
-	data_int      = Bit7,
-	fifo_wm_int   = Bit6,
-	fifo_full_int = Bit5,
+	FIFO_CONFIG_0  = 0x3D,
+	FIFO_CONFIG_1  = 0x3E,
+	FIFO_DATA      = 0x3F,
+	SELF_TEST      = 0x3C,
+	READ_GYRO      = 0x02, //check that this is the correct register - JGME
 };
 
 // FIFO_STATUS
@@ -93,63 +88,68 @@ enum FIFO_STATUS_BIT : uint8_t {
 	fifo_frame_counter = Bit6 | Bit5 | Bit4 | Bit3 | Bit2 | Bit1 | Bit0, // fifo_frame_counter<6:0>
 };
 
-// ACCD_HBW
-enum ACCD_HBW_BIT : uint8_t {
-	data_high_bw = Bit7, // 1 -> unfiltered
+// RANGE
+enum RANGE_BIT : uint8_t {
+	gyro_range_2000_dps = 0x00, // ±2000
+	gyro_range_1000_dps = 0x01, // ±1000
+	gyro_range_500_dps  = 0x02, // ±500
+	gyro_range_250_dps  = 0x04, // ±250
+	gyro_range_125_dps  = 0x05, // ±125
 };
 
-// PMU_RANGE
-enum PMU_RANGE_BIT : uint8_t {
-	// range<3:0>
-	range_2g  = Bit1 | Bit0, //  ́0011b ́ -> ±2g range
-	range_4g  = Bit2 | Bit0, //  ́0101b ́ -> ±4g range
-	range_8g  = Bit3,        //  ́1000b ́ -> ±8g range
-	range_16g = Bit3 | Bit2, //  ́1100b ́ -> ±16g range
+// RATE_HBW
+enum RATE_HBW_BIT : uint8_t {
+	data_high_bw = Bit7, //  1 -> unfiltered
+};
+
+// INT_EN_0
+enum INT_EN_0_BIT : uint8_t {
+	data_en = Bit7,
+	fifo_en = Bit6,
 };
 
 // INT_EN_1
 enum INT_EN_1_BIT : uint8_t {
-	int_fwm_en   = Bit6,
-	int_ffull_en = Bit5,
-	data_en      = Bit4,
+	int1_od  = Bit1,
+	int1_lvl = Bit0,
 };
 
 // INT_MAP_1
 enum INT_MAP_1_BIT : uint8_t {
-	int2_data  = Bit7,
-	int2_fwm   = Bit6,
-	int2_ffull = Bit5,
-
-	int1_ffull = Bit2,
-	int1_fwm   = Bit1,
-	int1_data  = Bit0,
+	int1_fifo = Bit2,
+	int1_data = Bit0,
 };
 
-// INT_OUT_CTRL
-enum INT_OUT_CTRL_BIT : uint8_t {
-	int1_od  = Bit1,
-	int1_lvl = Bit0,
+// FIFO_WM_ENABLE
+enum FIFO_WM_ENABLE_BIT : uint8_t {
+	fifo_wm_enable  = Bit7,
+};
+
+// FIFO_CONFIG_0
+enum FIFO_CONFIG_0_BIT : uint8_t {
+	tag = Bit7,
 };
 
 // FIFO_CONFIG_1
 enum FIFO_CONFIG_1_BIT : uint8_t {
 	fifo_mode = Bit6,
+	fifo_mode_stream = Bit7,
 };
 
 namespace FIFO
 {
 struct DATA {
-	uint8_t ACCD_X_LSB;
-	uint8_t ACCD_X_MSB;
-	uint8_t ACCD_Y_LSB;
-	uint8_t ACCD_Y_MSB;
-	uint8_t ACCD_Z_LSB;
-	uint8_t ACCD_Z_MSB;
+	uint8_t RATE_X_LSB;
+	uint8_t RATE_X_MSB;
+	uint8_t RATE_Y_LSB;
+	uint8_t RATE_Y_MSB;
+	uint8_t RATE_Z_LSB;
+	uint8_t RATE_Z_MSB;
 };
 static_assert(sizeof(DATA) == 6);
 
-static constexpr size_t SIZE = sizeof(DATA) * 32; // up to 32 frames of accelerometer data
-
+// 100 frames of data in FIFO mode
+static constexpr size_t SIZE = sizeof(DATA) * 100;
 
 } // namespace FIFO
-} // namespace Bosch::BMI055::Accelerometer
+} // namespace Bosch::BMI055::Gyroscope

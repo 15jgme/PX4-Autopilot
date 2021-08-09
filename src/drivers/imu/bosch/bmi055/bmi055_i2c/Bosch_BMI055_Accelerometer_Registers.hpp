@@ -47,20 +47,37 @@ static constexpr uint8_t Bit6 = (1 << 6);
 static constexpr uint8_t Bit7 = (1 << 7);
 
 static constexpr uint32_t SPI_SPEED = 10 * 1000 * 1000; // 10MHz SPI serial interface
+
+
+static constexpr uint32_t I2C_400_SPEED = 400 * 1000; // 400kHz I2C interface
+static constexpr uint32_t I2C_200_SPEED = 200 * 1000; // 200kHz I2C interface
+static constexpr uint32_t I2C_100_SPEED = 100 * 1000; // 100kHz I2C interface
+
 static constexpr uint8_t DIR_READ = 0x80;
+
+static constexpr uint8_t ID = 0x1E;
+
+static constexpr uint8_t ACC_I2C_ADDR_PRIMARY = 0x18;
+static constexpr uint8_t ACC_I2C_ADDR_SECONDARY = 0x19;
 
 static constexpr uint8_t chip_id = 0b11111010;
 
 enum class Register : uint8_t {
 	BGW_CHIPID    = 0x00,
+	ACC_ERR_REG   = 0x02,
 
+	ACCD_TEMP     = 0x08,
+	ACC_SOFTRESET      = 0x14,
+	ACC_PWR_CTRL       = 0x7D,
+	ACC_CHIP_ID        = 0x00,
+	ACC_PWR_CONF       = 0x7C,
+	ACC_RANGE          = 0x41,
+	ACC_CONF           = 0x40,
+
+	INT_STATUS_1  = 0x0A,
 
 	FIFO_LENGTH_0      = 0x24,
 	FIFO_LENGTH_1      = 0x25,
-
-	ACCD_TEMP     = 0x08,
-
-	INT_STATUS_1  = 0x0A,
 
 	FIFO_STATUS   = 0x0E,
 	PMU_RANGE     = 0x0F,
@@ -74,10 +91,15 @@ enum class Register : uint8_t {
 
 	INT_OUT_CTRL  = 0x20,
 
-	FIFO_CONFIG_0 = 0x30,
+	FIFO_DOWN_SAMPLING = 0x45,
 
+	FIFO_CONFIG_0 = 0x30,
 	FIFO_CONFIG_1 = 0x3E,
 	FIFO_DATA     = 0x3F,
+	ACC_SELF_TEST      = 0x32,
+	ACC_I2C_ADDR_PRIMARY_REG = 0x6D,
+	ACC_I2C_ADDR_SECONDARY_REG = 0x19,
+	ACC_READ = 0x02
 };
 
 // INT_STATUS_1
@@ -150,6 +172,25 @@ static_assert(sizeof(DATA) == 6);
 
 static constexpr size_t SIZE = sizeof(DATA) * 32; // up to 32 frames of accelerometer data
 
+
+enum header : uint8_t {
+	sensor_data_frame       = 0b10000100,
+	skip_frame              = 0b01000000,
+	sensor_time_frame       = 0b01000100,
+	FIFO_input_config_frame = 0b01001000,
+	sample_drop_frame       = 0b01010000,
+};
+
+struct bmi05x_sensor_data {
+	/*! X-axis sensor data */
+	int16_t x;
+
+	/*! Y-axis sensor data */
+	int16_t y;
+
+	/*! Z-axis sensor data */
+	int16_t z;
+};
 
 } // namespace FIFO
 } // namespace Bosch::BMI055::Accelerometer
