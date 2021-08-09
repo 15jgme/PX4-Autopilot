@@ -121,7 +121,7 @@ private:
 		{ Register::INT_MAP_1,         INT_MAP_1_BIT::int1_fifo, 0 },
 		{ Register::FIFO_WM_ENABLE,    FIFO_WM_ENABLE_BIT::fifo_wm_enable, 0 },
 		{ Register::FIFO_CONFIG_0,     0, FIFO_CONFIG_0_BIT::tag }, // fifo_water_mark_level_trigger_retain<6:0>
-		{ Register::FIFO_CONFIG_1,     FIFO_CONFIG_1_BIT::FIFO_MODE_STREAM, 0 },
+		{ Register::FIFO_CONFIG_1,     FIFO_CONFIG_1_BIT::fifo_mode_stream, 0 },
 	};
 };
 

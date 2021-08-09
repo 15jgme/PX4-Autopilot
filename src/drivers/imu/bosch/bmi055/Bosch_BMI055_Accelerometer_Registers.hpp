@@ -54,6 +54,10 @@ static constexpr uint8_t chip_id = 0b11111010;
 enum class Register : uint8_t {
 	BGW_CHIPID    = 0x00,
 
+
+	FIFO_LENGTH_0      = 0x24,
+	FIFO_LENGTH_1      = 0x25,
+
 	ACCD_TEMP     = 0x08,
 
 	INT_STATUS_1  = 0x0A,
@@ -145,6 +149,7 @@ struct DATA {
 static_assert(sizeof(DATA) == 6);
 
 static constexpr size_t SIZE = sizeof(DATA) * 32; // up to 32 frames of accelerometer data
+
 
 } // namespace FIFO
 } // namespace Bosch::BMI055::Accelerometer

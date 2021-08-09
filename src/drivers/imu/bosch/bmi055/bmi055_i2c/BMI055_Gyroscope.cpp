@@ -168,7 +168,8 @@ void BMI055_Gyroscope::RunImpl()
 		break;
 
 	case STATE::FIFO_READ: {
-		SimpleFIFORead(now);
+		// SimpleFIFORead(now);
+		NormalRead(now);
 		}
 
 		break;
@@ -178,6 +179,7 @@ void BMI055_Gyroscope::RunImpl()
 void BMI055_Gyroscope::ConfigureGyro()
 {
 	const uint8_t RANGE = RegisterRead(Register::RANGE) & (Bit3 | Bit2 | Bit1 | Bit0);
+
 
 	switch (RANGE) {
 	case gyro_range_2000_dps:
@@ -390,7 +392,7 @@ void BMI055_Gyroscope::FIFOReset()
 		}
 	}
 }
-bool BMI088_Gyroscope::SelfTest()
+bool BMI055_Gyroscope::SelfTest()
 {
 	//Datasheet page 17 self test
 
@@ -420,7 +422,7 @@ bool BMI088_Gyroscope::SelfTest()
 	return test_res;
 }
 
-bool BMI088_Gyroscope::NormalRead(const hrt_abstime &timestamp_sample)
+bool BMI055_Gyroscope::NormalRead(const hrt_abstime &timestamp_sample)
 {
 	float x = 0;
 	float y = 0;
@@ -452,7 +454,7 @@ bool BMI088_Gyroscope::NormalRead(const hrt_abstime &timestamp_sample)
 	return true;
 }
 
-bool BMI088_Gyroscope::SimpleFIFORead(const hrt_abstime &timestamp_sample)
+bool BMI055_Gyroscope::SimpleFIFORead(const hrt_abstime &timestamp_sample)
 {
 	uint8_t n_frames;
 	sensor_gyro_fifo_s gyro{};

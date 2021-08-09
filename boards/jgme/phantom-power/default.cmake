@@ -16,6 +16,7 @@ px4_add_board(
 		barometer/bmp280
 		gps
 		imu/bosch/bmi055/bmi055_i2c
+		magnetometer/bosch/bmm150
 		pwm_out
 		adc/board_adc #get this working
 		# telemetry

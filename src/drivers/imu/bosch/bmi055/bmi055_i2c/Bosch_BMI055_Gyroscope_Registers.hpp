@@ -133,7 +133,7 @@ enum FIFO_CONFIG_0_BIT : uint8_t {
 // FIFO_CONFIG_1
 enum FIFO_CONFIG_1_BIT : uint8_t {
 	fifo_mode = Bit6,
-	fifo_mode_stream = Bit7;
+	fifo_mode_stream = Bit7,
 };
 
 namespace FIFO

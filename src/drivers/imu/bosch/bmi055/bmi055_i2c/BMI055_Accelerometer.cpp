@@ -116,7 +116,7 @@ void BMI055_Accelerometer::RunImpl()
 	switch (_state) {
 	case STATE::SELFTEST:
 		//PX4_WARN("Selftest state");
-		//SelfTest();
+		SelfTest();
 		_state = STATE::RESET;
 		ScheduleDelayed(10_ms);
 		break;
@@ -184,7 +184,8 @@ void BMI055_Accelerometer::RunImpl()
 		break;
 
 	case STATE::FIFO_READ: {
-			SimpleFIFORead(now);
+			// SimpleFIFORead(now);
+			NormalRead(now);
 		}
 		break;
 	}
@@ -193,6 +194,7 @@ void BMI055_Accelerometer::RunImpl()
 void BMI055_Accelerometer::ConfigureAccel()
 {
 	const uint8_t PMU_RANGE = RegisterRead(Register::PMU_RANGE) & (Bit3 | Bit2 | Bit1 | Bit0);
+	// const uint8_t PMU_RANGE = range_16g;//, Bit1 | Bit0;
 
 	switch (PMU_RANGE) {
 	case range_2g:
@@ -679,7 +681,7 @@ float *BMI055_Accelerometer::ReadAccelData()
 float *BMI055_Accelerometer::ReadAccelDataFIFO()
 {
 	float *accel_mg = new float[3];
-	struct FIFO::bmi08x_sensor_data bmi08x_accel;
+	struct FIFO::bmi05x_sensor_data bmi05x_accel;
 	uint8_t buffer[50] = {0};
 
 	PX4_WARN("FIFO mode is stop-at-full");
@@ -729,20 +731,20 @@ float *BMI055_Accelerometer::ReadAccelDataFIFO()
 	uint8_t custom_size = 42;
 	uint8_t buffer_data[custom_size] = {0};
 	buffer[0] = static_cast<uint8_t>(Register::FIFO_DATA);
-	bmi08x_accel.x = 10;
-	PX4_WARN("bmi08x_accel %d", bmi08x_accel.x);
+	bmi05x_accel.x = 10;
+	PX4_WARN("bmi05x_accel %d", bmi05x_accel.x);
 	transfer(&buffer[0], 1, &buffer_data[0], custom_size);
 
 	/* This is a super-simple FIFO parsing loop, hoping it will only find valid accel data packets */
 	for (int i = 1; i < custom_size;) {
 		/* Header of acceleration sensor data frame: 100001xxb, where x is INT1/INT2 tag, ignored here */
 		if (buffer_data[i] == (0x84 & 0x8c)) {
-			UnpackSensorData(&bmi08x_accel, &buffer_data[i + 1]);
-			PX4_WARN("Frame: %03d ax:%f ay:%f az:%f", i / 6, (double)bmi08x_accel.x, (double)bmi08x_accel.y,
-				 (double)bmi08x_accel.z);
-			accel_mg[0] = bmi08x_accel.x;
-			accel_mg[1] = bmi08x_accel.y;
-			accel_mg[2] = bmi08x_accel.z;
+			UnpackSensorData(&bmi05x_accel, &buffer_data[i + 1]);
+			PX4_WARN("Frame: %03d ax:%f ay:%f az:%f", i / 6, (double)bmi05x_accel.x, (double)bmi05x_accel.y,
+				 (double)bmi05x_accel.z);
+			accel_mg[0] = bmi05x_accel.x;
+			accel_mg[1] = bmi05x_accel.y;
+			accel_mg[2] = bmi05x_accel.z;
 			float *data_in_mg = SensorDataTomg(accel_mg);
 			PX4_WARN("Frame mg: %03d ax:%f ay:%f az:%f", i / 6, (double)data_in_mg[0], (double)data_in_mg[1],
 				 (double)data_in_mg[2]);
@@ -761,7 +763,7 @@ uint8_t  BMI055_Accelerometer::CheckSensorErrReg()
 	return RegisterRead(Register::ACC_ERR_REG);
 }
 
-void BMI055_Accelerometer::UnpackSensorData(struct FIFO::bmi08x_sensor_data *sens_data, uint8_t *buffer)
+void BMI055_Accelerometer::UnpackSensorData(struct FIFO::bmi05x_sensor_data *sens_data, uint8_t *buffer)
 {
 	uint16_t data_lsb;
 	uint16_t data_msb;
@@ -790,9 +792,9 @@ float *BMI055_Accelerometer::SensorDataTomg(float *data)
 
 bool BMI055_Accelerometer::NormalRead(const hrt_abstime &timestamp_sample)
 {
-	const int16_t tX[3] = {1, 0, 0};
-	const int16_t tY[3] = {0, -1, 0};
-	const int16_t tZ[3] = {0, 0, -1};
+	// const int16_t tX[3] = {1, 0, 0};
+	// const int16_t tY[3] = {0, -1, 0};
+	// const int16_t tZ[3] = {0, 0, -1};
 
 	float x = 0;
 	float y = 0;
@@ -817,11 +819,15 @@ bool BMI055_Accelerometer::NormalRead(const hrt_abstime &timestamp_sample)
 
 	// sensor's frame is +x forward, +y left, +z up
 	//  flip y & z to publish right handed with z down (x forward, y right, z down)
-	x = accel_x * tX[0] + accel_y * tX[1] + accel_z * tX[2];
-	y = accel_x * tY[0] + accel_y * tY[1] + accel_z * tY[2];
-	z = accel_x * tZ[0] + accel_y * tZ[1] + accel_z * tZ[2];
+	// x = accel_x * tX[0] + accel_y * tX[1] + accel_z * tX[2];
+	// y = accel_x * tY[0] + accel_y * tY[1] + accel_z * tY[2];
+	// z = accel_x * tZ[0] + accel_y * tZ[1] + accel_z * tZ[2];
 
-	//PX4_WARN("x: %f | y: %f | z: %f", (double)x, (double)y ,(double)z);
+	x = (int16_t)((float)accel_x * 0.0641964f);
+	y = (int16_t)((float)accel_y * 0.0641964f);
+	z = (int16_t)((float)accel_z * 0.0641964f);
+
+	// PX4_WARN("x: %f | y: %f | z: %f", (double)x, (double)y ,(double)z);
 	_px4_accel.update(timestamp_sample, x, y, z);
 
 	return true;
