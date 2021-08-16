@@ -241,6 +241,11 @@ private:
 	float fv2{0.0f};
 	bool verbose{false};
 
+	float pos_x_final = 0;
+	float pos_y_final = 0;
+	float vel_x_final = 0;
+	float vel_y_final = 0;
+
 	//Additional thrust
 	bool thrust_add_flag{false};
 	float T_add{0.0f};

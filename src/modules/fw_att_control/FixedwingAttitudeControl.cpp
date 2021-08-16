@@ -1443,16 +1443,27 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	// float KiY = 0.25f*0.0008f;
 	// float KiZ = 0.25f*0.0004f;
 
-	// /* --- SITL --- */
-	float KpX = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) ) ;
-	float KpY = 1.25f *  0.54f / ( (1.0f*0.8f*0.8f) ) ;
-	float KpZ = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) * 1.2f) ;
-	float KdX = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
-	float KdY = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
-	float KdZ = 0.168f / (1.0f*0.8f*0.8f*(1.2f));
+	/* --- Real life 2--- */
+	float KpX = 0.243f;
+	float KpY = 0.243f;
+	float KpZ = 1.89f;
+	float KdX = 0.1323f;
+	float KdY = 0.1323f;
+	float KdZ = 0.06615f;
 	float KiX = 0.25f*0.0008f;
 	float KiY = 0.25f*0.0008f;
 	float KiZ = 0.25f*0.0004f;
+
+	// /* --- SITL --- */
+	// float KpX = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) ) ;
+	// float KpY = 1.25f *  0.54f / ( (1.0f*0.8f*0.8f) ) ;
+	// float KpZ = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) * 1.2f) ;
+	// float KdX = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
+	// float KdY = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
+	// float KdZ = 0.168f / (1.0f*0.8f*0.8f*(1.2f));
+	// float KiX = 0.25f*0.0008f;
+	// float KiY = 0.25f*0.0008f;
+	// float KiZ = 0.25f*0.0004f;
 
 	/* --- ⛽ integral gains --- */
 	KiX *= 0.0f;
@@ -1460,15 +1471,15 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	KiZ *= 0.0f;
 
 	// Added roll gains
-	// float k_roll_p = 35*0.005f*4.32f;
-	// float k_roll_y = 0.5f*0.7f*0.02f*0.4f;
-	// float max_roll = 30.0f;
+	float k_roll_p = 35*0.005f*4.32f;
+	float k_roll_y = 0.5f*0.7f*0.02f*0.4f;
+	float max_roll = 30.0f;
 	// float k_roll_i = 0.0f*0.01f;
 
 	// Added roll gains SITL!
-	float k_roll_p = 4.32f;//0.45f*4.32f;
-	float k_roll_y = 0.2f;
-	float max_roll = 30.0f;
+	// float k_roll_p = 4.32f;//0.45f*4.32f;
+	// float k_roll_y = 0.2f;
+	// float max_roll = 30.0f;
 
 
 
@@ -1484,7 +1495,7 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	// Call JUAN Maneuver generator. This assigns a position setpoint.
 
 	// NOTE!!!!!!!!!!! Check Qground disarm parameters!!!!!!
-	 JUAN_reference_generator(6); //3 == zigzag
+	 JUAN_reference_generator(4); //3 == zigzag
 
 	// Control law
 	float _error_pos_x = _pos_x_ref-_pos_x_est;
@@ -1500,8 +1511,8 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	_error_z_int = _error_z_int + _error_pos_z*_delta_time_attitude;
 
 	// Nose vector
-	float Fv1 = 1.0f*0.8f*0.8f*(_acc_x_ref + 1.3f*KdX * _error_vel_x + KpX * _error_pos_x + 0.5f*KiX * _error_x_int);
-	float Fv2 = 1.0f*0.8f*0.8f*(_acc_y_ref + 1.3f*KdY * _error_vel_y + KpY * _error_pos_y + 0.5f*KiY * _error_y_int);
+	float Fv1 = 1.0f*0.8f*0.8f*(1.3f*KdX * _error_vel_x + KpX * _error_pos_x + 0.5f*KiX * _error_x_int);
+	float Fv2 = 1.0f*0.8f*0.8f*(1.3f*KdY * _error_vel_y + KpY * _error_pos_y + 0.5f*KiY * _error_y_int);
 	float Fv3 = 1.0f*0.8f*0.8f*(1.2f*KdZ * _error_vel_z + 1.2f*KpZ * _error_pos_z + 0.3f*KiZ * _error_z_int) - 0.4f*_gravity_const;
 	float _norm_F = sqrtf(Fv1*Fv1+Fv2*Fv2+Fv3*Fv3);
 	fv1 = Fv1/_norm_F;
@@ -1836,9 +1847,9 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 		float t_man = _time_elapsed;
 		float Vel_track1 = 10.0f;
 		// float Vel_track1 = _initial_vxy;
-		float t_switch_ff = 40.0f;
+		float t_switch_ff = 7.0f;
 
-		if(t_man < t_switch_ff){ feedforward_flag = false; }
+		if(t_man < t_switch_ff){ feedforward_flag = true; }
 		else { feedforward_flag = false; if(!exitMsgSent){{PX4_INFO("Switching to no-feedforward"); exitMsgSent = true;}}}
 
 		_vel_x_ref = Vel_track1*cosf(_initial_heading);
@@ -1949,7 +1960,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 		float delX = _x_zero - _pos_x_exit;
 		float delY = _y_zero - _pos_y_exit;
 
-		float maxRot = 6; // maximum number of revolutions
+		float maxRot = 2.0f; // maximum number of revolutions
 		float t_man = _time_elapsed;
 
 		float theta_0 = atan2f(delY, delX) + PI_f;
@@ -1957,10 +1968,6 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 		if(!PX4_ISFINITE(theta_0)){theta_0 = 0.0f; PX4_INFO("Non finite theta_0, using 0 instead");}
 
 		// float V_i = 10.0f;
-
-
-		float pos_x_final = 0;
-		float pos_y_final = 0;
 
 		if(t_man < t_runup)
 		{
@@ -2021,8 +2028,11 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 				t_last = t_man;
 				pos_x_final = _pos_x_ref;
 				pos_y_final = _pos_y_ref;
+				vel_x_final = _vel_x_ref;
+				vel_y_final = _vel_y_ref;
 			}
 			else { //Go into hover
+				// PX4_INFO("DONE!");
 				completeFlag = true;
 				if(!exitMsgSent)
 				{
@@ -2031,16 +2041,16 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 				}
 
 				/* ---- just keep swimming ---- */
-				_vel_x_ref = V_n*sinf(theta_i);
-				_vel_y_ref = -V_n*cosf(theta_i);
+				_vel_x_ref = vel_x_final;
+				_vel_y_ref = vel_y_final;
 				_vel_z_ref = 0.0f;
 
-				_pos_x_ref = pos_x_final + V_n*cosf(theta_i)*(t_man - t_last); //need some t_end for this
-				_pos_y_ref = pos_y_final + V_n*sinf(theta_i)*(t_man - t_last);
+				_pos_x_ref = pos_x_final + vel_x_final*(t_man - t_last); //need some t_end for this
+				_pos_y_ref = pos_y_final + vel_y_final*(t_man - t_last);
 				_pos_z_ref = _pos_z_initial;
 
 				/* ---- reset feedforward stuff ---- */
-				feedforward_flag = true;
+				feedforward_flag = false;
 				// _juan_att_var.feedforward_on = true;
 			}
 		}
