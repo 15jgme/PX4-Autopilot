@@ -72,6 +72,7 @@
 #include <uORB/topics/vehicle_local_position.h> //JUAN
 #include <uORB/topics/wind.h> //JACKSON
 #include <uORB/topics/airspeed.h> //JACKSON
+#include <uORB/topics/jackson_debug_variables.h> //JACKSON
 
 
 using matrix::Eulerf;
@@ -122,6 +123,7 @@ private:
 	//JUAN
 	uORB::Subscription _vehicle_local_position_setpoint_sub{ORB_ID(vehicle_local_position_setpoint)};
 	uORB::Subscription _juan_attitude_variables_sub{ORB_ID(juan_attitude_variables)}; //JUAN
+	uORB::Subscription _jackson_debug_variables_sub{ORB_ID(jackson_debug_variables)}; //JACKSON
 
 	uORB::SubscriptionData<airspeed_s> _airspeed_sub{ORB_ID(airspeed)};
 
@@ -131,6 +133,7 @@ private:
 	// JUAN
 	uORB::Publication<vehicle_local_position_setpoint_s>	_local_pos_sp_pub{ORB_ID(vehicle_local_position_setpoint)};
 	uORB::Publication<juan_attitude_variables_s>	_juan_attitude_variables_pub{ORB_ID(juan_attitude_variables)}; //JUAN
+	uORB::Publication<jackson_debug_variables_s> _jackson_debug_variables_pub{ORB_ID(jackson_debug_variables)}; //JACKSON
 
 	uORB::SubscriptionData<airspeed_validated_s> _airspeed_validated_sub{ORB_ID(airspeed_validated)};
 
@@ -147,6 +150,7 @@ private:
 
 	//JACKSON
 	wind_s				_wind {};		/**< wind */
+	jackson_debug_variables_s 	_jackson_dbg_var{};	//debugging variables. Not published if verbose flag is false
 
 	//JUAN
 	vehicle_local_position_setpoint_s _local_pos_sp{}; 		//local position setpoint
@@ -226,7 +230,7 @@ private:
 	matrix::Vector3f _alpha_reference_body;
 	float _global_jar;
 
-	/* ------ Jackson's stuff -----*/
+	/* ------ start of Jackson's stuff -----*/
 	float t_last = 0.0f;
 
 	float t_last_vertex{0.0f};
@@ -235,9 +239,10 @@ private:
 	float _acc_y_ref{0.0f};
 	float fv1{0.0f};
 	float fv2{0.0f};
+	bool verbose{false};
 
 	//Additional thrust
-	bool thrust_add_flag{true};
+	bool thrust_add_flag{false};
 	float T_add{0.0f};
 
 	float _pos_x_last_vtx{0.0f}; //Positions of last vertex reletive to _pos_init
@@ -254,6 +259,8 @@ private:
 
 	bool feedforward_flag = false; //If true wind feedforward on position is enabled
 	bool longTurn = true;
+	bool lockHeadingFlag = false;
+	/* ------ end of Jackson's stuff -----*/
 
 	DEFINE_PARAMETERS(
 		(ParamFloat<px4::params::FW_ACRO_X_MAX>) _param_fw_acro_x_max,

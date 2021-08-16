@@ -599,8 +599,16 @@ void FixedwingAttitudeControl::Run()
 				_previous_yaw = euler_angles.psi();
 				longTurn = true; //start off with a long turn
 				// _initial_heading = _previous_yaw;
-				_initial_heading = PI_f/2.0f;// *
-				// _initial_heading = atan2f(_local_pos.vy, _local_pos.vx); //Use velocity direction instead
+
+				if(lockHeadingFlag)
+				{
+					_initial_heading = PI_f/2.0f;
+				}
+				else
+				{
+					_initial_heading = atan2f(_local_pos.vy, _local_pos.vx); //Use velocity direction instead
+				}
+
 				_initial_vxy = sqrtf(_local_pos.vy * _local_pos.vy + _local_pos.vx * _local_pos.vx);
 				_previous_time = hrt_absolute_time() / 1e6;
 				_time_elapsed = 0.0f;
@@ -855,15 +863,18 @@ void FixedwingAttitudeControl::Run()
 					C_ri = R_roll * C_ri_pos.transpose();
 					// C_ri = C_ri_pos.transpose();
 
-					_juan_att_var.c_ri_pre_ff[0] =  C_ri(0, 0);
-					_juan_att_var.c_ri_pre_ff[1] =  C_ri(0, 1);
-					_juan_att_var.c_ri_pre_ff[2] =  C_ri(0, 2);
-					_juan_att_var.c_ri_pre_ff[3] =  C_ri(1, 0);
-					_juan_att_var.c_ri_pre_ff[4] =  C_ri(1, 1);
-					_juan_att_var.c_ri_pre_ff[5] =  C_ri(1, 2);
-					_juan_att_var.c_ri_pre_ff[6] =  C_ri(2, 0);
-					_juan_att_var.c_ri_pre_ff[7] =  C_ri(2, 1);
-					_juan_att_var.c_ri_pre_ff[8] =  C_ri(2, 2);
+					if(verbose)
+					{
+						_jackson_dbg_var.c_ri_pre_ff[0] =  C_ri(0, 0);
+						_jackson_dbg_var.c_ri_pre_ff[1] =  C_ri(0, 1);
+						_jackson_dbg_var.c_ri_pre_ff[2] =  C_ri(0, 2);
+						_jackson_dbg_var.c_ri_pre_ff[3] =  C_ri(1, 0);
+						_jackson_dbg_var.c_ri_pre_ff[4] =  C_ri(1, 1);
+						_jackson_dbg_var.c_ri_pre_ff[5] =  C_ri(1, 2);
+						_jackson_dbg_var.c_ri_pre_ff[6] =  C_ri(2, 0);
+						_jackson_dbg_var.c_ri_pre_ff[7] =  C_ri(2, 1);
+						_jackson_dbg_var.c_ri_pre_ff[8] =  C_ri(2, 2);
+					}
 
 					if (feedforward_flag) {
 						wind_estimate_poll(); //update estimate
@@ -975,30 +986,30 @@ void FixedwingAttitudeControl::Run()
 				/*..................................................................*/
 
 				/*................Attitude controller gains.........................*/
-				// float Kad1 = 0.8f * 0.00706f;
-				// float Kad2 = 0.5f * 0.07576f;
-				// float Kad3 = 0.7f * 0.07736f;
+				float Kad1 = 0.8f * 0.00706f;
+				float Kad2 = 0.5f * 0.07576f;
+				float Kad3 = 0.7f * 0.07736f;
 
-				// float Kap1 = 1.0f * 0.1656f;
-				// float Kap2 = 1.0f * 1.022f;
-				// float Kap3 = 1.0f * 0.6776f;
-
-				// float Kai1 = 0.0f * 0.8f * 0.1656f;
-				// float Kai2 = 0.0f * 0.8f * 1.022f;
-				// float Kai3 = 0.0f * 0.8f * 0.6776f;
-				/*..................................................................*/
-				/*................Attitude controller gains SITL!.........................*/
-				float Kad1 = 0.15f * 4.54f * 0.22f * 0.0706f / (0.7f);
-				float Kad2 = 0.17f *4.54f * 0.22f * 0.6376f / (0.8f);
-				float Kad3 = 0.2f *4.54f * 0.22f * 0.7736f / (0.8f);
-
-				float Kap1 = 0.27f *4.54f * 0.22f * 0.7099f / (0.8f);
-				float Kap2 = 0.22f *4.54f * 0.22f * 0.35f * 25.5359f / (1.0f);
-				float Kap3 = 0.3f *4.54f * 0.22f * 0.35f * 38.7187f / (0.8f);
+				float Kap1 = 1.0f * 0.1656f;
+				float Kap2 = 1.0f * 1.022f;
+				float Kap3 = 1.0f * 0.6776f;
 
 				float Kai1 = 0.0f * 0.8f * 0.1656f;
 				float Kai2 = 0.0f * 0.8f * 1.022f;
 				float Kai3 = 0.0f * 0.8f * 0.6776f;
+				/*..................................................................*/
+				/*................Attitude controller gains SITL!.........................*/
+				// float Kad1 = 0.15f * 4.54f * 0.22f * 0.0706f / (0.7f);
+				// float Kad2 = 0.17f *4.54f * 0.22f * 0.6376f / (0.8f);
+				// float Kad3 = 0.2f *4.54f * 0.22f * 0.7736f / (0.8f);
+
+				// float Kap1 = 0.27f *4.54f * 0.22f * 0.7099f / (0.8f);
+				// float Kap2 = 0.22f *4.54f * 0.22f * 0.35f * 25.5359f / (1.0f);
+				// float Kap3 = 0.3f *4.54f * 0.22f * 0.35f * 38.7187f / (0.8f);
+
+				// float Kai1 = 0.0f * 0.8f * 0.1656f;
+				// float Kai2 = 0.0f * 0.8f * 1.022f;
+				// float Kai3 = 0.0f * 0.8f * 0.6776f;
 				/*..................................................................*/
 
 				/* Integral errors */
@@ -1241,6 +1252,7 @@ void FixedwingAttitudeControl::Run()
 
 
 				_juan_attitude_variables_pub.publish(_juan_att_var);
+				_jackson_debug_variables_pub.publish(_jackson_dbg_var);
 				/*..................................................................*/
 
 				/*............... JUAN attitude control ends here.................... */
@@ -1431,7 +1443,7 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	// float KiY = 0.25f*0.0008f;
 	// float KiZ = 0.25f*0.0004f;
 
-	/* --- SITL --- */
+	// /* --- SITL --- */
 	float KpX = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) ) ;
 	float KpY = 1.25f *  0.54f / ( (1.0f*0.8f*0.8f) ) ;
 	float KpZ = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) * 1.2f) ;
@@ -1456,7 +1468,7 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	// Added roll gains SITL!
 	float k_roll_p = 4.32f;//0.45f*4.32f;
 	float k_roll_y = 0.2f;
-	float max_roll = 40.0f;
+	float max_roll = 30.0f;
 
 
 
@@ -1527,13 +1539,14 @@ void FixedwingAttitudeControl::JUAN_position_control()
 
 				// float Ye = -sinf(psi)*(_pos_x_ref - _local_pos.x) + cosf(psi)*(_pos_y_ref - _local_pos.y); old
 
-				_juan_att_var.psi = psi;
+				if(verbose){_jackson_dbg_var.psi = psi;}
 				float Ye = -sinf(psi)*(_pos_y_ref - _local_pos.y) + cosf(psi)*(_pos_x_ref - _local_pos.x); //new
 				float psi_c = k_roll_y * Ye;
 
 				// PX4_INFO("psi: %f , psi_c: %f, Ye: %f", (double)psi, (double)psi_c, (double)Ye);
 
-				_juan_att_var.psi_c_b4 = psi_c;
+				if(verbose){_jackson_dbg_var.psi_c_b4 = psi_c;}
+
 
 				/* ----- UNWRAP ----- */
 				if (psi_c < -PI_f)
@@ -1545,7 +1558,7 @@ void FixedwingAttitudeControl::JUAN_position_control()
 					psi_c = psi_c - 2.0f*PI_f;
 				}
 
-				_juan_att_var.psi_c = psi_c;
+				if(verbose){_jackson_dbg_var.psi_c = psi_c;}
 
 				float roll_com = (0.5f*k_roll_p*psi_c);
 				if (roll_com >= 0.0f)
@@ -1601,17 +1614,18 @@ void FixedwingAttitudeControl::JUAN_position_control()
 				matrix::Dcmf R_roll_temp(Bldr_Matrix_cri_2);
 				R_roll = R_roll_temp;//.transpose(); //comes out flipped
 
-
-				_juan_att_var.r_roll_rows[0] =  R_roll(0,0);
-				_juan_att_var.r_roll_rows[1] =  R_roll(0,1);
-				_juan_att_var.r_roll_rows[2] =  R_roll(0,2);
-				_juan_att_var.r_roll_rows[3] =  R_roll(1,0);
-				_juan_att_var.r_roll_rows[4] =  R_roll(1,1);
-				_juan_att_var.r_roll_rows[5] =  R_roll(1,2);
-				_juan_att_var.r_roll_rows[6] =  R_roll(2,0);
-				_juan_att_var.r_roll_rows[7] =  R_roll(2,1);
-				_juan_att_var.r_roll_rows[8] =  R_roll(2,2);
-
+				if(verbose)
+				{
+					_jackson_dbg_var.r_roll_rows[0] =  R_roll(0,0);
+					_jackson_dbg_var.r_roll_rows[1] =  R_roll(0,1);
+					_jackson_dbg_var.r_roll_rows[2] =  R_roll(0,2);
+					_jackson_dbg_var.r_roll_rows[3] =  R_roll(1,0);
+					_jackson_dbg_var.r_roll_rows[4] =  R_roll(1,1);
+					_jackson_dbg_var.r_roll_rows[5] =  R_roll(1,2);
+					_jackson_dbg_var.r_roll_rows[6] =  R_roll(2,0);
+					_jackson_dbg_var.r_roll_rows[7] =  R_roll(2,1);
+					_jackson_dbg_var.r_roll_rows[8] =  R_roll(2,2);
+				}
 
 				C_ri_pos = C_ref_steady;
 	}
@@ -1924,8 +1938,8 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	{
 		float V_n = _initial_vxy;
 		V_n = 10.0f;
-		float radius = 10.0f; //m
-		float t_runup = 10.0f; //sec
+		float radius = 30.0f; //m
+		float t_runup = 4.0f; //sec
 		float discrep = 0.0f; //m
 
 		// Center of circle
@@ -2047,7 +2061,11 @@ float FixedwingAttitudeControl::saturate(float value, float min, float max)
 
 void FixedwingAttitudeControl::wind_ff_rot_update()
 {
+	/* --- SITL GAINS --- */
+	// float KdX = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
+	// float KdY = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
 
+	/* --- Real life gains --- */
 	float KdX = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
 	float KdY = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
 
@@ -2104,10 +2122,8 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 
 	_juan_att_var.crab_angle_ff = asinf(  R_wind(1,0) );
 
-	if(true)//(v_wind_E != 0.0f || v_wind_N != 0.0f) && (v_E != 0.0f || v_N != 0.0f))
-	{
-		_juan_att_var.crab_angle_ff_alt = acosf( (v_N * v_tild_N + v_E * v_tild_E) / ( v_tild_norm * v_norm ) );
-	}
+	if(verbose){_jackson_dbg_var.crab_angle_ff_alt = acosf( (v_N * v_tild_N + v_E * v_tild_E) / ( v_tild_norm * v_norm ) );}
+
 
 	_juan_att_var.r_wind_rows[0] =  R_wind(0,0);
 	_juan_att_var.r_wind_rows[1] =  R_wind(0,1);

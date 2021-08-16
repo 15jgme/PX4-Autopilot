@@ -84,6 +84,7 @@ set(msg_files
 	iridiumsbd_status.msg
 	irlock_report.msg
 	juan_attitude_variables.msg
+	jackson_debug_variables.msg
 	landing_gear.msg
 	landing_target_innovations.msg
 	landing_target_pose.msg

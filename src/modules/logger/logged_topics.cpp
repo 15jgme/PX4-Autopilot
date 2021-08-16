@@ -57,7 +57,7 @@ void LoggedTopics::add_default_topics()
 	add_topic("camera_capture");
 	add_topic("camera_trigger");
 	add_topic("camera_trigger_secondary");
-	add_topic("cellular_status", 200);
+	add_topic("cellular_status", 1000);
 	add_topic("commander_state");
 	add_topic("cpuload");
 	add_topic("esc_status", 250);
@@ -76,8 +76,8 @@ void LoggedTopics::add_default_topics()
 	add_topic("offboard_control_mode", 100);
 	add_topic("onboard_computer_status", 10);
 	add_topic("parameter_update");
-	add_topic("position_controller_status", 500);
-	add_topic("position_setpoint_triplet", 200);
+	add_topic("position_controller_status", 1000);
+	add_topic("position_setpoint_triplet", 1000);
 	add_topic("px4io_status");
 	add_topic("radio_status");
 	add_topic("rpm", 500);
@@ -95,9 +95,9 @@ void LoggedTopics::add_default_topics()
 	add_topic("test_motor", 500);
 	add_topic("trajectory_setpoint", 200);
 	add_topic("transponder_report");
-	add_topic("vehicle_acceleration", 50);
+	add_topic("vehicle_acceleration", 100);
 	add_topic("vehicle_air_data", 200);
-	add_topic("vehicle_angular_velocity", 20);
+	add_topic("vehicle_angular_velocity", 100);
 	add_topic("vehicle_attitude", 50);
 	add_topic("vehicle_attitude_setpoint", 50);
 	add_topic("vehicle_command");
@@ -109,7 +109,7 @@ void LoggedTopics::add_default_topics()
 	add_topic("vehicle_local_position", 100);
 	add_topic("vehicle_local_position_setpoint", 100);
 	add_topic("vehicle_magnetometer", 200);
-	add_topic("vehicle_rates_setpoint", 20);
+	add_topic("vehicle_rates_setpoint", 200);
 	add_topic("vehicle_roi", 1000);
 	add_topic("vehicle_status");
 	add_topic("vehicle_status_flags");
@@ -117,11 +117,11 @@ void LoggedTopics::add_default_topics()
 	add_topic("wind", 1000);
 
 	// Control allocation topics
-	add_topic("vehicle_actuator_setpoint", 20);
-	add_topic("vehicle_angular_acceleration", 20);
-	add_topic("vehicle_angular_acceleration_setpoint", 20);
-	add_topic("vehicle_thrust_setpoint", 20);
-	add_topic("vehicle_torque_setpoint", 20);
+	add_topic("vehicle_actuator_setpoint", 1000);
+	add_topic("vehicle_angular_acceleration", 1000);
+	add_topic("vehicle_angular_acceleration_setpoint", 1000);
+	add_topic("vehicle_thrust_setpoint", 1000);
+	add_topic("vehicle_torque_setpoint", 1000);
 
 	//Juan's topic
 	add_topic("juan_attitude_variables", 100);
