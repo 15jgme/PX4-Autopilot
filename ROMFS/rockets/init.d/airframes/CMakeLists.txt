@@ -33,8 +33,5 @@
 
 px4_add_romfs_files(
 
-	4900_crazyflie
 	4901_crazyflie21
-
-
 )

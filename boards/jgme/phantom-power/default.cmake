@@ -9,9 +9,12 @@ px4_add_board(
 	ARCHITECTURE cortex-m4
 	CONSTRAINED_MEMORY
 	ROMFSROOT rockets
-	# CONSTRAINED_FLASH
+	CONSTRAINED_FLASH
 	SERIAL_PORTS
 		TEL4:/dev/ttyS3
+		TEL1:/dev/ttyS1
+		TEL2:/dev/ttyS2
+		WIFI:/dev/ttyS0
 	DRIVERS
 		barometer/bmp280
 		# gps
@@ -20,6 +23,7 @@ px4_add_board(
 		pwm_out
 		adc/board_adc #get this working
 		telemetry
+		tone_alarm
 	MODULES
 		attitude_estimator_q
 		#camera_feedback
