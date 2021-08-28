@@ -53,6 +53,14 @@ set(msg_files
 	cpuload.msg
 	differential_pressure.msg
 	distance_sensor.msg
+
+	#Added by Jackson
+	debug_array.msg
+	debug_key_value.msg
+	debug_value.msg
+	debug_vect.msg
+	#Added by Jackson
+
 	ekf2_timestamps.msg
 	ekf_gps_drift.msg
 	esc_report.msg

@@ -8,18 +8,18 @@ px4_add_board(
 	TOOLCHAIN arm-none-eabi
 	ARCHITECTURE cortex-m4
 	CONSTRAINED_MEMORY
-	ROMFSROOT px4fmu_common
-	CONSTRAINED_FLASH
-	# SERIAL_PORTS
-	# 	TEL4:/dev/ttyS3
+	ROMFSROOT rockets
+	# CONSTRAINED_FLASH
+	SERIAL_PORTS
+		TEL4:/dev/ttyS3
 	DRIVERS
 		barometer/bmp280
-		gps
+		# gps
 		imu/bosch/bmi055/bmi055_i2c
 		magnetometer/bosch/bmm150
 		pwm_out
 		adc/board_adc #get this working
-		# telemetry
+		telemetry
 	MODULES
 		attitude_estimator_q
 		#camera_feedback

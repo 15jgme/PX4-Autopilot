@@ -161,6 +161,11 @@
 
 #define BOARD_HAS_PWM	DIRECT_PWM_OUTPUT_CHANNELS
 
+
+/* RC Serial port */
+
+#define RC_SERIAL_PORT               "/dev/ttyS3"
+
 #define BOARD_ENABLE_CONSOLE_BUFFER
 #define BOARD_CONSOLE_BUFFER_SIZE (1024*3)
 
