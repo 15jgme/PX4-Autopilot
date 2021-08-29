@@ -7,7 +7,7 @@ px4_add_board(
 	MODEL phantom-power
 	TOOLCHAIN arm-none-eabi
 	ARCHITECTURE cortex-m4
-	CONSTRAINED_MEMORY
+	# CONSTRAINED_MEMORY
 	ROMFSROOT rockets
 	CONSTRAINED_FLASH
 	SERIAL_PORTS
@@ -17,7 +17,6 @@ px4_add_board(
 		WIFI:/dev/ttyS0
 	DRIVERS
 		barometer/bmp280
-		# gps
 		imu/bosch/bmi055/bmi055_i2c
 		imu/bno055
 		magnetometer/bosch/bmm150
@@ -33,7 +32,8 @@ px4_add_board(
 		ekf2
 		events
 		# flight_mode_manager
-		#gyro_fft
+		gyro_calibration
+		gyro_fft
 		land_detector
 		landing_target_estimator
 		load_mon
