@@ -33,7 +33,7 @@
 
 #pragma once
 
-#include <functional>
+// #include <functional> jgme commented out, might be bad
 #include <drivers/device/i2c.h>
 #include <ecl/geo/geo.h>
 #include <lib/conversion/rotation.h>
