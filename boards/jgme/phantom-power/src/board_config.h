@@ -126,7 +126,7 @@
 /* PWM
 */
 
-#define DIRECT_PWM_OUTPUT_CHANNELS	2
+#define DIRECT_PWM_OUTPUT_CHANNELS	4
 
 /* This board overrides the defaults by providing
  * PX4_PWM_ALTERNATE_RANGES and a replacement set of

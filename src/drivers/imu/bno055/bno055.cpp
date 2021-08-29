@@ -33,7 +33,7 @@
 
 #include "bno055.hpp"
 
-using namespace std::placeholders;
+// using namespace std::placeholders;
 
 BNO055::BNO055(I2CSPIBusOption bus_option, int bus, int bus_frequency) :
 	I2C(DRV_IMU_DEVTYPE_BNO055, MODULE_NAME, bus, BNO055_I2C_ADDR1, bus_frequency),
