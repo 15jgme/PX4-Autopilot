@@ -78,11 +78,15 @@
 #define LED_TX 4
 #define LED_RX 5
 
-#define GPIO_FSYNC_MPU9250		(GPIO_OUTPUT|GPIO_PORTC|GPIO_PIN14) // Needs to be set low
-#define GPIO_DRDY_MPU9250		(GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|GPIO_PORTC|GPIO_PIN13)
 
 
 #define GPIO_NRF_TXEN			(GPIO_INPUT|GPIO_PULLUP|GPIO_EXTI|GPIO_PORTA|GPIO_PIN4)
+
+/* Tone alarm output. */
+#define TONE_ALARM_TIMER             3    /* timer 2 */
+#define TONE_ALARM_CHANNEL           2    /* channel 1 */
+#define GPIO_TONE_ALARM_IDLE         (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTC|GPIO_PIN7)
+#define GPIO_TONE_ALARM              (GPIO_ALT|GPIO_AF2|GPIO_SPEED_2MHz|GPIO_PUSHPULL|GPIO_PORTC|GPIO_PIN7)
 
 
 /*
@@ -97,17 +101,13 @@
 #define BOARD_I2C_BUS_CLOCK_INIT {PX4_I2C_BUS_ONBOARD_HZ, 400000, PX4_I2C_BUS_EXPANSION_HZ}
 
 
-/* Devices on the onboard bus.
- *
- * Note that these are unshifted addresses.
- */
-#define PX4_I2C_OBDEV_MPU9250	0x69
+
 
 /* USB OTG FS
  *
  * PA9  OTG_FS_VBUS VBUS sensing
  */
-#define GPIO_OTGFS_VBUS		(GPIO_INPUT|GPIO_FLOAT|GPIO_SPEED_100MHz|GPIO_OPENDRAIN|GPIO_PORTA|GPIO_PIN9)
+#define GPIO_OTGFS_VBUS		(GPIO_INPUT|GPIO_FLOAT|GPIO_SPEED_100MHz|GPIO_OPENDRAIN|GPIO_PORTA|GPIO_PIN3)
 
 /*
  * ADC channels
@@ -122,12 +122,6 @@
 /* Define Battery 1 Voltage Divider and A per V. */
 #define BOARD_BATTERY1_V_DIV         (13.653333333f)
 
-/* Tone alarm output : These are only applicable when the buzzer deck is attached */
-#define TONE_ALARM_TIMER	5	/* timer 5 */
-#define TONE_ALARM_CHANNEL 3	/* channel 3 */
-#define GPIO_TONE_ALARM_IDLE	(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTA|GPIO_PIN2)
-#define GPIO_TONE_ALARM		(GPIO_ALT|GPIO_AF2|GPIO_SPEED_2MHz|GPIO_PUSHPULL|GPIO_PORTA|GPIO_PIN2)
-#define GPIO_TONE_ALARM_NEG (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_OUTPUT_CLEAR|GPIO_PORTA|GPIO_PIN3)
 
 /* PWM
 */
@@ -164,7 +158,7 @@
 
 /* RC Serial port */
 
-#define RC_SERIAL_PORT               "/dev/ttyS3"
+#define RC_SERIAL_PORT               "/dev/ttyS1"
 
 #define BOARD_ENABLE_CONSOLE_BUFFER
 #define BOARD_CONSOLE_BUFFER_SIZE (1024*3)

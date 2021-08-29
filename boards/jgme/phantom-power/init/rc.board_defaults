@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------
 
 # system_power unavailable
-param set-default CBRK_SUPPLY_CHK 894281
+# param set-default CBRK_SUPPLY_CHK 894281
 
 param set-default SYS_AUTOSTART 4901
 
