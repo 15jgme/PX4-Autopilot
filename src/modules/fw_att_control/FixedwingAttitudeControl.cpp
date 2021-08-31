@@ -1196,7 +1196,7 @@ void FixedwingAttitudeControl::Run()
 
 
 
-				_juan_att_var.test_variable = 1.0f;
+				_juan_att_var.test_variable = 2.2f;
 
 
 				// matrix::Eulerf euler_ref(C_ri.transpose());
@@ -1441,11 +1441,11 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	// float KiZ = 0.25f*0.0004f;
 
 	/* --- Real life 2--- */
-	float KpX = 2.0f*3.0f*0.243f;
-	float KpY = 2.0f*3.0f*0.243f;
+	float KpX = 1.0f*3.0f*0.243f;
+	float KpY = 1.0f*3.0f*0.243f;
 	float KpZ = 1.89f;
-	float KdX = 3.0f*0.1323f;
-	float KdY = 3.0f*0.1323f;
+	float KdX = 0.7f*3.0f*0.1323f;
+	float KdY = 0.7f*3.0f*0.1323f;
 	float KdZ = 0.06615f;
 	float KiX = 0.25f*0.0008f;
 	float KiY = 0.25f*0.0008f;
@@ -1474,8 +1474,8 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	// float k_roll_i = 0.0f*0.01f;
 
 	// Added roll gains SITL!
-	float k_roll_p = 4.32f;//0.45f*4.32f;
-	// float k_roll_y = 0.2f;
+	float k_roll_p = 0.3f*4.32f;//0.45f*4.32f;
+	float k_roll_y = 0.2f;
 	float max_roll = 30.0f;
 
 
@@ -1542,44 +1542,44 @@ void FixedwingAttitudeControl::JUAN_position_control()
 			belly_e_old = proj2;
 
 				//OLD/SIMPLE
-				// // float psi = atan2f(_local_pos.vy, _local_pos.vx); old
-				// float psi = atan2f(_local_pos.vx, _local_pos.vy); //new
-				// // float psi = -_local_pos.heading + PI_f/2.0f;
+				// float psi = atan2f(_local_pos.vy, _local_pos.vx); old
+				float psi = atan2f(_local_pos.vx, _local_pos.vy); //new
+				// float psi = -_local_pos.heading + PI_f/2.0f;
 
-				// // float Ye = -sinf(psi)*(_pos_x_ref - _local_pos.x) + cosf(psi)*(_pos_y_ref - _local_pos.y); old
+				// float Ye = -sinf(psi)*(_pos_x_ref - _local_pos.x) + cosf(psi)*(_pos_y_ref - _local_pos.y); old
 
-				// if(verbose){_jackson_dbg_var.psi = psi;}
-				// float Ye = -sinf(psi)*(_pos_y_ref - _local_pos.y) + cosf(psi)*(_pos_x_ref - _local_pos.x); //new
-				// float psi_c = k_roll_y * Ye;
+				if(verbose){_jackson_dbg_var.psi = psi;}
+				float Ye = -sinf(psi)*(_pos_y_ref - _local_pos.y) + cosf(psi)*(_pos_x_ref - _local_pos.x); //new
+				float psi_c = k_roll_y * Ye;
 
-				// // PX4_INFO("psi: %f , psi_c: %f, Ye: %f", (double)psi, (double)psi_c, (double)Ye);
+				// PX4_INFO("psi: %f , psi_c: %f, Ye: %f", (double)psi, (double)psi_c, (double)Ye);
 
-				// if(verbose){_jackson_dbg_var.psi_c_b4 = psi_c;}
+				if(verbose){_jackson_dbg_var.psi_c_b4 = psi_c;}
 				// OLD/SIMPLE
 
 				// NEW/COMPLEX
 
-				float xi = atan2(_local_pos.vx, _local_pos.vy);
-				float Ye = -sinf(xi)*(_pos_y_ref - _local_pos.y) + cosf(xi)*(_pos_x_ref - _local_pos.x);
+				// float xi = atan2(_local_pos.vx, _local_pos.vy);
+				// float Ye = -sinf(xi)*(_pos_y_ref - _local_pos.y) + cosf(xi)*(_pos_x_ref - _local_pos.x);
 
-				// float xir = atan2(_vel_x_ref, _vel_y_ref);
+				// // float xir = atan2(_vel_x_ref, _vel_y_ref);
 
-				float k_cross = 0.2;
-				float k_head = -1;
+				// float k_cross = 0.2;
+				// float k_head = -1;
 
-				// xie = xir - xi + atan(ky*Ye);
+				// // xie = xir - xi + atan(ky*Ye);
 
-				// float e_heading = acos( dot( (Vi(1:2)/norm(Vi(1:2))) , (Vref(1:2)/norm(Vref(1:2))) ) );
+				// // float e_heading = acos( dot( (Vi(1:2)/norm(Vi(1:2))) , (Vref(1:2)/norm(Vref(1:2))) ) );
 
-				float dv12 = _vel_x_ref*_vel_x_est + _vel_y_ref*_vel_y_est;
-				float cv12 = _vel_x_ref*_vel_y_est - _vel_x_est * _vel_y_ref;
+				// float dv12 = _vel_x_ref*_vel_x_est + _vel_y_ref*_vel_y_est;
+				// float cv12 = _vel_x_ref*_vel_y_est - _vel_x_est * _vel_y_ref;
 
-				float e_heading = atan2f(cv12, dv12);
+				// float e_heading = atan2f(cv12, dv12);
 
 
-				// xie = k_head*(xir - xi) + atan(k_cross*Ye);
-				float xie = k_head*(e_heading) + atanf(k_cross*Ye);
-				float psi_c = xie;
+				// // xie = k_head*(xir - xi) + atan(k_cross*Ye);
+				// float xie = k_head*(e_heading) + atanf(k_cross*Ye);
+				// float psi_c = xie;
 				// NEW/COMPLEX
 
 
@@ -1596,6 +1596,9 @@ void FixedwingAttitudeControl::JUAN_position_control()
 				if(verbose){_jackson_dbg_var.psi_c = psi_c;}
 
 				float roll_com = (0.5f*k_roll_p*psi_c);
+
+
+
 				if (roll_com >= 0.0f)
 				{
 					if (roll_com > max_roll*PI_f/180.0f)
@@ -1609,7 +1612,32 @@ void FixedwingAttitudeControl::JUAN_position_control()
 						roll_com = -max_roll*PI_f/180;
 					}
 				}
-				// roll_com = 0.0f;
+
+				// Roll modifier (airspeed based)
+				float Vas = 8.0f; //m/s
+				float Vae = 6.0f; //m/s
+
+				float rollMod = 0.0f;
+
+				if(_airspeed_sub.get().indicated_airspeed_m_s > Vas)
+				{
+
+					rollMod = 0.0f;
+				}
+				else if (_airspeed_sub.get().indicated_airspeed_m_s < Vae)
+				{
+					rollMod = 1.0f;
+				}
+				else
+				{
+					rollMod = (1/(Vas - Vae)) * (Vas - _airspeed_sub.get().indicated_airspeed_m_s);
+					PX4_INFO("%f",(double)rollMod);
+				}
+
+				roll_com *= rollMod;// killed this
+
+				// Roll modifier (airspeed based)
+
 				_juan_att_var.roll_comm = roll_com;
 
 				/* ---- Cri ---- */
@@ -1973,7 +2001,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	{
 		// float V_n = _initial_vxy;
 		float V_n = 10.0f;
-		float radius = 25.0f; //m
+		float radius = 30.0f; //m
 		float t_runup = 6.0f; //sec
 		float discrep = 0.0f; //m
 
@@ -2100,8 +2128,8 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 	// float KdY = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
 
 	/* --- Real life gains --- */
-	float KdX = 3.0f*0.1323f;
-	float KdY = 3.0f*0.1323f;
+	float KdX = 0.7f*3.0f*0.1323f;
+	float KdY = 0.7f*3.0f*0.1323f;
 
 	/* ---- Wind vector ---- */
 	float v_wind_N = _wind.windspeed_north;
@@ -2177,11 +2205,13 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 
 	if(thrust_add_flag)
 	{
-		matrix::Dcmf CriTemp =  C_ri * R_wind; //Temporarity to get rotated nose vector
-		float fv1r = CriTemp(1,1);
-		float fv2r = CriTemp(1,2);
+		// matrix::Dcmf CriTemp =  C_ri * R_wind; //Temporarity to get rotated nose vector
+		// float fv1r = CriTemp(1,1);
+		// float fv2r = CriTemp(1,2);
 
-		T_add =	(fv1r * KdX * (v_tild_N - v_N) + fv2r * KdY * (v_tild_E - v_E));
+		// T_add =	(fv1r * KdX * (v_tild_N - v_N) + fv2r * KdY * (v_tild_E - v_E));
+		T_add =	(fv1 * KdX * (v_tild_N - v_N) + fv2 * KdY * (v_tild_E - v_E));
+		// T_add =	(Fv1 * KdX * (v_tild_N - v_N) + Fv2 * KdY * (v_tild_E - v_E));
 
 
 		if(T_add > 0)
