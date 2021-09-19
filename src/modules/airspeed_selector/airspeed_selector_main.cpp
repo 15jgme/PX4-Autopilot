@@ -91,7 +91,7 @@ private:
 
 	void Run() override;
 
-	static constexpr int MAX_NUM_AIRSPEED_SENSORS = 3; /**< Support max 3 airspeed sensors */
+	static constexpr int MAX_NUM_AIRSPEED_SENSORS = 3; /**< Support max 3 airspeed sensors */ //NOTE COULD SET THIS TO 1
 	enum airspeed_index {
 		DISABLED_INDEX = -1,
 		GROUND_MINUS_WIND_INDEX,
@@ -113,7 +113,7 @@ private:
 	uORB::Subscription _vehicle_local_position_sub{ORB_ID(vehicle_local_position)};
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
 	uORB::Subscription _vtol_vehicle_status_sub{ORB_ID(vtol_vehicle_status)};
-	uORB::Subscription _airspeed_sub[MAX_NUM_AIRSPEED_SENSORS] {{ORB_ID(airspeed), 0}, {ORB_ID(airspeed), 1}, {ORB_ID(airspeed), 2}}; /**< raw airspeed topics subscriptions. */
+	uORB::Subscription _airspeed_sub[MAX_NUM_AIRSPEED_SENSORS] {{ORB_ID(airspeed), 0}, {ORB_ID(airspeed), 1}, {ORB_ID(airspeed), 2}}; /**< raw airspeed topics subscriptions. */ //NOTE COULD JUST PICK ONE OF THESE
 
 	estimator_status_s _estimator_status {};
 	vehicle_acceleration_s _accel {};
@@ -237,7 +237,7 @@ AirspeedModule::init()
 }
 
 void
-AirspeedModule::check_for_connected_airspeed_sensors()
+AirspeedModule::check_for_connected_airspeed_sensors() // Could make sure this only detects a single sensor
 {
 	/* check for new connected airspeed sensor */
 	int detected_airspeed_sensors = 0;
