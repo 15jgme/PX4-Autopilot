@@ -73,6 +73,7 @@ protected:
 	float			_diff_pres_offset;
 
 	uORB::PublicationMulti<differential_pressure_s>	_airspeed_pub{ORB_ID(differential_pressure)};
+	uORB::PublicationMulti<differential_pressure_masm_s>	_airspeed_masm_pub{ORB_ID(differential_pressure_masm)}; // secondary topic for MASM
 
 	int			_airspeed_orb_class_instance;
 

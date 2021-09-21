@@ -182,7 +182,8 @@ SDP3X::collect()
 	report.differential_pressure_raw_pa = diff_press_pa_raw - _diff_pres_offset;
 	report.device_id = _device_id.devid;
 
-	_airspeed_pub.publish(report);
+	// _airspeed_pub.publish(report);
+	_airspeed_masm_pub.publish(report);
 
 	perf_end(_sample_perf);
 

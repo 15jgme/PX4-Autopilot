@@ -162,8 +162,8 @@ void airspeed_slipstream_record::run()
 
 	/* subscribe to diff pressure topic */
 	int sensor_sub_fd[2] = {};
-	sensor_sub_fd[0] = orb_subscribe_multi(ORB_ID(differential_pressure), 0);
-	sensor_sub_fd[1] = orb_subscribe_multi(ORB_ID(differential_pressure), 1);
+	sensor_sub_fd[0] = orb_subscribe_multi(ORB_ID(differential_pressure_masm), 0);
+	sensor_sub_fd[1] = orb_subscribe_multi(ORB_ID(differential_pressure_masm), 1);
 
 	/* subscribe to esc rpm topic */
 	int esc_sub_fd = orb_subscribe(ORB_ID(esc_status));
@@ -279,8 +279,8 @@ void airspeed_slipstream_record::run()
 			orb_copy(ORB_ID(rc_channels), rc_sub_fd, &rc_chan);
 			if((int)rc_chan.channels[7] == 1)// || true)	//RECORD!
 			{
-				orb_copy(ORB_ID(differential_pressure), sensor_sub_fd[0], &diff_pres_A);
-				orb_copy(ORB_ID(differential_pressure), sensor_sub_fd[1], &diff_pres_B);
+				orb_copy(ORB_ID(differential_pressure_masm), sensor_sub_fd[0], &diff_pres_A);
+				orb_copy(ORB_ID(differential_pressure_masm), sensor_sub_fd[1], &diff_pres_B);
 
 				/* --------------------- Sensor 1 assignment --------------------*/
 				if(diff_pres_A.device_id == sensID_1 && sens_1_active){
@@ -429,8 +429,8 @@ int airspeed_slipstream_record::diff_pressure_calib()
 
 	/* subscribe to diff pressure topic */
 	int sensor_sub_fd[2] = {};
-	sensor_sub_fd[0] = orb_subscribe_multi(ORB_ID(differential_pressure), 0);
-	sensor_sub_fd[1] = orb_subscribe_multi(ORB_ID(differential_pressure), 1);
+	sensor_sub_fd[0] = orb_subscribe_multi(ORB_ID(differential_pressure_masm), 0);
+	sensor_sub_fd[1] = orb_subscribe_multi(ORB_ID(differential_pressure_masm), 1);
 
 	orb_set_interval(sensor_sub_fd[0], 50);
 	orb_set_interval(sensor_sub_fd[1], 50);
@@ -456,8 +456,8 @@ int airspeed_slipstream_record::diff_pressure_calib()
 
 		} else if (fds[0].revents & fds[1].revents & POLLIN) {
 
-			orb_copy(ORB_ID(differential_pressure), sensor_sub_fd[0], &diff_pres_A);
-			orb_copy(ORB_ID(differential_pressure), sensor_sub_fd[1], &diff_pres_B);
+			orb_copy(ORB_ID(differential_pressure_masm), sensor_sub_fd[0], &diff_pres_A);
+			orb_copy(ORB_ID(differential_pressure_masm), sensor_sub_fd[1], &diff_pres_B);
 
 			/*--------- Sort sensors ---------*/
 			/* --------------------- Sensor 1 assignment --------------------*/

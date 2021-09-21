@@ -218,7 +218,7 @@ MEASAirspeed::collect()
 	report.device_id = _device_id.devid;
 
 	_airspeed_pub.publish(report);
-
+	_airspeed_masm_pub.publish(report);
 	ret = OK;
 
 	perf_end(_sample_perf);

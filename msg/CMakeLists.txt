@@ -55,6 +55,7 @@ set(msg_files
 	debug_value.msg
 	debug_vect.msg
 	differential_pressure.msg
+	differential_pressure_masm.msg
 	distance_sensor.msg
 	ekf2_timestamps.msg
 	ekf_gps_drift.msg

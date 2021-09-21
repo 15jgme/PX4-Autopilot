@@ -40,7 +40,7 @@
 #include <px4_platform_common/module_params.h>
 #include <uORB/Subscription.hpp>
 #include <uORB/topics/parameter_update.h>
-#include <uORB/topics/differential_pressure.h>
+#include <uORB/topics/differential_pressure_masm.h>
 #include <uORB/topics/airspeed_multi_record.h>
 #include <uORB/topics/airspeed.h>
 #include <uORB/topics/esc_status.h>
@@ -144,16 +144,16 @@ private:
 
 	/* Structs */
 
-	struct differential_pressure_s diff_pres_ID_1; //Struct to store data for primary sensor
-	struct differential_pressure_s diff_pres_ID_2; //Struct to store data for slipstream sensor
-	struct differential_pressure_s diff_pres;
+	struct differential_pressure_masm_s diff_pres_ID_1; //Struct to store data for primary sensor
+	struct differential_pressure_masm_s diff_pres_ID_2; //Struct to store data for slipstream sensor
+	struct differential_pressure_masm_s diff_pres;
 	struct esc_status_s esc_stat;
 	struct airspeed_s airspeed;
 	struct rc_channels_s rc_chan;
 	struct vehicle_air_data_s airdat;
 
-	differential_pressure_s diff_pres_A{};
-	differential_pressure_s diff_pres_B{};
+	differential_pressure_masm_s diff_pres_A{};
+	differential_pressure_masm_s diff_pres_B{};
 
 	DEFINE_PARAMETERS(
 		(ParamInt<px4::params::SYS_AUTOSTART>) _param_sys_autostart,   /**< example parameter */
