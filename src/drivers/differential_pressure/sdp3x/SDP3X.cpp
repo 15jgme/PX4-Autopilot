@@ -174,6 +174,7 @@ SDP3X::collect()
 	float temperature_c = temp / static_cast<float>(SDP3X_SCALE_TEMPERATURE);
 
 	differential_pressure_s report{};
+	differential_pressure_masm_s reportMASM{};
 
 	report.timestamp = hrt_absolute_time();
 	report.error_count = perf_event_count(_comms_errors);
@@ -182,8 +183,16 @@ SDP3X::collect()
 	report.differential_pressure_raw_pa = diff_press_pa_raw - _diff_pres_offset;
 	report.device_id = _device_id.devid;
 
+	//Copy over to other struct
+	reportMASM.timestamp = report.timestamp;
+	reportMASM.error_count = perf_event_count(_comms_errors);
+	reportMASM.temperature = report.temperature;
+	reportMASM.differential_pressure_filtered_pa = report.differential_pressure_filtered_pa;
+	reportMASM.differential_pressure_raw_pa = report.differential_pressure_raw_pa;
+	reportMASM.device_id = report.device_id;
+
 	// _airspeed_pub.publish(report);
-	_airspeed_masm_pub.publish(report);
+	_airspeed_masm_pub.publish(reportMASM);
 
 	perf_end(_sample_perf);
 
