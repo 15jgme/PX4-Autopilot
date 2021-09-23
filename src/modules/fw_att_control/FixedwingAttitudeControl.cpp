@@ -1196,7 +1196,7 @@ void FixedwingAttitudeControl::Run()
 
 
 
-				_juan_att_var.test_variable = 2.2f;
+				_juan_att_var.test_variable = 1.3;
 
 
 				// matrix::Eulerf euler_ref(C_ri.transpose());
@@ -1920,21 +1920,23 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	}
 	else if(_maneuver_type == 5) //Jackson's path, rectangle
 	{
-		// feedforward_flag = false;
+		feedforward_flag = true;
+		thrust_add_flag = true;
 		float t_turn = 7.5; //Useless
 		float t_man = _time_elapsed;
 		float t_turns_long  = 7.5f;
-		float t_turn_short = 3.0f;
+		float t_turn_short = 4.0f;
 		float V_i = 10.0f;
 		// V_i = _initial_vxy;
 
-		if (turnCount < 16 && !completeFlag)
+		if (turnCount < 8 && !completeFlag)
 		{
 			//Flip between long and short runs
 			if(longTurn){
 				t_turn = t_turns_long;
 			}else{
 				t_turn = t_turn_short;
+				V_i = 8.0f;
 			}
 
 
@@ -1948,9 +1950,18 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 
 				PX4_INFO("turn %i", turnCount);
 
-				if(turnCount == 8){feedforward_flag = false;} //turn ff on
+
 				longTurn = !longTurn;
 			}
+			if(turnCount >= 4){
+				feedforward_flag = false;
+				thrust_add_flag = false;
+				_juan_att_var.estimated_position_nff_x = _local_pos.x;
+				_juan_att_var.estimated_position_nff_y = _local_pos.y;
+			}else{
+				_juan_att_var.estimated_position_ff_x = _local_pos.x;
+				_juan_att_var.estimated_position_ff_y = _local_pos.y;
+			} //turn ff on
 			_vel_x_ref = V_i*cosf(_initial_heading);
 			_vel_y_ref = V_i*sinf(_initial_heading);
 			_vel_z_ref = 0.0f;
@@ -2023,6 +2034,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 
 		if(t_man < t_runup)
 		{
+			thrust_add_flag = true;
 			feedforward_flag = true;
 			_vel_x_ref = V_n*cosf(_initial_heading);
 			_vel_y_ref = V_n*sinf(_initial_heading);
@@ -2109,7 +2121,121 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 
 
 	}
+	// else if(_maneuver_type == 7) //Jackson's path, racetrack
+	// {
+	// 	// float V_n = _initial_vxy;
+	// 	float V_n = 10.0f;
+	// 	float radius = 30.0f; //m
+	// 	float t_runup = 6.0f; //sec
+	// 	float discrep = 0.0f; //m
 
+	// 	// Center of circle
+	// 	float _x_zero =  _pos_x_exit + (radius - discrep) * cosf(_initial_heading - PI_f/2);
+	// 	float _y_zero = _pos_y_exit + (radius - discrep) * sinf(_initial_heading - PI_f/2);
+
+	// 	float delX = _x_zero - _pos_x_exit;
+	// 	float delY = _y_zero - _pos_y_exit;
+
+	// 	float maxRot = 3.0f; // maximum number of revolutions
+	// 	float t_man = _time_elapsed;
+
+	// 	float theta_0 = atan2f(delY, delX) + PI_f;
+
+	// 	if(!PX4_ISFINITE(theta_0)){theta_0 = 0.0f; PX4_INFO("Non finite theta_0, using 0 instead");}
+
+	// 	// float V_i = 10.0f;
+
+	// 	if(t_man < t_runup)
+	// 	{
+	// 		thrust_add_flag = true;
+	// 		feedforward_flag = true;
+	// 		_vel_x_ref = V_n*cosf(_initial_heading);
+	// 		_vel_y_ref = V_n*sinf(_initial_heading);
+	// 		_vel_z_ref = 0.0f;
+
+	// 		_pos_x_ref = _pos_x_initial + V_n*cosf(_initial_heading)*t_man;
+	// 		_pos_y_ref = _pos_y_initial + V_n*sinf(_initial_heading)*t_man;
+	// 		_pos_z_ref = _pos_z_initial;
+
+	// 		_pos_x_exit = _pos_x_ref;
+	// 		_pos_y_exit = _pos_y_ref;
+	// 		t_circ = t_man;
+	// 		float eVecN = _pos_x_ref - _local_pos.x;
+	// 		float eVecE = _pos_y_ref - _local_pos.y;
+	// 		_juan_att_var.path_rel_err = eVecN*cosf(_initial_heading + PI_f/2.0f) +  eVecE*sinf(_initial_heading + PI_f/2.0f);
+	// 		_juan_att_var.estimated_position_ff_x = _local_pos.x;
+	// 		_juan_att_var.estimated_position_ff_y = _local_pos.y;
+
+	// 		if(t_man - tLast < 10)
+
+	// 	}
+	// 	else
+	// 	{
+	// 		float theta_i = -V_n/radius * (t_man - t_circ) + theta_0;
+	// 		if (abs(theta_i) < 2.0f * PI_f * maxRot)
+	// 		{
+	// 			_acc_x_ref = 0.0f * -((V_n * V_n)/radius) * cosf(theta_i);
+	// 			_acc_y_ref = 0.0f * -((V_n * V_n)/radius) * sinf(theta_i);
+
+	// 			_juan_att_var.reference_acceleration_x = _acc_x_ref;
+	// 			_juan_att_var.reference_acceleration_y = _acc_y_ref;
+
+	// 			_vel_x_ref = V_n * sinf(theta_i);
+	// 			_vel_y_ref = -V_n * cosf(theta_i);
+	// 			_vel_z_ref = 0.0f;
+
+	// 			_pos_x_ref =_x_zero + radius*cosf(theta_i);
+	// 			_pos_y_ref =_y_zero + radius*sinf(theta_i);
+	// 			_pos_z_ref = _pos_z_initial;
+
+	// 			t_last = t_man;
+
+	// 			if(abs(theta_i) > PI_f * maxRot){
+	// 				feedforward_flag = false;
+	// 				thrust_add_flag = false;
+	// 				_juan_att_var.estimated_position_nff_x = _local_pos.x;
+	// 				_juan_att_var.estimated_position_nff_y = _local_pos.y;
+	// 				if(!exitMsgSent){PX4_INFO("FF off"); exitMsgSent=true;}
+	// 			}else{
+	// 				feedforward_flag = true;
+	// 				_juan_att_var.estimated_position_ff_x = _local_pos.x;
+	// 				_juan_att_var.estimated_position_ff_y = _local_pos.y;
+	// 			}
+
+
+	// 			/* --- ensuring a clean exit --- */
+	// 			t_last = t_man;
+	// 			pos_x_final = _pos_x_ref;
+	// 			pos_y_final = _pos_y_ref;
+	// 			vel_x_final = _vel_x_ref;
+	// 			vel_y_final = _vel_y_ref;
+	// 		}
+	// 		else { //Go into hover
+	// 			// PX4_INFO("DONE!");
+	// 			completeFlag = true;
+	// 			if(!exitMsgSent)
+	// 			{
+	// 				PX4_INFO("Path exiting");
+	// 				exitMsgSent = true;
+	// 			}
+
+	// 			/* ---- just keep swimming ---- */
+	// 			_vel_x_ref = vel_x_final;
+	// 			_vel_y_ref = vel_y_final;
+	// 			_vel_z_ref = 0.0f;
+
+	// 			_pos_x_ref = pos_x_final + vel_x_final*(t_man - t_last); //need some t_end for this
+	// 			_pos_y_ref = pos_y_final + vel_y_final*(t_man - t_last);
+	// 			_pos_z_ref = _pos_z_initial;
+
+	// 			/* ---- reset feedforward stuff ---- */
+	// 			feedforward_flag = false;
+	// 			// _juan_att_var.feedforward_on = true;
+	// 		}
+	// 	}
+
+
+	// }
 
 
 }
@@ -2129,8 +2255,8 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 	// float KdY = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
 
 	/* --- Real life gains --- */
-	float KdX = 0.7f*3.0f*0.1323f;
-	float KdY = 0.7f*3.0f*0.1323f;
+	// float KdX = 0.7f*3.0f*0.1323f;
+	// float KdY = 0.7f*3.0f*0.1323f;
 
 	/* ---- Wind vector ---- */
 	float v_wind_N = _wind.windspeed_north;
@@ -2206,17 +2332,17 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 
 	if(thrust_add_flag)
 	{
-		matrix::Dcmf CriTemp =  C_ri * R_wind; //Temporarity to get rotated nose vector
-		float fv1r = CriTemp(1,1);
-		float fv2r = CriTemp(1,2);
+		// matrix::Dcmf CriTemp =  C_ri * R_wind; //Temporarity to get rotated nose vector
+		// float fv1r = CriTemp(1,1);
+		// float fv2r = CriTemp(1,2);
 
-		T_add =	(fv1r * KdX * (v_tild_N - v_N) + fv2r * KdY * (v_tild_E - v_E));
+		// T_add =	(fv1r * KdX * (v_tild_N - v_N) + fv2r * KdY * (v_tild_E - v_E));
 
 		// // Normalize f vectors (since they're in XY)
-		float fNorm = sqrt(fv1*fv1 + fv2*fv2);
+		// float fNorm = sqrt(fv1*fv1 + fv2*fv2);
 		// float frNorm = sqrt(fv1r*fv1r + fv2r*fv2r);
-		float fv1n = fv1/fNorm;
-		float fv2n = fv2/fNorm;
+		// float fv1n = fv1/fNorm;
+		// float fv2n = fv2/fNorm;
 
 		// float fv1rn = fv1r/frNorm;
 		// float fv2rn = fv2r/frNorm;
@@ -2225,10 +2351,10 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 		float rotAng = cosf(abs(_juan_att_var.crab_angle_ff));
 		// if(rotAng < cosf(PI_f/3.0f) && rotAng>0.0f){rotAng = cosf(PI_f/3.0f);} //Limit rotation angle to avoid singularity
 		// if(rotAng<0.0f){rotAng = 1;} //Limit rotation angle to avoid singularity
-		PX4_INFO("tff denom: %f", (double)rotAng);
+		// PX4_INFO("tff denom: %f", (double)rotAng);
 		T_add = ThrustN / rotAng - ThrustN; //Step 1
 		// T_add += (fv1rn * KdX * (v_tild_N - v_N) + fv2rn * KdY * (v_tild_E - v_E)); //Step 2
-		T_add += (fv1n * KdX * (v_tild_N - v_N) + fv2n * KdY * (v_tild_E - v_E)); //Step 2
+		// T_add += (fv1n * KdX * (v_tild_N - v_N) + fv2n * KdY * (v_tild_E - v_E)); //Step 2
 
 
 		if(T_add > 0)
