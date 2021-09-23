@@ -1631,7 +1631,7 @@ void FixedwingAttitudeControl::JUAN_position_control()
 				else
 				{
 					rollMod = (1/(Vas - Vae)) * (Vas - _airspeed_sub.get().indicated_airspeed_m_s);
-					PX4_INFO("%f",(double)rollMod);
+					// PX4_INFO("%f",(double)rollMod);
 				}
 
 				roll_com *= rollMod;// killed this
@@ -2111,6 +2111,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	}
 
 
+
 }
 
 float FixedwingAttitudeControl::saturate(float value, float min, float max)
@@ -2205,13 +2206,29 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 
 	if(thrust_add_flag)
 	{
-		// matrix::Dcmf CriTemp =  C_ri * R_wind; //Temporarity to get rotated nose vector
-		// float fv1r = CriTemp(1,1);
-		// float fv2r = CriTemp(1,2);
+		matrix::Dcmf CriTemp =  C_ri * R_wind; //Temporarity to get rotated nose vector
+		float fv1r = CriTemp(1,1);
+		float fv2r = CriTemp(1,2);
 
-		// T_add =	(fv1r * KdX * (v_tild_N - v_N) + fv2r * KdY * (v_tild_E - v_E));
-		T_add =	(fv1 * KdX * (v_tild_N - v_N) + fv2 * KdY * (v_tild_E - v_E));
-		// T_add =	(Fv1 * KdX * (v_tild_N - v_N) + Fv2 * KdY * (v_tild_E - v_E));
+		T_add =	(fv1r * KdX * (v_tild_N - v_N) + fv2r * KdY * (v_tild_E - v_E));
+
+		// // Normalize f vectors (since they're in XY)
+		float fNorm = sqrt(fv1*fv1 + fv2*fv2);
+		// float frNorm = sqrt(fv1r*fv1r + fv2r*fv2r);
+		float fv1n = fv1/fNorm;
+		float fv2n = fv2/fNorm;
+
+		// float fv1rn = fv1r/frNorm;
+		// float fv2rn = fv2r/frNorm;
+
+		// float rotAng = fv1n*fv1rn + fv2n*fv2rn;
+		float rotAng = cosf(abs(_juan_att_var.crab_angle_ff));
+		// if(rotAng < cosf(PI_f/3.0f) && rotAng>0.0f){rotAng = cosf(PI_f/3.0f);} //Limit rotation angle to avoid singularity
+		// if(rotAng<0.0f){rotAng = 1;} //Limit rotation angle to avoid singularity
+		PX4_INFO("tff denom: %f", (double)rotAng);
+		T_add = ThrustN / rotAng - ThrustN; //Step 1
+		// T_add += (fv1rn * KdX * (v_tild_N - v_N) + fv2rn * KdY * (v_tild_E - v_E)); //Step 2
+		T_add += (fv1n * KdX * (v_tild_N - v_N) + fv2n * KdY * (v_tild_E - v_E)); //Step 2
 
 
 		if(T_add > 0)
@@ -2222,5 +2239,11 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 		{
 			T_add *= 1.0f;
 		}
+
+		_juan_att_var.tadd = T_add;
+	}
+	else
+	{
+		T_add = 0;
 	}
 }
