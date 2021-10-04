@@ -42,6 +42,7 @@ set(msg_files
 	airspeed.msg
 	airspeed_validated.msg
 	airspeed_wind.msg
+	airspeed_multi_record.msg
 	battery_status.msg
 	camera_capture.msg
 	camera_trigger.msg
@@ -52,6 +53,7 @@ set(msg_files
 	control_allocator_status.msg
 	cpuload.msg
 	differential_pressure.msg
+	differential_pressure_hidden.msg
 	distance_sensor.msg
 	ekf2_timestamps.msg
 	ekf_gps_drift.msg

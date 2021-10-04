@@ -192,7 +192,7 @@ bool PreFlightCheck::preflightCheck(orb_advert_t *mavlink_log_pub, vehicle_statu
 		if (!airspeedCheck(mavlink_log_pub, status, optional, report_failures, prearm, (bool)max_airspeed_check_en,
 				   arming_max_airspeed_allowed)
 		    && !(bool)optional) {
-			failed = true;
+			// failed = true;
 		}
 	}
 

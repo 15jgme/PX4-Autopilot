@@ -73,6 +73,10 @@
 #include <uORB/topics/wind.h> //JACKSON
 #include <uORB/topics/airspeed.h> //JACKSON
 #include <uORB/topics/jackson_debug_variables.h> //JACKSON
+#include <uORB/topics/rc_channels.h> //JACKSON
+#include <uORB/topics/airspeed_multi_record.h> //JACKSON
+#include <math.h>
+#include <mathlib/math/filter/LowPassFilter2p.hpp>
 
 
 using matrix::Eulerf;
@@ -118,7 +122,13 @@ private:
 	uORB::Subscription _vehicle_rates_sub{ORB_ID(vehicle_angular_velocity)};
 
 	//JACKSON
+	uORB::Subscription _masm_sub{ORB_ID(airspeed_multi_record)};
 	uORB::Subscription _wind_sub{ORB_ID(wind)};
+	uORB::Subscription _rc_sub{ORB_ID(rc_channels)};
+	float sampleFreq = 100;
+	float cutoffFreq = 10;
+	math::LowPassFilter2p _filter{sampleFreq, cutoffFreq};
+
 
 	//JUAN
 	uORB::Subscription _vehicle_local_position_setpoint_sub{ORB_ID(vehicle_local_position_setpoint)};
@@ -149,6 +159,8 @@ private:
 	vehicle_status_s			_vehicle_status {};	/**< vehicle status */
 
 	//JACKSON
+	airspeed_multi_record_s 	_masm{};
+	rc_channels_s 			_rc_ch{};
 	wind_s				_wind {};		/**< wind */
 	jackson_debug_variables_s 	_jackson_dbg_var{};	//debugging variables. Not published if verbose flag is false
 

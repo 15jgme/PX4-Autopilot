@@ -801,7 +801,7 @@ void FixedwingAttitudeControl::Run()
 				// 	// _yaw_test_profile = _previous_yaw+3.1416f;
 				// }
 				// _yaw_rate_reference = 0.0f;
-				//
+
 				// float _manual_yaw = _yaw_test_profile;
 				// float _manual_roll = _roll_test_profile;
 				// float _manual_pitch = _pitch_test_profile;
@@ -837,7 +837,7 @@ void FixedwingAttitudeControl::Run()
 				// matrix::Dcmf C_manual = C_roll*C_pitch;
 
 				/*... DCMs for control system ......................................*/
-				_JUAN_flight_mode = 1;
+				_JUAN_flight_mode = 0;
 
 				if (_JUAN_flight_mode < 1) { //if in juan's flight mode
 					C_ri = C_manual; //set reference
@@ -1090,7 +1090,35 @@ void FixedwingAttitudeControl::Run()
 				/* .........................Control allocation......................*/
 				// float airspeed2 = get_airspeed_and_update_scaling();
 				// float Vs = airspeed2;
-				float Vs = 5.0f;
+				_rc_sub.update(&_rc_ch); // update rc
+				int sw7 = _rc_ch.channels[7];
+				float Vs = 10.0f;
+				float Vmin = 2.0f;
+
+				if(sw7 < -0.1)
+				{
+					float Vtot = sqrtf(_local_pos.vx * _local_pos.vx + _local_pos.vy * _local_pos.vy + _local_pos.vz * _local_pos.vz);
+					float Faero = (1)*(0.0157f*Vtot*Vtot - 0.0524f*Vtot + 0.5583f); // (1) should be replaced by Kaero
+					float T2 = Faero + 0.45f*9.81f*sinf(euler_now.theta());
+					if(T2 < 0.0f){T2 = 0.0f;}
+					float u = C_bi(0, 0) * _local_pos.vx + C_bi(0, 1) * _local_pos.vy + C_bi(0, 2) * _local_pos.vz;
+					Vs = sqrt(u*u + (2.0f*T2)/(1.225f * 0.05067f));
+				}
+				else if(sw7 < 0.1 && -0.1 < sw7)
+				{
+					Vs = 5.0f;
+				}
+				else if(sw7 > 0.1)
+				{
+					_masm_sub.update(&_masm);
+					Vs = _masm.primary_airspeed_ms;//MASM reading
+				}
+
+				if(Vs < Vmin){Vs = Vmin;}
+				float Vsfilt = _filter.apply(Vs);
+				_juan_att_var.vs = Vs;
+				_juan_att_var.vsfilt = Vsfilt;
+				Vsfilt = Vs;
 
 				float AilDef = 0.7f * tau_1 / (.5f * ro * powf(Vs, 2.0f) * S_area * b_span * Cl_delta_a); //Aileron Deflection (deg)
 				float ElevDef = 0.8f * tau_2 / (.5f * ro * powf(Vs, 2.0f) * S_area * c_bar * Cm_delta_e); //Elevator Deflection (deg)

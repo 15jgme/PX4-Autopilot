@@ -162,8 +162,8 @@ void airspeed_slipstream_record::run()
 
 	/* subscribe to diff pressure topic */
 	int sensor_sub_fd[2] = {};
-	sensor_sub_fd[0] = orb_subscribe_multi(ORB_ID(differential_pressure_masm), 0);
-	sensor_sub_fd[1] = orb_subscribe_multi(ORB_ID(differential_pressure_masm), 1);
+	sensor_sub_fd[0] = orb_subscribe_multi(ORB_ID(differential_pressure_hidden), 0);
+	sensor_sub_fd[1] = orb_subscribe_multi(ORB_ID(differential_pressure_hidden), 1);
 
 	/* subscribe to esc rpm topic */
 	int esc_sub_fd = orb_subscribe(ORB_ID(esc_status));
@@ -201,12 +201,12 @@ void airspeed_slipstream_record::run()
 
 
 	px4_pollfd_struct_t fds[] = {
-		{ .fd = sensor_combined_sub,   .events = POLLIN },
+		// { .fd = sensor_combined_sub,   .events = POLLIN },
 		{ .fd = sensor_sub_fd[0],   .events = POLLIN },
-		{ .fd = sensor_sub_fd[1],   .events = POLLIN },
-		{ .fd = esc_sub_fd,   .events = POLLIN },
-		{ .fd = asp_sub_fd,   .events = POLLIN },
-		{ .fd = rc_sub_fd,   .events = POLLIN },
+		// { .fd = sensor_sub_fd[1],   .events = POLLIN },
+		// { .fd = esc_sub_fd,   .events = POLLIN },
+		// { .fd = asp_sub_fd,   .events = POLLIN },
+		// { .fd = rc_sub_fd,   .events = POLLIN },
 		{ .fd = airdat_sub_fd, .events = POLLIN},
 	};
 
@@ -239,30 +239,30 @@ void airspeed_slipstream_record::run()
 			break;
 	}
 
-	enum AIRSPEED_SENSOR_MODEL smodel_2;
+	// enum AIRSPEED_SENSOR_MODEL smodel_2;
 
-	switch ((sensID_2 >> 16) & 0xFF) {
-		case DRV_DIFF_PRESS_DEVTYPE_SDP31:
+	// switch ((sensID_2 >> 16) & 0xFF) {
+	// 	case DRV_DIFF_PRESS_DEVTYPE_SDP31:
 
-		/* fallthrough */
-		case DRV_DIFF_PRESS_DEVTYPE_SDP32:
+	// 	/* fallthrough */
+	// 	case DRV_DIFF_PRESS_DEVTYPE_SDP32:
 
-		/* fallthrough */
-		case DRV_DIFF_PRESS_DEVTYPE_SDP33:
-			/* fallthrough */
-			smodel_2 = AIRSPEED_SENSOR_MODEL_SDP3X;
-			break;
+	// 	/* fallthrough */
+	// 	case DRV_DIFF_PRESS_DEVTYPE_SDP33:
+	// 		/* fallthrough */
+	// 		smodel_2 = AIRSPEED_SENSOR_MODEL_SDP3X;
+	// 		break;
 
-		default:
-			smodel_2 = AIRSPEED_SENSOR_MODEL_MEMBRANE;
-			break;
-	}
+	// 	default:
+	// 		smodel_2 = AIRSPEED_SENSOR_MODEL_MEMBRANE;
+	// 		break;
+	// }
 
 	while (!should_exit()) {
 		px4_usleep(1);
 
 		// wait for up to 1000ms for data
-		int pret = px4_poll(fds, 7, 1000);
+		int pret = px4_poll(fds, 2, 1000);
 
 		if (pret == 0) {
 			// Timeout: let the loop run anyway, don't do `continue` here
@@ -273,14 +273,13 @@ void airspeed_slipstream_record::run()
 			px4_usleep(50000);
 			continue;
 
-		} else if (fds[1].revents & fds[2].revents & fds[3].revents & fds[4].revents & fds[6].revents & POLLIN) {
+		} else if (fds[0].revents & fds[1].revents & POLLIN) {
 
 
-			orb_copy(ORB_ID(rc_channels), rc_sub_fd, &rc_chan);
-			if((int)rc_chan.channels[7] == 1)// || true)	//RECORD!
+			if(true)	//RECORD!
 			{
-				orb_copy(ORB_ID(differential_pressure_masm), sensor_sub_fd[0], &diff_pres_A);
-				orb_copy(ORB_ID(differential_pressure_masm), sensor_sub_fd[1], &diff_pres_B);
+				orb_copy(ORB_ID(differential_pressure_hidden), sensor_sub_fd[0], &diff_pres_A);
+				orb_copy(ORB_ID(differential_pressure_hidden), sensor_sub_fd[1], &diff_pres_B);
 
 				/* --------------------- Sensor 1 assignment --------------------*/
 				if(diff_pres_A.device_id == sensID_1 && sens_1_active){
@@ -333,31 +332,31 @@ void airspeed_slipstream_record::run()
 
 
 				/* <------------------------->SENSOR 2<--------------------->*/
-				airspeed_multi_data.secondary_differential_pressure_filtered_pa = diff_pres_ID_2.differential_pressure_filtered_pa + ID_2_cal;
-				airspeed_multi_data.secondary_differential_pressure_raw_pa = diff_pres_ID_2.differential_pressure_raw_pa + ID_2_cal;
-				airspeed_multi_data.secondary_temperature = diff_pres_ID_2.temperature;
-				airspeed_multi_data.secondary_device_id = diff_pres_ID_2.device_id;
+				airspeed_multi_data.secondary_differential_pressure_filtered_pa = 0.0f;
+				airspeed_multi_data.secondary_differential_pressure_raw_pa = 0.0f;
+				airspeed_multi_data.secondary_temperature = 0.0f;
+				airspeed_multi_data.secondary_device_id = 0;
 
-				air_temperature_2_celsius = (diff_pres_ID_2.temperature > -300.0f) ? diff_pres_ID_2.temperature :
-									(airdat.baro_temp_celcius - PCB_TEMP_ESTIMATE_DEG);
+				// air_temperature_2_celsius = (diff_pres_ID_2.temperature > -300.0f) ? diff_pres_ID_2.temperature :
+				// 					(airdat.baro_temp_celcius - PCB_TEMP_ESTIMATE_DEG);
 
-				airspeed_ID_2 = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
-										air_cmodel,
-										smodel_2, air_tube_length, air_tube_diameter_mm,
-										(diff_pres_ID_2.differential_pressure_filtered_pa + ID_2_cal), airdat.baro_pressure_pa,
-										air_temperature_2_celsius);
-				if(PX4_ISFINITE(airspeed_ID_2)){
-					airspeed_multi_data.secondary_airspeed_ms = airspeed_ID_2;
-				}
+				// airspeed_ID_2 = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
+				// 						air_cmodel,
+				// 						smodel_2, air_tube_length, air_tube_diameter_mm,
+				// 						(diff_pres_ID_2.differential_pressure_filtered_pa + ID_2_cal), airdat.baro_pressure_pa,
+				// 						air_temperature_2_celsius);
+				// if(PX4_ISFINITE(airspeed_ID_2)){
+					airspeed_multi_data.secondary_airspeed_ms = 0.0f;
+				// }
 
 				/* <--------------------------->ESC<-----------------------> */
-				airspeed_multi_data.rpm_sens = esc_stat.esc[0].esc_rpm;
+				airspeed_multi_data.rpm_sens = 0;
 
 				/* <------------------------>CALIBRATIOn<------------------> */
 				airspeed_multi_data.primary_calibrated = sensID_1_cal_flag;
-				airspeed_multi_data.secondary_calibrated = sensID_2_cal_flag;
+				airspeed_multi_data.secondary_calibrated = 0;
 				airspeed_multi_data.primary_calib_offset_pa = ID_1_cal;
-				airspeed_multi_data.secondary_calib_offset_pa = ID_2_cal;
+				airspeed_multi_data.secondary_calib_offset_pa = 0;
 
 
 
@@ -429,21 +428,21 @@ int airspeed_slipstream_record::diff_pressure_calib()
 
 	/* subscribe to diff pressure topic */
 	int sensor_sub_fd[2] = {};
-	sensor_sub_fd[0] = orb_subscribe_multi(ORB_ID(differential_pressure_masm), 0);
-	sensor_sub_fd[1] = orb_subscribe_multi(ORB_ID(differential_pressure_masm), 1);
+	sensor_sub_fd[0] = orb_subscribe_multi(ORB_ID(differential_pressure_hidden), 0);
+	sensor_sub_fd[1] = orb_subscribe_multi(ORB_ID(differential_pressure_hidden), 1);
 
 	orb_set_interval(sensor_sub_fd[0], 50);
 	orb_set_interval(sensor_sub_fd[1], 50);
 
 	px4_pollfd_struct_t fds[] = {
 		{ .fd = sensor_sub_fd[0],   .events = POLLIN },
-		{ .fd = sensor_sub_fd[1],   .events = POLLIN },
+		// { .fd = sensor_sub_fd[1],   .events = POLLIN },
 	};
 
 	int i = 0;
 	while(i < maxSamp)
 	{
-		int pret = px4_poll(fds, 2, 1000);
+		int pret = px4_poll(fds, 1, 1000);
 		/* update uorb messages */
 		if (pret == 0) {
 			// Timeout: let the loop run anyway, don't do `continue` here
@@ -454,10 +453,10 @@ int airspeed_slipstream_record::diff_pressure_calib()
 			px4_usleep(50000);
 			continue;
 
-		} else if (fds[0].revents & fds[1].revents & POLLIN) {
+		} else if (fds[0].revents & POLLIN) {
 
-			orb_copy(ORB_ID(differential_pressure_masm), sensor_sub_fd[0], &diff_pres_A);
-			orb_copy(ORB_ID(differential_pressure_masm), sensor_sub_fd[1], &diff_pres_B);
+			orb_copy(ORB_ID(differential_pressure_hidden), sensor_sub_fd[0], &diff_pres_A);
+			// orb_copy(ORB_ID(differential_pressure_hidden), sensor_sub_fd[1], &diff_pres_B);
 
 			/*--------- Sort sensors ---------*/
 			/* --------------------- Sensor 1 assignment --------------------*/
@@ -468,17 +467,17 @@ int airspeed_slipstream_record::diff_pressure_calib()
 				diff_pres_ID_1 = diff_pres_B;
 				// PX4_INFO("sens1 found");
 			}
-			/* --------------------- Sensor 2 assignment --------------------*/
-			if(diff_pres_A.device_id == sensID_2 && sens_2_active){
-				diff_pres_ID_2 = diff_pres_A;
-				// PX4_INFO("sens2 found");
-			} else if (diff_pres_B.device_id == sensID_2 && sens_2_active) {
-				diff_pres_ID_2 = diff_pres_B;
-				// PX4_INFO("sens2 found");
-			}
+			// /* --------------------- Sensor 2 assignment --------------------*/
+			// if(diff_pres_A.device_id == sensID_2 && sens_2_active){
+			// 	diff_pres_ID_2 = diff_pres_A;
+			// 	// PX4_INFO("sens2 found");
+			// } else if (diff_pres_B.device_id == sensID_2 && sens_2_active) {
+			// 	diff_pres_ID_2 = diff_pres_B;
+			// 	// PX4_INFO("sens2 found");
+			// }
 
 			ID_1_cal -= diff_pres_ID_1.differential_pressure_filtered_pa / maxSamp;
-			ID_2_cal -= diff_pres_ID_2.differential_pressure_filtered_pa / maxSamp;
+			// ID_2_cal -= diff_pres_ID_2.differential_pressure_filtered_pa / maxSamp;
 
 			i++;
 
