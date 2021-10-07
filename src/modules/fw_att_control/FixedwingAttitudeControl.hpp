@@ -125,8 +125,8 @@ private:
 	uORB::Subscription _masm_sub{ORB_ID(airspeed_multi_record)};
 	uORB::Subscription _wind_sub{ORB_ID(wind)};
 	uORB::Subscription _rc_sub{ORB_ID(rc_channels)};
-	float sampleFreq = 100;
-	float cutoffFreq = 10;
+	float sampleFreq = 200;
+	float cutoffFreq = 2;
 	math::LowPassFilter2p _filter{sampleFreq, cutoffFreq};
 
 

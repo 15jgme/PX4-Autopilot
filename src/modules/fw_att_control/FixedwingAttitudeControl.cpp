@@ -754,7 +754,7 @@ void FixedwingAttitudeControl::Run()
 					_pitch_test_profile = 0.0f;
 					_pitch_rate_reference = 0.0f;
 
-				} else if (_time_elapsed < 3.0f) { //constant pitch rate
+				} else if (_time_elapsed <3.0f) { //constant pitch rate
 					_pitch_rate_reference = 3.1416f;
 					_pitch_test_profile = _pitch_test_profile + _pitch_rate_reference * _delta_time_attitude;
 
@@ -873,7 +873,7 @@ void FixedwingAttitudeControl::Run()
 						_jackson_dbg_var.c_ri_pre_ff[8] =  C_ri(2, 2);
 					}
 
-					if (feedforward_flag) {
+					if (false){//(feedforward_flag) {
 						wind_estimate_poll(); //update estimate
 						wind_ff_rot_update(); //update R_wind
 						// matrix::Dcmf temp_C_ri = C_ri * R_wind; //avoid any weirdness like in Eigen
@@ -984,16 +984,16 @@ void FixedwingAttitudeControl::Run()
 
 				/*................Attitude controller gains.........................*/
 				float Kad1 = 0.8f * 0.00706f;
-				float Kad2 = 0.5f * 0.07576f;
+				float Kad2 = 1.3f*0.5f * 0.07576f;
 				float Kad3 = 0.7f * 0.07736f;
 
 				float Kap1 = 1.0f * 0.1656f;
-				float Kap2 = 1.0f * 1.022f;
+				float Kap2 = 1.5f*1.0f * 1.022f;
 				float Kap3 = 1.0f * 0.6776f;
 
-				float Kai1 = 0.0f * 0.8f * 0.1656f;
-				float Kai2 = 0.0f * 0.8f * 1.022f;
-				float Kai3 = 0.0f * 0.8f * 0.6776f;
+				// float Kai1 = 0.0f * 0.8f * 0.1656f;
+				// float Kai2 = 0.0f * 0.8f * 1.022f;
+				// float Kai3 = 0.0f * 0.8f * 0.6776f;
 				/*..................................................................*/
 				/*................Attitude controller gains SITL!.........................*/
 				// float Kad1 = 0.15f * 4.54f * 0.22f * 0.0706f / (0.7f);
@@ -1033,9 +1033,9 @@ void FixedwingAttitudeControl::Run()
 				// float tau_3 = -0.8f*Kad3*z_rate_body+0.8f*Kap3*err_att_3+Kai3*_e_int_3;
 
 				/*................. Final one!!!! ...................................*/
-				float tau_1 = -0.7f * Kad1 * (x_rate_body - _omega_reference_body(0)) + 0.8f * Kap1 * err_att_1 + Kai1 * _e_int_1;
-				float tau_2 = -0.8f * Kad2 * (y_rate_body - _omega_reference_body(1)) + 1.0f * Kap2 * err_att_2 + Kai2 * _e_int_2;
-				float tau_3 = -0.8f * Kad3 * (z_rate_body - _omega_reference_body(2)) + 0.8f * Kap3 * err_att_3 + Kai3 * _e_int_3;
+				float tau_1 = -0.7f * Kad1 * (x_rate_body - _omega_reference_body(0)) + 0.8f * Kap1 * err_att_1;// + Kai1 * _e_int_1;
+				float tau_2 = -0.8f * Kad2 * (y_rate_body - _omega_reference_body(1)) + 1.0f * Kap2 * err_att_2;// + Kai2 * _e_int_2;
+				float tau_3 = -0.8f * Kad3 * (z_rate_body - _omega_reference_body(2)) + 0.8f * Kap3 * err_att_3;// + Kai3 * _e_int_3;
 
 
 				/*.........Alternative Tracking control law ..................................*/
@@ -1098,7 +1098,7 @@ void FixedwingAttitudeControl::Run()
 				if(sw7 < -0.1)
 				{
 					float Vtot = sqrtf(_local_pos.vx * _local_pos.vx + _local_pos.vy * _local_pos.vy + _local_pos.vz * _local_pos.vz);
-					float Faero = (1)*(0.0157f*Vtot*Vtot - 0.0524f*Vtot + 0.5583f); // (1) should be replaced by Kaero
+					float Faero = (2)*(0.0157f*Vtot*Vtot - 0.0524f*Vtot + 0.5583f); // (1) should be replaced by Kaero
 					float T2 = Faero + 0.45f*9.81f*sinf(euler_now.theta());
 					if(T2 < 0.0f){T2 = 0.0f;}
 					float u = C_bi(0, 0) * _local_pos.vx + C_bi(0, 1) * _local_pos.vy + C_bi(0, 2) * _local_pos.vz;
@@ -1118,7 +1118,7 @@ void FixedwingAttitudeControl::Run()
 				float Vsfilt = _filter.apply(Vs);
 				_juan_att_var.vs = Vs;
 				_juan_att_var.vsfilt = Vsfilt;
-				Vsfilt = Vs;
+				Vs = Vsfilt;
 
 				float AilDef = 0.7f * tau_1 / (.5f * ro * powf(Vs, 2.0f) * S_area * b_span * Cl_delta_a); //Aileron Deflection (deg)
 				float ElevDef = 0.8f * tau_2 / (.5f * ro * powf(Vs, 2.0f) * S_area * c_bar * Cm_delta_e); //Elevator Deflection (deg)
