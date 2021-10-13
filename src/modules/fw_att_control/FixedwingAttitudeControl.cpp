@@ -747,24 +747,67 @@ void FixedwingAttitudeControl::Run()
 
 
 				// Manual attitude end
+				int8_t loopNum = 1;
 
+				if(loopNum == 0)
+				{
+					/* ........................ Loop profile Pitch...........................*/
+					if (_time_elapsed < 1.0f) { //do nothing for a second
+						_pitch_test_profile = 0.0f;
+						_pitch_rate_reference = 0.0f;
+					} else if (_time_elapsed <3.0f) { //constant pitch rate
+						_pitch_rate_reference = 3.1416f;
+						_pitch_test_profile = _pitch_test_profile + _pitch_rate_reference * _delta_time_attitude;
+					} else { //do nothing
+						_pitch_rate_reference = 0.0f;
+						_pitch_test_profile = 0.0f;
+					}
 
-				/* ........................ Loop profile ...........................*/
-				if (_time_elapsed < 1.0f) { //do nothing for a second
-					_pitch_test_profile = 0.0f;
+					_yaw_rate_reference = 0.0f;
+					_roll_rate_reference = 0.0f;
+
+				}
+				else if(loopNum == 1)
+				{
+					/* ........................ Loop profile Yaw...........................*/
+					if (_time_elapsed < 1.0f) { //do nothing for a second
+						_yaw_test_profile = 0.0f;
+						_yaw_rate_reference = 0.0f;
+
+					} else if (_time_elapsed <3.0f) { //constant pitch rate
+						_yaw_rate_reference = 3.1416f/2.0f;
+						_yaw_test_profile = _yaw_test_profile + _yaw_rate_reference * _delta_time_attitude;
+
+					} else { //do nothing
+						_yaw_rate_reference= 0.0f;
+						_yaw_test_profile = 0.0f;
+					}
+
 					_pitch_rate_reference = 0.0f;
+					_roll_rate_reference = 0.0f;
 
-				} else if (_time_elapsed <3.0f) { //constant pitch rate
-					_pitch_rate_reference = 3.1416f;
-					_pitch_test_profile = _pitch_test_profile + _pitch_rate_reference * _delta_time_attitude;
+				}
+				else if(loopNum == 2)
+				{
+					/* ........................ Loop profile Roll...........................*/
+					if (_time_elapsed < 1.0f) { //do nothing for a second
+						_roll_test_profile = 0.0f;
+						_roll_rate_reference = 0.0f;
 
-				} else { //do nothing
+					} else if (_time_elapsed <3.0f) { //constant pitch rate
+						_roll_rate_reference = 3.1416f;
+						_roll_test_profile = _roll_test_profile + _roll_rate_reference * _delta_time_attitude;
+
+					} else { //do nothing
+						_roll_rate_reference= 0.0f;
+						_roll_test_profile = 0.0f;
+					}
+
 					_pitch_rate_reference = 0.0f;
-					_pitch_test_profile = 0.0f;
+					_yaw_rate_reference = 0.0f;
+
 				}
 
-				_yaw_rate_reference = 0.0f;
-				_roll_rate_reference = 0.0f;
 
 				float _manual_yaw = _yaw_test_profile;
 				float _manual_roll = _roll_test_profile;
