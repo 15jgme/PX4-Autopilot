@@ -747,7 +747,7 @@ void FixedwingAttitudeControl::Run()
 
 
 				// Manual attitude end
-				int8_t loopNum = 1;
+				int8_t loopNum = 2;
 
 				if(loopNum == 0)
 				{
@@ -780,7 +780,7 @@ void FixedwingAttitudeControl::Run()
 
 					} else { //do nothing
 						_yaw_rate_reference= 0.0f;
-						_yaw_test_profile = 0.0f;
+						_yaw_test_profile = 3.1416f;
 					}
 
 					_pitch_rate_reference = 0.0f;
