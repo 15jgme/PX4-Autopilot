@@ -598,14 +598,14 @@ void FixedwingAttitudeControl::Run()
 				// JUAN: Preparing variables for custom mode transition
 				_previous_yaw = euler_angles.psi();
 				longTurn = true; //start off with a long turn
-				// _initial_heading = _previous_yaw;
+				_initial_heading = _previous_yaw;
 
-				if (lockHeadingFlag) {
-					_initial_heading = PI_f / 2.0f;
+				// if (lockHeadingFlag) {
+				// 	_initial_heading = PI_f / 2.0f;
 
-				} else {
-					_initial_heading = atan2f(_local_pos.vy, _local_pos.vx); //Use velocity direction instead
-				}
+				// } else {
+				// 	_initial_heading = atan2f(_local_pos.vy, _local_pos.vx); //Use velocity direction instead
+				// }
 
 				_initial_vxy = sqrtf(_local_pos.vy * _local_pos.vy + _local_pos.vx * _local_pos.vx);
 				_previous_time = hrt_absolute_time() / 1e6;
@@ -747,7 +747,7 @@ void FixedwingAttitudeControl::Run()
 
 
 				// Manual attitude end
-				int8_t loopNum = 2;
+				int8_t loopNum = 1;
 
 				if(loopNum == 0)
 				{
@@ -771,7 +771,7 @@ void FixedwingAttitudeControl::Run()
 				{
 					/* ........................ Loop profile Yaw...........................*/
 					if (_time_elapsed < 1.0f) { //do nothing for a second
-						_yaw_test_profile = 0.0f;
+						_yaw_test_profile = 0.0f + _initial_heading;
 						_yaw_rate_reference = 0.0f;
 
 					} else if (_time_elapsed <3.0f) { //constant pitch rate
@@ -780,7 +780,7 @@ void FixedwingAttitudeControl::Run()
 
 					} else { //do nothing
 						_yaw_rate_reference= 0.0f;
-						_yaw_test_profile = 3.1416f;
+						_yaw_test_profile = 3.1416f + _initial_heading;
 					}
 
 					_pitch_rate_reference = 0.0f;
@@ -827,7 +827,7 @@ void FixedwingAttitudeControl::Run()
 				// else if (_time_elapsed <2.0f){
 				// 	_pitch_rate_reference = 3.1416f/2.0f;
 				// 	_pitch_test_profile = _pitch_test_profile + _pitch_rate_reference*_delta_time_attitude;
-				//  _roll_rate_reference = 0.0f;
+				// 	_roll_rate_reference = 0.0f;
 				// 	_roll_test_profile = 0.0f;
 				// }
 				// else if(_time_elapsed <3.0f){
@@ -849,7 +849,7 @@ void FixedwingAttitudeControl::Run()
 				// float _manual_roll = _roll_test_profile;
 				// float _manual_pitch = _pitch_test_profile;
 				// float _heading_rate_coordinated = -1.0f;
-				// float _ground_velocity_corrected = -1.0f;
+				// _ground_velocity_corrected = -1.0f;
 
 				/*................... End ATA profile...............................*/
 
@@ -1149,7 +1149,7 @@ void FixedwingAttitudeControl::Run()
 				}
 				else if(sw7 < 0.1 && -0.1 < sw7)
 				{
-					Vs = 5.0f;
+					Vs = 10.0f;
 				}
 				else if(sw7 > 0.1)
 				{
@@ -1267,7 +1267,7 @@ void FixedwingAttitudeControl::Run()
 
 
 
-				_juan_att_var.test_variable = 1.3;
+				_juan_att_var.test_variable = 19;
 
 
 				// matrix::Eulerf euler_ref(C_ri.transpose());
