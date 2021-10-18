@@ -130,7 +130,7 @@ private:
 	uORB::Subscription _vcontrol_mode_sub{ORB_ID(vehicle_control_mode)};
 	uORB::Subscription _vehicle_air_data_sub{ORB_ID(vehicle_air_data)};
 
-	uORB::Publication<airspeed_s>             _airspeed_pub{ORB_ID(airspeed)};
+	uORB::Publication<airspeed_s>             _airspeed_pub{ORB_ID(airspeed)}; // Eliminate here JGME
 	uORB::Publication<sensor_combined_s>      _sensor_pub{ORB_ID(sensor_combined)};
 
 	perf_counter_t	_loop_perf;			/**< loop performance counter */
@@ -379,7 +379,7 @@ void Sensors::diff_pres_poll()
 		airspeed.air_temperature_celsius = air_temperature_celsius;
 
 		if (PX4_ISFINITE(airspeed.indicated_airspeed_m_s) && PX4_ISFINITE(airspeed.true_airspeed_m_s)) {
-			_airspeed_pub.publish(airspeed);
+			_airspeed_pub.publish(airspeed); // Eliminate here
 		}
 	}
 }
