@@ -204,10 +204,10 @@ void airspeed_slipstream_record::run()
 		// { .fd = sensor_combined_sub,   .events = POLLIN },
 		{ .fd = sensor_sub_fd[0],   .events = POLLIN },
 		// { .fd = sensor_sub_fd[1],   .events = POLLIN },
-		// { .fd = esc_sub_fd,   .events = POLLIN },
 		// { .fd = asp_sub_fd,   .events = POLLIN },
 		// { .fd = rc_sub_fd,   .events = POLLIN },
 		{ .fd = airdat_sub_fd, .events = POLLIN},
+		{ .fd = esc_sub_fd,   .events = POLLIN },
 	};
 
 
@@ -262,7 +262,7 @@ void airspeed_slipstream_record::run()
 		px4_usleep(1);
 
 		// wait for up to 1000ms for data
-		int pret = px4_poll(fds, 2, 1000);
+		int pret = px4_poll(fds, 3, 1000);
 
 		if (pret == 0) {
 			// Timeout: let the loop run anyway, don't do `continue` here
@@ -273,7 +273,7 @@ void airspeed_slipstream_record::run()
 			px4_usleep(50000);
 			continue;
 
-		} else if (fds[0].revents & fds[1].revents & POLLIN) {
+		} else if (fds[0].revents & fds[1].revents  & fds[2].revents & POLLIN) {
 
 
 			if(true)	//RECORD!
@@ -350,7 +350,8 @@ void airspeed_slipstream_record::run()
 				// }
 
 				/* <--------------------------->ESC<-----------------------> */
-				airspeed_multi_data.rpm_sens = 0;
+				airspeed_multi_data.rpm_sens = esc_stat.esc[0].esc_rpm;
+
 
 				/* <------------------------>CALIBRATIOn<------------------> */
 				airspeed_multi_data.primary_calibrated = sensID_1_cal_flag;
