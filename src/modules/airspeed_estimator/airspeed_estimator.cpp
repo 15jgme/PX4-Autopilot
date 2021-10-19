@@ -141,20 +141,19 @@ void AirspeedEstimator::run()
 	int wind_sub = orb_subscribe(ORB_ID(wind));
 	int masm_sub = orb_subscribe(ORB_ID(airspeed_multi_record));
 
-	px4_pollfd_struct_t fds[2];
-	fds[0].fd = wind_sub;
-	fds[0].events = POLLIN;
-	fds[1].fd = masm_sub;
-	fds[1].events = POLLIN;
+	orb_set_interval(wind_sub, 20);
+	orb_set_interval(masm_sub, 20);
+
+	px4_pollfd_struct_t fds[] = {
+		{ .fd = wind_sub,   .events = POLLIN },
+		{ .fd = masm_sub,   .events = POLLIN },
+	};
 
 	/* advertise airspeed topic */
 	struct airspeed_s airspeed_d;
 	memset(&airspeed_d, 0, sizeof(airspeed_d));
 	orb_advert_t airspeed_pub = orb_advertise(ORB_ID(airspeed), &airspeed_d);
 
-
-	// initialize parameters
-	parameters_update(true);
 
 	while (!should_exit()) {
 
@@ -170,41 +169,49 @@ void AirspeedEstimator::run()
 			px4_usleep(50000);
 			continue;
 
-		} else if (fds[0].revents & fds[1].revents & POLLIN) {
+		} else if (fds[1].revents & POLLIN) {
 
 			orb_copy(ORB_ID(airspeed_multi_record), masm_sub, &masm); //Copy masm data
-			orb_copy(ORB_ID(wind), wind_sub, &windEst); //Copy wind data
+
+			if(fds[0].revents)
+			{
+				orb_copy(ORB_ID(wind), wind_sub, &windEst); //Copy wind data if we get it
+			}
+
 
 			nRec = masm.rpm_sens / 60.0f; // Convert to rev/s
 			pitRec = masm.primary_airspeed_ms;
 
+			float VaTemp = calcVa(pitRec, nRec);
+			if(VaTemp > 0 && PX4_ISFINITE(VaTemp))
+			{
+				//Let through if positive
+				airspeed_d.indicated_airspeed_m_s = calcVa(pitRec, nRec);
+				airspeed_d.true_airspeed_m_s = calcVa(pitRec, nRec);
+			}else{
+				//Deny if negative
+				airspeed_d.indicated_airspeed_m_s = 0.0f;
+				airspeed_d.true_airspeed_m_s = 0.0f;
+			}
+
 			airspeed_d.timestamp = hrt_absolute_time();
-			airspeed_d.indicated_airspeed_m_s = calcVa(pitRec, nRec);
-			airspeed_d.true_airspeed_m_s = calcVa(pitRec, nRec);
 			airspeed_d.air_temperature_celsius = masm.primary_temperature;
 			airspeed_d.confidence = 1;
 
 		}
+		else
+		{
+			px4_usleep(50000);
+			PX4_ERR("Fuck");
+		}
 
-		parameters_update();
 		orb_publish(ORB_ID(airspeed), airspeed_pub, &airspeed_d); //Publish
 	}
 
-	orb_unsubscribe(sensor_combined_sub);
+	// orb_unsubscribe(sensor_combined_sub);
 }
 
-void AirspeedEstimator::parameters_update(bool force)
-{
-	// check for parameter updates
-	if (_parameter_update_sub.updated() || force) {
-		// clear update
-		parameter_update_s update;
-		_parameter_update_sub.copy(&update);
 
-		// update parameters from storage
-		updateParams();
-	}
-}
 
 int AirspeedEstimator::print_usage(const char *reason)
 {
@@ -246,7 +253,7 @@ float AirspeedEstimator::calcVa(float Vpit, float n)
 {
 	float A = p02;
 	float B = (p01 + p11*n);
-	float C = (p00 + p10*n + p20*n.^2 - vPit);
+	float C = (p00 + p10*n + p20*n*n - Vpit);
 
 	solExist = B*B - 4*A*C > 0;
 	// float Va = 10.0f; //TODO should I just declare this in another scope and only write to it if its reasonable?

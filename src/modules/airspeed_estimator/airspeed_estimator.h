@@ -90,7 +90,6 @@ private:
 	 * @param parameter_update_sub uorb subscription to parameter_update
 	 * @param force for a parameter update
 	 */
-	void parameters_update(bool force = false);
 
 
 	DEFINE_PARAMETERS(
@@ -106,7 +105,7 @@ private:
 	float pitRec{0.0f}; //pitot tube recording
 
 	// Subscriptions
-	uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 1000};
+	// uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 1000};
 
 };
 

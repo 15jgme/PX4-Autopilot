@@ -8,3 +8,6 @@ if param compare TEL_FRSKY_CONFIG 0
 then
 	frsky_telemetry start -d /dev/ttyS6 -t 15
 fi
+
+airspeed_slipstream_record start
+airspeed_estimator start

@@ -32,9 +32,12 @@
 ############################################################################
 
 px4_add_module(
-	MODULE templates__template_module
-	MAIN template_module
+	MODULE modules__airspeed_estimator
+	MAIN airspeed_estimator
 	SRCS
-		template_module.cpp
+		airspeed_estimator.cpp
+		airspeed_estimator.h
+	DEPENDS
+		mathlib
 	)
 
