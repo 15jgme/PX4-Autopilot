@@ -379,7 +379,7 @@ void Sensors::diff_pres_poll()
 		airspeed.air_temperature_celsius = air_temperature_celsius;
 
 		if (PX4_ISFINITE(airspeed.indicated_airspeed_m_s) && PX4_ISFINITE(airspeed.true_airspeed_m_s)) {
-			_airspeed_pub.publish(airspeed); // Eliminate here
+			// _airspeed_pub.publish(airspeed); // Eliminate here
 		}
 	}
 }
