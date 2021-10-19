@@ -147,6 +147,11 @@ void AirspeedEstimator::run()
 	fds[1].fd = masm_sub;
 	fds[1].events = POLLIN;
 
+	/* advertise airspeed topic */
+	struct airspeed_s airspeed_d;
+	memset(&airspeed_d, 0, sizeof(airspeed_d));
+	orb_advert_t airspeed_pub = orb_advertise(ORB_ID(airspeed), &airspeed_d);
+
 
 	// initialize parameters
 	parameters_update(true);
@@ -170,10 +175,19 @@ void AirspeedEstimator::run()
 			orb_copy(ORB_ID(airspeed_multi_record), masm_sub, &masm); //Copy masm data
 			orb_copy(ORB_ID(wind), wind_sub, &windEst); //Copy wind data
 
+			nRec = masm.rpm_sens / 60.0f; // Convert to rev/s
+			pitRec = masm.primary_airspeed_ms;
+
+			airspeed_d.timestamp = hrt_absolute_time();
+			airspeed_d.indicated_airspeed_m_s = calcVa(pitRec, nRec);
+			airspeed_d.true_airspeed_m_s = calcVa(pitRec, nRec);
+			airspeed_d.air_temperature_celsius = masm.primary_temperature;
+			airspeed_d.confidence = 1;
 
 		}
 
 		parameters_update();
+		orb_publish(ORB_ID(airspeed), airspeed_pub, &airspeed_d); //Publish
 	}
 
 	orb_unsubscribe(sensor_combined_sub);
@@ -230,12 +244,12 @@ int airspeed_estimator_main(int argc, char *argv[])
 
 float AirspeedEstimator::calcVa(float Vpit, float n)
 {
-	float A = ...;
-	float B = ...;
-	float C = ...;
+	float A = p02;
+	float B = (p01 + p11*n);
+	float C = (p00 + p10*n + p20*n.^2 - vPit);
 
 	solExist = B*B - 4*A*C > 0;
-	float Va = 10.0f; //TODO should I just declare this in another scope and only write to it if its reasonable?
+	// float Va = 10.0f; //TODO should I just declare this in another scope and only write to it if its reasonable?
 
 	if(solExist)
 	{

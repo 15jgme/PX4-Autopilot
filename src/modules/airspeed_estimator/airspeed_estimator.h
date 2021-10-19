@@ -40,6 +40,7 @@
 #include <uORB/topics/airspeed_multi_record.h>
 #include <uORB/topics/wind.h>
 #include <uORB/topics/airspeed_wind.h>
+#include <uORB/topics/airspeed.h>
 
 extern "C" __EXPORT int airspeed_estimator_main(int argc, char *argv[]);
 
@@ -73,12 +74,12 @@ public:
 	float calcVa(float Vpit, float n);
 
 	// Thruster curve fit
-	float p01 = 1.0f;
-	float p10 = 1.0f;
-	float p11 = 1.0f;
-	float p02 = 1.0f;
-	float p20 = 1.0f;
-	float p12 = 1.0f;
+	float p00 = 0.04022f;
+	float p10 = 0.07437f;
+	float p01 = 0.528f;
+	float p20 = 0.00004402f;
+	float p11 = -0.001512f;
+	float p02 = 0.009899f;
 
 	bool solExist{true};
 
@@ -99,6 +100,10 @@ private:
 
 	struct airspeed_multi_record_s masm;
 	struct wind_s windEst;
+
+	float Va{10.0f}; // Declare here, only update if we get a new good Va
+	float nRec{0.0f}; //prop Rev/s
+	float pitRec{0.0f}; //pitot tube recording
 
 	// Subscriptions
 	uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 1000};
