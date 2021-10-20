@@ -30,3 +30,8 @@ mavlink start -x -u $udp_onboard_payload_port_local -r 4000 -f -m onboard -o $ud
 
 # Onboard link to gimbal
 mavlink start -x -u $udp_onboard_gimbal_port_local -r 400000 -m gimbal -o $udp_onboard_gimbal_port_remote
+
+#Sketchy but start up extras
+airspeed_slipstream_record_sitl start
+rpm_publisher_sitl start
+airspeed_estimator start

@@ -166,13 +166,15 @@ void airspeed_slipstream_record_sitl::run()
 	sensor_sub_fd[1] = orb_subscribe_multi(ORB_ID(differential_pressure), 1);
 
 	/* subscribe to esc rpm topic */
-	int esc_sub_fd = orb_subscribe(ORB_ID(esc_status));
+	int rpm_sub_fd = orb_subscribe(ORB_ID(rpm_sitl));
 	/* subscribe to airspeed topic */
 	int asp_sub_fd = orb_subscribe(ORB_ID(airspeed));
 	/* subscribe to rc topic */
 	int rc_sub_fd = orb_subscribe(ORB_ID(rc_channels));
 	/* subscribe to airdata topic */
 	int airdat_sub_fd = orb_subscribe(ORB_ID(vehicle_air_data));
+	/* subscribe to rc topic */
+	int rpm_fd = orb_subscribe(ORB_ID(rpm_sitl));
 
 
 
@@ -186,10 +188,11 @@ void airspeed_slipstream_record_sitl::run()
 	// orb_set_interval(_parameter_update_sub, 50);
 	orb_set_interval(sensor_sub_fd[0], 50);
 	orb_set_interval(sensor_sub_fd[1], 50);
-	orb_set_interval(esc_sub_fd, 50);
+	orb_set_interval(rpm_sub_fd, 50);
 	orb_set_interval(asp_sub_fd, 50);
 	orb_set_interval(rc_sub_fd, 500);
 	orb_set_interval(airdat_sub_fd, 50);
+	orb_set_interval(rpm_fd, 50);
 
 	// uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 50}; // PARAMS
 	// uORB::SubscriptionInterval sensor_sub_fd{ORB_ID(differential_pressure), 50}; //DIFF PRESSURE
@@ -207,7 +210,8 @@ void airspeed_slipstream_record_sitl::run()
 		// { .fd = asp_sub_fd,   .events = POLLIN },
 		// { .fd = rc_sub_fd,   .events = POLLIN },
 		{ .fd = airdat_sub_fd, .events = POLLIN},
-		{ .fd = esc_sub_fd,   .events = POLLIN },
+		{ .fd = rpm_sub_fd,   .events = POLLIN },
+		{ .fd = rpm_fd,   .events = POLLIN },
 	};
 
 
@@ -262,7 +266,7 @@ void airspeed_slipstream_record_sitl::run()
 		px4_usleep(1);
 
 		// wait for up to 1000ms for data
-		int pret = px4_poll(fds, 3, 1000);
+		int pret = px4_poll(fds, 4, 1000);
 
 		if (pret == 0) {
 			// Timeout: let the loop run anyway, don't do `continue` here
@@ -273,13 +277,14 @@ void airspeed_slipstream_record_sitl::run()
 			px4_usleep(50000);
 			continue;
 
-		} else if (fds[0].revents & fds[1].revents  & fds[2].revents & POLLIN) {
+		} else if (fds[0].revents & fds[1].revents  & fds[2].revents & fds[3].revents & POLLIN) {
 
 
 			if(true)	//RECORD!
 			{
 				orb_copy(ORB_ID(differential_pressure), sensor_sub_fd[0], &diff_pres_A);
 				orb_copy(ORB_ID(differential_pressure), sensor_sub_fd[1], &diff_pres_B);
+				orb_copy(ORB_ID(rpm_sitl), rpm_fd, &rpm);
 
 				/* --------------------- Sensor 1 assignment --------------------*/
 				if(diff_pres_A.device_id == sensID_1 && sens_1_active){
@@ -300,7 +305,7 @@ void airspeed_slipstream_record_sitl::run()
 				}
 
 
-				orb_copy(ORB_ID(esc_status), esc_sub_fd, &esc_stat);
+				orb_copy(ORB_ID(rpm_sitl), rpm_sub_fd, &rpm);
 				orb_copy(ORB_ID(airspeed), asp_sub_fd, &airspeed);
 				orb_copy(ORB_ID(vehicle_air_data), airdat_sub_fd, &airdat);
 
@@ -326,8 +331,20 @@ void airspeed_slipstream_record_sitl::run()
 										smodel_1, 0.16f, 1.4f,
 										diff_pres_ID_1.differential_pressure_filtered_pa + ID_1_cal, airdat.baro_pressure_pa,
 										air_temperature_1_celsius);
-				if(PX4_ISFINITE(airspeed_ID_1 )){
-					airspeed_multi_data.primary_airspeed_ms = airspeed_ID_1;
+
+				float n = rpm.esc_rpm / 60.0f;
+				float p00 = 0.04022f;
+				float p10 = 0.07437f;
+				float p01 = 0.528f;
+				float p20 = 0.00004402f;
+				float p11 = -0.001512f;
+				float p02 = 0.009899f;
+				float A = p02;
+				float B = (p01 + p11*n);
+				float C = (p00 + p10*n + p20*n*n);
+				float vPit = A*airspeed_ID_1*airspeed_ID_1 + B*airspeed_ID_1 + C;
+				if(PX4_ISFINITE(vPit )){
+					airspeed_multi_data.primary_airspeed_ms = vPit;
 				}
 
 
@@ -350,7 +367,7 @@ void airspeed_slipstream_record_sitl::run()
 				// }
 
 				/* <--------------------------->ESC<-----------------------> */
-				airspeed_multi_data.rpm_sens = esc_stat.esc[0].esc_rpm;
+				airspeed_multi_data.rpm_sens = rpm.esc_rpm;
 
 
 				/* <------------------------>CALIBRATIOn<------------------> */
@@ -373,7 +390,7 @@ void airspeed_slipstream_record_sitl::run()
 	}
 	orb_unsubscribe(sensor_sub_fd[0]);
 	orb_unsubscribe(sensor_sub_fd[1]);
-	orb_unsubscribe(esc_sub_fd);
+	orb_unsubscribe(rpm_sub_fd);
 	orb_unsubscribe(asp_sub_fd);
 	orb_unsubscribe(rc_sub_fd);
 	orb_unsubscribe(sensor_combined_sub);

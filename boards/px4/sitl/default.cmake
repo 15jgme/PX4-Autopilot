@@ -25,6 +25,7 @@ px4_add_board(
 		#uavcan
 	MODULES
 		airspeed_slipstream_record_sitl
+		rpm_publisher_sitl
 		airspeed_estimator
 		airship_att_control
 		airspeed_selector

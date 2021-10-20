@@ -149,7 +149,7 @@ void RpmPublisherSitl::run()
 	/* advertise airspeed topic */
 	struct rpm_sitl_s rpm_sitl_d;
 	memset(&rpm_sitl_d, 0, sizeof(rpm_sitl_d));
-	orb_advert_t rpm_sitl_d = orb_advertise(ORB_ID(rpm_sitl), &rpm_sitl_d);
+	orb_advert_t rpm_sitl_pub = orb_advertise(ORB_ID(rpm_sitl), &rpm_sitl_d);
 
 
 	while (!should_exit()) {
@@ -169,7 +169,10 @@ void RpmPublisherSitl::run()
 		} else if (fds[0].revents & POLLIN) {
 
 			orb_copy(ORB_ID(actuator_outputs), act_sub, &actOut); //Copy actOut
-			float thrI = actOut.output[2];
+			float thrI = actOut.output[4];
+			rpm_sitl_d.esc_rpm = 1.0f*(7.815f*thrI - 7606.0f);
+			if(rpm_sitl_d.esc_rpm < 0.0f){rpm_sitl_d.esc_rpm = 0.0f;}
+			rpm_sitl_d.timestamp = hrt_absolute_time();
 
 
 		}
@@ -179,7 +182,7 @@ void RpmPublisherSitl::run()
 			PX4_ERR("Fuck");
 		}
 
-		orb_publish(ORB_ID(airspeed), airspeed_pub, &airspeed_d); //Publish
+		orb_publish(ORB_ID(rpm_sitl), rpm_sitl_pub, &rpm_sitl_d); //Publish
 	}
 
 	// orb_unsubscribe(sensor_combined_sub);

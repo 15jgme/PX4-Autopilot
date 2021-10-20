@@ -45,6 +45,7 @@
 #include <uORB/topics/airspeed.h>
 #include <uORB/topics/esc_status.h>
 #include <uORB/topics/rc_channels.h>
+#include <uORB/topics/rpm_sitl.h>
 #include <uORB/topics/vehicle_air_data.h>
 #include <parameters/param.h>
 #include <uORB/SubscriptionInterval.hpp>
@@ -116,7 +117,7 @@ private:
 	float air_tube_length=0.656;
 	int32_t air_cmodel = 0;
 
-	uint sensID_1 = 4923657; //Sensor ID for primary airspeed sensor FMU
+	uint sensID_1 = 0; //Sensor ID for primary airspeed sensor FMU
 	// uint sensID_1 = 0;
 	bool sens_1_active = true;
 	float ID_1_cal = 0; //Pa
@@ -147,10 +148,11 @@ private:
 	struct differential_pressure_s diff_pres_ID_1; //Struct to store data for primary sensor
 	struct differential_pressure_s diff_pres_ID_2; //Struct to store data for slipstream sensor
 	struct differential_pressure_s diff_pres;
-	struct esc_status_s esc_stat;
 	struct airspeed_s airspeed;
 	struct rc_channels_s rc_chan;
 	struct vehicle_air_data_s airdat;
+
+	rpm_sitl_s rpm{};
 
 	differential_pressure_s diff_pres_A{};
 	differential_pressure_s diff_pres_B{};

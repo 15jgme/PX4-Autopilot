@@ -199,11 +199,11 @@ void AirspeedEstimator::run()
 			airspeed_d.confidence = 1;
 
 		}
-		else
-		{
-			px4_usleep(50000);
-			PX4_ERR("Fuck");
-		}
+		// else
+		// {
+		// 	px4_usleep(50000);
+		// 	PX4_ERR("Fail");
+		// }
 
 		orb_publish(ORB_ID(airspeed), airspeed_pub, &airspeed_d); //Publish
 	}
