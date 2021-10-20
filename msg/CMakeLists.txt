@@ -123,6 +123,7 @@ set(msg_files
 	rate_ctrl_status.msg
 	rc_channels.msg
 	rc_parameter_map.msg
+	rpm_sitl.msg
 	rpm.msg
 	rtl_flight_time.msg
 	safety.msg

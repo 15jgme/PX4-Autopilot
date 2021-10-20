@@ -30,10 +30,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
-#include "airspeed_slipstream_record.hpp"
+#include "airspeed_slipstream_record_sitl.hpp"
 
 
-int airspeed_slipstream_record::print_status()
+int airspeed_slipstream_record_sitl::print_status()
 {
 	PX4_INFO("Running");
 	// TODO: print additional runtime information about the state of the module
@@ -41,7 +41,7 @@ int airspeed_slipstream_record::print_status()
 	return 0;
 }
 
-int airspeed_slipstream_record::custom_command(int argc, char *argv[])
+int airspeed_slipstream_record_sitl::custom_command(int argc, char *argv[])
 {
 	/*
 	if (!is_running()) {
@@ -59,7 +59,7 @@ int airspeed_slipstream_record::custom_command(int argc, char *argv[])
 }
 
 
-int airspeed_slipstream_record::task_spawn(int argc, char *argv[])
+int airspeed_slipstream_record_sitl::task_spawn(int argc, char *argv[])
 {
 	_task_id = px4_task_spawn_cmd("module",
 				      SCHED_DEFAULT,
@@ -76,7 +76,7 @@ int airspeed_slipstream_record::task_spawn(int argc, char *argv[])
 	return 0;
 }
 
-airspeed_slipstream_record *airspeed_slipstream_record::instantiate(int argc, char *argv[])
+airspeed_slipstream_record_sitl *airspeed_slipstream_record_sitl::instantiate(int argc, char *argv[])
 {
 	int example_param = 0;
 	bool example_flag = false;
@@ -113,7 +113,7 @@ airspeed_slipstream_record *airspeed_slipstream_record::instantiate(int argc, ch
 		return nullptr;
 	}
 
-	airspeed_slipstream_record *instance = new airspeed_slipstream_record(example_param, example_flag);
+	airspeed_slipstream_record_sitl *instance = new airspeed_slipstream_record_sitl(example_param, example_flag);
 
 	if (instance == nullptr) {
 		PX4_ERR("alloc failed");
@@ -122,12 +122,12 @@ airspeed_slipstream_record *airspeed_slipstream_record::instantiate(int argc, ch
 	return instance;
 }
 
-airspeed_slipstream_record::airspeed_slipstream_record(int example_param, bool example_flag)
+airspeed_slipstream_record_sitl::airspeed_slipstream_record_sitl(int example_param, bool example_flag)
 	: ModuleParams(nullptr)
 {
 }
 
-void airspeed_slipstream_record::run()
+void airspeed_slipstream_record_sitl::run()
 {
 
 	/* Initialize */
@@ -379,7 +379,7 @@ void airspeed_slipstream_record::run()
 	orb_unsubscribe(sensor_combined_sub);
 }
 
-void airspeed_slipstream_record::parameters_update(bool force)
+void airspeed_slipstream_record_sitl::parameters_update(bool force)
 {
 	// check for parameter updates
 	if (_parameter_update_sub.updated() || force) {
@@ -392,7 +392,7 @@ void airspeed_slipstream_record::parameters_update(bool force)
 	}
 }
 
-int airspeed_slipstream_record::print_usage(const char *reason)
+int airspeed_slipstream_record_sitl::print_usage(const char *reason)
 {
 	if (reason) {
 		PX4_WARN("%s\n", reason);
@@ -410,7 +410,7 @@ CLI usage example:
 $ module start -f -p 42
 )DESCR_STR");
 
-	PRINT_MODULE_USAGE_NAME("module", "airspeed_slipstream_record");
+	PRINT_MODULE_USAGE_NAME("module", "airspeed_slipstream_record_sitl");
 	PRINT_MODULE_USAGE_COMMAND("start");
 	PRINT_MODULE_USAGE_PARAM_FLAG('f', "Optional example flag", true);
 	PRINT_MODULE_USAGE_PARAM_INT('p', 0, 0, 1000, "Optional example parameter", true);
@@ -419,12 +419,12 @@ $ module start -f -p 42
 	return 0;
 }
 
-int airspeed_slipstream_record_main(int argc, char *argv[])
+int airspeed_slipstream_record_sitl_main(int argc, char *argv[])
 {
-	return airspeed_slipstream_record::main(argc, argv);
+	return airspeed_slipstream_record_sitl::main(argc, argv);
 }
 
-int airspeed_slipstream_record::diff_pressure_calib()
+int airspeed_slipstream_record_sitl::diff_pressure_calib()
 {
 
 	/* subscribe to diff pressure topic */

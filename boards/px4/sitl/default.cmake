@@ -24,6 +24,8 @@ px4_add_board(
 		tone_alarm
 		#uavcan
 	MODULES
+		airspeed_slipstream_record_sitl
+		airspeed_estimator
 		airship_att_control
 		airspeed_selector
 		attitude_estimator_q

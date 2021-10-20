@@ -31,8 +31,8 @@
  *
  ****************************************************************************/
 
-#ifndef AIRSPEED_SLIPSTREAM_RECORD_HPP
-#define AIRSPEED_SLIPSTREAM_RECORD_HPP
+#ifndef AIRSPEED_SLIPSTREAM_RECORD_SITL_HPP
+#define AIRSPEED_SLIPSTREAM_RECORD_SITL_HPP
 
 #pragma once
 
@@ -53,7 +53,7 @@
 #include <drivers/drv_sensor.h>
 
 
-#include "airspeed_slipstream_record.hpp"
+// #include "airspeed_slipstream_record_sitl.hpp"
 
 #include <px4_platform_common/getopt.h>
 #include <px4_platform_common/log.h>
@@ -69,21 +69,21 @@
 #define PCB_TEMP_ESTIMATE_DEG		5.0f
 
 
-extern "C" __EXPORT int airspeed_slipstream_record_main(int argc, char *argv[]);
+extern "C" __EXPORT int airspeed_slipstream_record_sitl_main(int argc, char *argv[]);
 
 
-class airspeed_slipstream_record :  public ModuleBase<airspeed_slipstream_record> , public ModuleParams
+class airspeed_slipstream_record_sitl :  public ModuleBase<airspeed_slipstream_record_sitl> , public ModuleParams
 {
 public:
-	airspeed_slipstream_record(int example_param, bool example_flag);
+	airspeed_slipstream_record_sitl(int example_param, bool example_flag);
 
-	virtual ~airspeed_slipstream_record() = default;
+	virtual ~airspeed_slipstream_record_sitl() = default;
 
 	/** @see ModuleBase */
 	static int task_spawn(int argc, char *argv[]);
 
 	/** @see ModuleBase */
-	static airspeed_slipstream_record *instantiate(int argc, char *argv[]);
+	static airspeed_slipstream_record_sitl *instantiate(int argc, char *argv[]);
 
 	/** @see ModuleBase */
 	static int custom_command(int argc, char *argv[]);
