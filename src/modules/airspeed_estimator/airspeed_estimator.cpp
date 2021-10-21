@@ -177,6 +177,8 @@ void AirspeedEstimator::run()
 
 		} else if (fds[1].revents & fds[2].revents & fds[3].revents & POLLIN) {
 
+			bool ekfSw = false; // If false use complimentary filter
+
 			/* ---- Copy data ---- */
 			orb_copy(ORB_ID(airspeed_multi_record), masm_sub, &masm);
 			orb_copy(ORB_ID(vehicle_attitude), att_sub, &att);
@@ -195,10 +197,19 @@ void AirspeedEstimator::run()
 			nRec = masm.rpm_sens / 60.0f; // Convert to rev/s
 			pitRec = masm.primary_airspeed_ms;
 
-			/* ---- Complimentary ---- */
-			float VaPit = calcVa(pitRec, nRec);
-			float VaOut = calcComp(); // Run complimentary filter
-			/* ---- End of Complimentary ---- */
+			if(ekfSw)
+			{
+				/* ---- EKF ---- */
+				float VaOut = calcEKF();
+				/* ---- End of EKF ---- */
+			}
+			else
+			{
+				/* ---- Complimentary ---- */
+				float VaPit = calcVa(pitRec, nRec);
+				float VaOut = calcComp(); // Run complimentary filter
+				/* ---- End of Complimentary ---- */
+			}
 
 			/* ---- Protect system ---- */
 			if(VaTemp > 0 && PX4_ISFINITE(VaTemp))
@@ -339,4 +350,6 @@ float AirspeedEstimator::calcEKF();
 
 	Pkm1_km1 = Pk_k;
 	xkm1_km1 = xk_k;
+
+	return xk_k
 }
