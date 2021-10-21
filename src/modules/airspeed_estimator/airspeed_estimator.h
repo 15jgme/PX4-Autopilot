@@ -41,6 +41,12 @@
 #include <uORB/topics/wind.h>
 #include <uORB/topics/airspeed_wind.h>
 #include <uORB/topics/airspeed.h>
+#include <uORB/topics/vehicle_local_position.h>
+#include <uORB/topcis/vehicle_attitude.h>
+
+#include <lib/mathlib/mathlib.h>
+#include <matrix/math.hpp>
+#include <mathlib/mathlib.h>
 
 extern "C" __EXPORT int airspeed_estimator_main(int argc, char *argv[]);
 
@@ -73,6 +79,14 @@ public:
 	/** solve quadratic for Va **/
 	float calcVa(float Vpit, float n);
 
+	float calcEKF();
+	float Hfn(float Vakm1, float n);
+	float SlipFn(float Vakm1, float n);
+
+	float calcComp();
+
+	float calcExpectAs();
+
 	// Thruster curve fit
 	float p00 = 0.04022f;
 	float p10 = 0.07437f;
@@ -82,6 +96,20 @@ public:
 	float p02 = 0.009899f;
 
 	bool solExist{true};
+
+	// Complimentary filter
+	float alpha{0.0f};
+	float phi{0.0f};
+	float phiStart = 25;
+	float alphaStart = 0.3;
+	float alphaEnd = 0.1;
+
+	// EKF
+	float Q = 10.0f; // wind variance
+	float R = 10.0f; // sensor variance
+	float Fk = 1.0f;
+	float Pkm1_km1 = 20.0f;
+
 
 private:
 
@@ -97,15 +125,15 @@ private:
 		(ParamInt<px4::params::SYS_AUTOCONFIG>) _param_sys_autoconfig  /**< another parameter */
 	)
 
+	//Subscriptions
 	struct airspeed_multi_record_s masm;
 	struct wind_s windEst;
+	struct vehicle_attitude_s att;
+	struct vehicle_local_position pos;
 
 	float Va{10.0f}; // Declare here, only update if we get a new good Va
 	float nRec{0.0f}; //prop Rev/s
 	float pitRec{0.0f}; //pitot tube recording
-
-	// Subscriptions
-	// uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 1000};
 
 };
 

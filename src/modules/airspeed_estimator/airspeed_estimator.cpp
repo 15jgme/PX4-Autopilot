@@ -140,13 +140,19 @@ void AirspeedEstimator::run()
 	// Example: run the loop synchronized to the sensor_combined topic publication
 	int wind_sub = orb_subscribe(ORB_ID(wind));
 	int masm_sub = orb_subscribe(ORB_ID(airspeed_multi_record));
+	int att_sub  = orb_subscribe(ORB_ID(vehicle_attitude));
+	int pos_sub  = orb_subscribe(ORB_ID(vehicle_local_potition));
 
 	orb_set_interval(wind_sub, 20);
 	orb_set_interval(masm_sub, 20);
+	orb_set_interval(att_sub, 20);
+	orb_set_interval(pos_sub, 20);
 
 	px4_pollfd_struct_t fds[] = {
 		{ .fd = wind_sub,   .events = POLLIN },
 		{ .fd = masm_sub,   .events = POLLIN },
+		{ .fd = att_sub,   .events = POLLIN },
+		{ .fd = pos_sub,   .events = POLLIN },
 	};
 
 	/* advertise airspeed topic */
@@ -169,25 +175,37 @@ void AirspeedEstimator::run()
 			px4_usleep(50000);
 			continue;
 
-		} else if (fds[1].revents & POLLIN) {
+		} else if (fds[1].revents & fds[2].revents & fds[3].revents & POLLIN) {
 
-			orb_copy(ORB_ID(airspeed_multi_record), masm_sub, &masm); //Copy masm data
+			/* ---- Copy data ---- */
+			orb_copy(ORB_ID(airspeed_multi_record), masm_sub, &masm);
+			orb_copy(ORB_ID(vehicle_attitude), att_sub, &att);
+			orb_copy(ORB_ID(vehicle_local_position), pos_sub, &pos);
 
 			if(fds[0].revents)
 			{
 				orb_copy(ORB_ID(wind), wind_sub, &windEst); //Copy wind data if we get it
 			}
+			/* ---- Copy data ---- */
 
+			/* ---- Get wind estimated airspeed ---- */
+			float vaWindEst = calcExpectAs();
+			/* ---- Get wind estimated airspeed ---- */
 
 			nRec = masm.rpm_sens / 60.0f; // Convert to rev/s
 			pitRec = masm.primary_airspeed_ms;
 
-			float VaTemp = calcVa(pitRec, nRec);
+			/* ---- Complimentary ---- */
+			float VaPit = calcVa(pitRec, nRec);
+			float VaOut = calcComp(); // Run complimentary filter
+			/* ---- End of Complimentary ---- */
+
+			/* ---- Protect system ---- */
 			if(VaTemp > 0 && PX4_ISFINITE(VaTemp))
 			{
 				//Let through if positive
-				airspeed_d.indicated_airspeed_m_s = calcVa(pitRec, nRec);
-				airspeed_d.true_airspeed_m_s = calcVa(pitRec, nRec);
+				airspeed_d.indicated_airspeed_m_s = VaOut;
+				airspeed_d.true_airspeed_m_s = VaOut;
 			}else{
 				//Deny if negative
 				airspeed_d.indicated_airspeed_m_s = 0.0f;
@@ -197,13 +215,9 @@ void AirspeedEstimator::run()
 			airspeed_d.timestamp = hrt_absolute_time();
 			airspeed_d.air_temperature_celsius = masm.primary_temperature;
 			airspeed_d.confidence = 1;
+			/* ---- Protect system ---- */
 
 		}
-		// else
-		// {
-		// 	px4_usleep(50000);
-		// 	PX4_ERR("Fail");
-		// }
 
 		orb_publish(ORB_ID(airspeed), airspeed_pub, &airspeed_d); //Publish
 	}
@@ -268,4 +282,61 @@ float AirspeedEstimator::calcVa(float Vpit, float n)
 		}
 	}
 	return Va;
+}
+
+float AirspeedEstimator::calcComp(float vaEst, float Va_w)
+{
+	alpha = (-tanh(phi - phiStart - 2)/2 + 0.5) * (alphaStart - alphaEnd) + alphaEnd;
+	Vak = (1-alpha) * (Va_w) + alpha*(vaEst);
+	return Vak;
+}
+
+
+float AirspeedEstimator::calcExpectAs()
+{
+	float via_n = pos.vx - windEst.windspeed_north;
+	float via_e = pos.vy - windEst.windspeed_east;
+	float via_d = pos.vz;
+
+	matrix::Dcmf R = matrix::Quatf(att.q);
+	matrix::Dcmf Cbi = R.transpose();
+
+	float vab1 = Cbi(0,0)*via_n + Cbi(0,1)*via_e + Cbi(0,2)*via_d;
+
+	float normVa = sqrtf(via_n*via_n + via_e*via_e + via_d*via_d);
+
+	phi = acosf(vab1/normVa);
+
+	return vab1;
+
+}
+
+float AirspeedEstimator::Hfn(float Vakm1, float n)
+{
+	return n*(-0.001512) + Vakm1*0.019798 + 66.0f / 125.0f;
+}
+
+float AirspeedEstimator::SlipFn(float Vakm1, float n)
+{
+	return p00 + p10*n + p01*Vakm1 + p20*n*n + p11*n*Vakm1 + p02*Vakm1*Vakm1;
+}
+
+float AirspeedEstimator::calcEKF();
+{
+	float xk_km1 = calcExpectAs();
+	float Hk = Hfn(n,xk_km1);
+
+	float Pk_km1 = Fk*Pkm1_km1*Fk + Q;
+
+	float ykModel = SlipFn(n,xk_km1);
+	float yk = vPit - ykModel;
+	float Sk = Hk * Pk_km1 * (Hk) + R;
+
+	float Kk = Pk_km1 * (Hk) / Sk;
+	float xk_k = xk_km1 + Kk*yk;
+	float Pk_k = (1 - Kk*Hk)*Pk_km1;
+
+
+	Pkm1_km1 = Pk_k;
+	xkm1_km1 = xk_k;
 }
