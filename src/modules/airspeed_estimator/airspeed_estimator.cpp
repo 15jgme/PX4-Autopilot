@@ -73,7 +73,7 @@ int AirspeedEstimator::task_spawn(int argc, char *argv[])
 	_task_id = px4_task_spawn_cmd("module",
 				      SCHED_DEFAULT,
 				      SCHED_PRIORITY_MAX,
-				      1024,
+				      1676,
 				      (px4_main_t)&run_trampoline,
 				      (char *const *)argv);
 
@@ -143,10 +143,10 @@ void AirspeedEstimator::run()
 	int att_sub  = orb_subscribe(ORB_ID(vehicle_attitude));
 	int pos_sub  = orb_subscribe(ORB_ID(vehicle_local_position));
 
-	orb_set_interval(wind_sub, 20);
-	orb_set_interval(masm_sub, 20);
-	orb_set_interval(att_sub, 20);
-	orb_set_interval(pos_sub, 20);
+	orb_set_interval(wind_sub, 2);
+	orb_set_interval(masm_sub, 2);
+	orb_set_interval(att_sub, 2);
+	orb_set_interval(pos_sub, 2);
 
 	px4_pollfd_struct_t fds[] = {
 		{ .fd = wind_sub,   .events = POLLIN },
@@ -159,6 +159,12 @@ void AirspeedEstimator::run()
 	struct airspeed_s airspeed_d;
 	memset(&airspeed_d, 0, sizeof(airspeed_d));
 	orb_advert_t airspeed_pub = orb_advertise(ORB_ID(airspeed), &airspeed_d);
+
+
+	/* advertise estimator topic */
+	struct airspeed_estimator_dat_s airspeed_estimator_dat_d;
+	memset(&airspeed_estimator_dat_d, 0, sizeof(airspeed_estimator_dat_d));
+	orb_advert_t airspeed_estimator_dat_pub = orb_advertise(ORB_ID(airspeed_estimator_dat), &airspeed_estimator_dat_d);
 
 
 	while (!should_exit()) {
@@ -177,7 +183,7 @@ void AirspeedEstimator::run()
 
 		} else if (fds[1].revents & fds[2].revents & fds[3].revents & POLLIN) {
 
-			bool ekfSw = false; // If false use complimentary filter
+			bool ekfSw = true; // If false use complimentary filter
 
 			/* ---- Copy data ---- */
 			orb_copy(ORB_ID(airspeed_multi_record), masm_sub, &masm);
@@ -232,12 +238,14 @@ void AirspeedEstimator::run()
 		}
 		else
 		{
+			px4_usleep(50);
 			PX4_ERR("MASM: %d ---- ATT: %d ---- POS: %d", fds[1].revents,  fds[2].revents,  fds[3].revents);
 
 		}
 
 
 		orb_publish(ORB_ID(airspeed), airspeed_pub, &airspeed_d); //Publish
+		orb_publish(ORB_ID(airspeed_estimator_dat), airspeed_estimator_dat_pub, &airspeed_estimator_dat_d); //Publish
 	}
 
 	// orb_unsubscribe(sensor_combined_sub);
@@ -306,6 +314,11 @@ float AirspeedEstimator::calcComp(float vaEst, float Va_w)
 {
 	alpha = (-tanhf(phi - phiStart - 2.0f)/2.0f + 0.5f) * (alphaStart - alphaEnd) + alphaEnd;
 	float Vak = (1.0f-alpha) * (Va_w) + alpha*(vaEst);
+
+	airspeed_estimator_dat_d.va_wind = Va_w;
+	airspeed_estimator_dat_d.phi = phi;
+	airspeed_estimator_dat_d.alpha = alpha;
+
 	return Vak;
 }
 
@@ -355,7 +368,18 @@ float AirspeedEstimator::calcEKF(float n, float vPit)
 	float Pk_k = (1 - Kk*Hk)*Pk_km1;
 
 
+
 	Pkm1_km1 = Pk_k;
 
 	return xk_k;
+
+	airspeed_estimator_dat_d.xk_km1 = xk_km1;
+	airspeed_estimator_dat_d.hk = Hk;
+	airspeed_estimator_dat_d.pk_km1 = Pk_km1;
+	airspeed_estimator_dat_d.ykmodel = ykModel;
+	airspeed_estimator_dat_d.yk = yk;
+	airspeed_estimator_dat_d.sk = Sk;
+
+	airspeed_estimator_dat_d.ekf_flag = true;
+
 }

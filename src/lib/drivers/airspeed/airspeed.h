@@ -74,7 +74,7 @@ protected:
 	float			_diff_pres_offset;
 
 	uORB::PublicationMulti<differential_pressure_s>	_airspeed_pub{ORB_ID(differential_pressure)};
-	uORB::PublicationMulti<differential_pressure_hidden_s>	_airspeed_pub_hid{ORB_ID(differential_pressure_hidden)};
+	// uORB::PublicationMulti<differential_pressure_hidden_s>	_airspeed_pub_hid{ORB_ID(differential_pressure_hidden)};
 
 	int			_airspeed_orb_class_instance;
 

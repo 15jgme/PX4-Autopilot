@@ -34,7 +34,7 @@
 px4_add_module(
 	MODULE modules__airspeed_slipstream_record
 	MAIN airspeed_slipstream_record
-
+	PRIORITY "SCHED_PRIORITY_MAX-30"
 	SRCS
 		airspeed_slipstream_record.cpp
 		airspeed_slipstream_record.hpp

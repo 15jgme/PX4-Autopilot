@@ -43,6 +43,7 @@
 #include <uORB/topics/airspeed.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_attitude.h>
+#include <uORB/topics/airspeed_estimator_dat.msg>
 
 #include <lib/mathlib/mathlib.h>
 #include <matrix/math.hpp>

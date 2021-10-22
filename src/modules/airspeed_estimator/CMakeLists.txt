@@ -34,7 +34,7 @@
 px4_add_module(
 	MODULE modules__airspeed_estimator
 	MAIN airspeed_estimator
-
+	PRIORITY "SCHED_PRIORITY_MAX-30"
 	SRCS
 		airspeed_estimator.cpp
 		airspeed_estimator.h

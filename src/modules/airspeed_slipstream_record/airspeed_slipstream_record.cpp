@@ -63,7 +63,7 @@ int airspeed_slipstream_record::task_spawn(int argc, char *argv[])
 {
 	_task_id = px4_task_spawn_cmd("module",
 				      SCHED_DEFAULT,
-				      SCHED_PRIORITY_DEFAULT,
+				      SCHED_PRIORITY_MAX,
 				      1676,
 				      (px4_main_t)&run_trampoline,
 				      (char *const *)argv);
@@ -184,12 +184,12 @@ void airspeed_slipstream_record::run()
 
 	// Subscriptions
 	// orb_set_interval(_parameter_update_sub, 50);
-	orb_set_interval(sensor_sub_fd[0], 20);
-	orb_set_interval(sensor_sub_fd[1], 20);
-	orb_set_interval(esc_sub_fd, 20);
-	orb_set_interval(asp_sub_fd, 20);
+	orb_set_interval(sensor_sub_fd[0], 2);
+	orb_set_interval(sensor_sub_fd[1], 2);
+	orb_set_interval(esc_sub_fd, 2);
+	orb_set_interval(asp_sub_fd, 2);
 	orb_set_interval(rc_sub_fd, 500);
-	orb_set_interval(airdat_sub_fd, 20);
+	orb_set_interval(airdat_sub_fd, 2);
 
 	// uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 50}; // PARAMS
 	// uORB::SubscriptionInterval sensor_sub_fd{ORB_ID(differential_pressure), 50}; //DIFF PRESSURE
@@ -273,7 +273,18 @@ void airspeed_slipstream_record::run()
 			px4_usleep(50000);
 			continue;
 
-		} else if (fds[0].revents & fds[1].revents  & fds[2].revents & POLLIN) {
+		} else if (fds[0].revents  & POLLIN) {
+
+			//If ESC came in
+			if(fds[2].revents)
+			{
+				orb_copy(ORB_ID(esc_status), esc_sub_fd, &esc_stat);
+			}
+			//If airdat came in
+			if(fds[1].revents)
+			{
+				orb_copy(ORB_ID(vehicle_air_data), airdat_sub_fd, &airdat);
+			}
 
 
 			if(true)	//RECORD!
@@ -299,10 +310,8 @@ void airspeed_slipstream_record::run()
 					// PX4_INFO("sens2 found");
 				}
 
-
-				orb_copy(ORB_ID(esc_status), esc_sub_fd, &esc_stat);
 				orb_copy(ORB_ID(airspeed), asp_sub_fd, &airspeed);
-				orb_copy(ORB_ID(vehicle_air_data), airdat_sub_fd, &airdat);
+
 
 				//Put system IAS in message
 				airspeed_multi_data.vehicle_ias = airspeed.indicated_airspeed_m_s; //Set airspeed from system to msg airspeed (for faster logging)
