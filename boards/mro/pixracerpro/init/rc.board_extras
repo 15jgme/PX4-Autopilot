@@ -10,4 +10,4 @@ then
 fi
 
 airspeed_slipstream_record start
-airspeed_estimator start
+# airspeed_estimator start

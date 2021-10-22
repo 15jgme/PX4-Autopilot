@@ -34,6 +34,7 @@
 px4_add_module(
 	MODULE modules__airspeed_estimator
 	MAIN airspeed_estimator
+
 	SRCS
 		airspeed_estimator.cpp
 		airspeed_estimator.h

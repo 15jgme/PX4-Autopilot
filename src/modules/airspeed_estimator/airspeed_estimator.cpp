@@ -72,7 +72,7 @@ int AirspeedEstimator::task_spawn(int argc, char *argv[])
 {
 	_task_id = px4_task_spawn_cmd("module",
 				      SCHED_DEFAULT,
-				      SCHED_PRIORITY_DEFAULT,
+				      SCHED_PRIORITY_MAX,
 				      1024,
 				      (px4_main_t)&run_trampoline,
 				      (char *const *)argv);
@@ -141,7 +141,7 @@ void AirspeedEstimator::run()
 	int wind_sub = orb_subscribe(ORB_ID(wind));
 	int masm_sub = orb_subscribe(ORB_ID(airspeed_multi_record));
 	int att_sub  = orb_subscribe(ORB_ID(vehicle_attitude));
-	int pos_sub  = orb_subscribe(ORB_ID(vehicle_local_potition));
+	int pos_sub  = orb_subscribe(ORB_ID(vehicle_local_position));
 
 	orb_set_interval(wind_sub, 20);
 	orb_set_interval(masm_sub, 20);
@@ -164,7 +164,7 @@ void AirspeedEstimator::run()
 	while (!should_exit()) {
 
 		// wait for up to 1000ms for data
-		int pret = px4_poll(fds, 2, 1000);
+		int pret = px4_poll(fds, 4, 1000);
 
 		if (pret == 0) {
 			// Timeout: let the loop run anyway, don't do `continue` here
@@ -197,30 +197,31 @@ void AirspeedEstimator::run()
 			nRec = masm.rpm_sens / 60.0f; // Convert to rev/s
 			pitRec = masm.primary_airspeed_ms;
 
+			float VaOut;
 			if(ekfSw)
 			{
 				/* ---- EKF ---- */
-				float VaOut = calcEKF();
+				VaOut = calcEKF(nRec, pitRec);
 				/* ---- End of EKF ---- */
 			}
 			else
 			{
 				/* ---- Complimentary ---- */
 				float VaPit = calcVa(pitRec, nRec);
-				float VaOut = calcComp(); // Run complimentary filter
+				VaOut = calcComp(VaPit, vaWindEst); // Run complimentary filter
 				/* ---- End of Complimentary ---- */
 			}
 
 			/* ---- Protect system ---- */
-			if(VaTemp > 0 && PX4_ISFINITE(VaTemp))
+			if(VaOut > 0 && PX4_ISFINITE(VaOut))
 			{
 				//Let through if positive
 				airspeed_d.indicated_airspeed_m_s = VaOut;
 				airspeed_d.true_airspeed_m_s = VaOut;
 			}else{
 				//Deny if negative
-				airspeed_d.indicated_airspeed_m_s = 0.0f;
-				airspeed_d.true_airspeed_m_s = 0.0f;
+				airspeed_d.indicated_airspeed_m_s = VaOut*0.0f;
+				airspeed_d.true_airspeed_m_s = VaOut*0.0f;
 			}
 
 			airspeed_d.timestamp = hrt_absolute_time();
@@ -229,6 +230,12 @@ void AirspeedEstimator::run()
 			/* ---- Protect system ---- */
 
 		}
+		else
+		{
+			PX4_ERR("MASM: %d ---- ATT: %d ---- POS: %d", fds[1].revents,  fds[2].revents,  fds[3].revents);
+
+		}
+
 
 		orb_publish(ORB_ID(airspeed), airspeed_pub, &airspeed_d); //Publish
 	}
@@ -280,16 +287,16 @@ float AirspeedEstimator::calcVa(float Vpit, float n)
 	float B = (p01 + p11*n);
 	float C = (p00 + p10*n + p20*n*n - Vpit);
 
-	solExist = B*B - 4*A*C > 0;
+	solExist = B*B - 4.0f*A*C > 0;
 	// float Va = 10.0f; //TODO should I just declare this in another scope and only write to it if its reasonable?
 
 	if(solExist)
 	{
-		Va = (-B + sqrtf(B*B - 4*A*C)) / (2*A);
+		Va = (-B + sqrtf(B*B - 4.0f*A*C)) / (2.0f*A);
 
 		if(Va<0)
 		{
-			Va = (-B - sqrtf(B*B - 4*A*C)) / (2*A);
+			Va = (-B - sqrtf(B*B - 4.0f*A*C)) / (2.0f*A);
 		}
 	}
 	return Va;
@@ -297,8 +304,8 @@ float AirspeedEstimator::calcVa(float Vpit, float n)
 
 float AirspeedEstimator::calcComp(float vaEst, float Va_w)
 {
-	alpha = (-tanh(phi - phiStart - 2)/2 + 0.5) * (alphaStart - alphaEnd) + alphaEnd;
-	Vak = (1-alpha) * (Va_w) + alpha*(vaEst);
+	alpha = (-tanhf(phi - phiStart - 2.0f)/2.0f + 0.5f) * (alphaStart - alphaEnd) + alphaEnd;
+	float Vak = (1.0f-alpha) * (Va_w) + alpha*(vaEst);
 	return Vak;
 }
 
@@ -309,8 +316,8 @@ float AirspeedEstimator::calcExpectAs()
 	float via_e = pos.vy - windEst.windspeed_east;
 	float via_d = pos.vz;
 
-	matrix::Dcmf R = matrix::Quatf(att.q);
-	matrix::Dcmf Cbi = R.transpose();
+	matrix::Dcmf Rib = matrix::Quatf(att.q);
+	matrix::Dcmf Cbi = Rib.transpose();
 
 	float vab1 = Cbi(0,0)*via_n + Cbi(0,1)*via_e + Cbi(0,2)*via_d;
 
@@ -324,7 +331,7 @@ float AirspeedEstimator::calcExpectAs()
 
 float AirspeedEstimator::Hfn(float Vakm1, float n)
 {
-	return n*(-0.001512) + Vakm1*0.019798 + 66.0f / 125.0f;
+	return n*(-0.001512f) + Vakm1*0.019798f + 66.0f / 125.0f;
 }
 
 float AirspeedEstimator::SlipFn(float Vakm1, float n)
@@ -332,7 +339,7 @@ float AirspeedEstimator::SlipFn(float Vakm1, float n)
 	return p00 + p10*n + p01*Vakm1 + p20*n*n + p11*n*Vakm1 + p02*Vakm1*Vakm1;
 }
 
-float AirspeedEstimator::calcEKF();
+float AirspeedEstimator::calcEKF(float n, float vPit)
 {
 	float xk_km1 = calcExpectAs();
 	float Hk = Hfn(n,xk_km1);
@@ -349,7 +356,6 @@ float AirspeedEstimator::calcEKF();
 
 
 	Pkm1_km1 = Pk_k;
-	xkm1_km1 = xk_k;
 
-	return xk_k
+	return xk_k;
 }

@@ -42,7 +42,7 @@
 #include <uORB/topics/airspeed_wind.h>
 #include <uORB/topics/airspeed.h>
 #include <uORB/topics/vehicle_local_position.h>
-#include <uORB/topcis/vehicle_attitude.h>
+#include <uORB/topics/vehicle_attitude.h>
 
 #include <lib/mathlib/mathlib.h>
 #include <matrix/math.hpp>
@@ -79,11 +79,11 @@ public:
 	/** solve quadratic for Va **/
 	float calcVa(float Vpit, float n);
 
-	float calcEKF();
+	float calcEKF(float n, float vPit);
 	float Hfn(float Vakm1, float n);
 	float SlipFn(float Vakm1, float n);
 
-	float calcComp();
+	float calcComp(float vaEst, float Va_w);
 
 	float calcExpectAs();
 
@@ -129,7 +129,7 @@ private:
 	struct airspeed_multi_record_s masm;
 	struct wind_s windEst;
 	struct vehicle_attitude_s att;
-	struct vehicle_local_position pos;
+	struct vehicle_local_position_s pos;
 
 	float Va{10.0f}; // Declare here, only update if we get a new good Va
 	float nRec{0.0f}; //prop Rev/s

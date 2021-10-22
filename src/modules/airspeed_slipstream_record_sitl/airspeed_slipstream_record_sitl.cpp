@@ -63,7 +63,7 @@ int airspeed_slipstream_record_sitl::task_spawn(int argc, char *argv[])
 {
 	_task_id = px4_task_spawn_cmd("module",
 				      SCHED_DEFAULT,
-				      SCHED_PRIORITY_MIN,
+				      SCHED_PRIORITY_DEFAULT,
 				      1676,
 				      (px4_main_t)&run_trampoline,
 				      (char *const *)argv);

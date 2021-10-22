@@ -63,7 +63,7 @@ int airspeed_slipstream_record::task_spawn(int argc, char *argv[])
 {
 	_task_id = px4_task_spawn_cmd("module",
 				      SCHED_DEFAULT,
-				      SCHED_PRIORITY_MIN,
+				      SCHED_PRIORITY_DEFAULT,
 				      1676,
 				      (px4_main_t)&run_trampoline,
 				      (char *const *)argv);
@@ -184,12 +184,12 @@ void airspeed_slipstream_record::run()
 
 	// Subscriptions
 	// orb_set_interval(_parameter_update_sub, 50);
-	orb_set_interval(sensor_sub_fd[0], 50);
-	orb_set_interval(sensor_sub_fd[1], 50);
-	orb_set_interval(esc_sub_fd, 50);
-	orb_set_interval(asp_sub_fd, 50);
+	orb_set_interval(sensor_sub_fd[0], 20);
+	orb_set_interval(sensor_sub_fd[1], 20);
+	orb_set_interval(esc_sub_fd, 20);
+	orb_set_interval(asp_sub_fd, 20);
 	orb_set_interval(rc_sub_fd, 500);
-	orb_set_interval(airdat_sub_fd, 50);
+	orb_set_interval(airdat_sub_fd, 20);
 
 	// uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 50}; // PARAMS
 	// uORB::SubscriptionInterval sensor_sub_fd{ORB_ID(differential_pressure), 50}; //DIFF PRESSURE
