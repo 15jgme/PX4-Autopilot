@@ -363,7 +363,7 @@ float AirspeedEstimator::calcEKF(float n, float vPit)
 
 	float Pk_km1 = Fk*Pkm1_km1*Fk + Q;
 
-	float ykModel = SlipFn(n,xk_km1);
+	float ykModel = SlipFn(xk_km1,n);
 	float yk = vPit - ykModel;
 	float Sk = Hk * Pk_km1 * (Hk) + R;
 
