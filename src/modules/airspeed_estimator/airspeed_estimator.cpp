@@ -182,7 +182,7 @@ void AirspeedEstimator::run()
 
 		} else if (fds[1].revents & fds[2].revents & fds[3].revents & POLLIN) {
 
-			bool ekfSw = true; // If false use complimentary filter
+			bool ekfSw = false; // If false use complimentary filter
 
 			/* ---- Copy data ---- */
 			orb_copy(ORB_ID(airspeed_multi_record), masm_sub, &masm);
@@ -322,6 +322,7 @@ float AirspeedEstimator::calcComp(float vaEst, float Va_w)
 	airspeed_estimator_dat_d.va_wind = Va_w;
 	airspeed_estimator_dat_d.phi = phi;
 	airspeed_estimator_dat_d.alpha = alpha;
+	airspeed_estimator_dat_d.va_est = vaEst;
 
 	return Vak;
 }
@@ -340,7 +341,7 @@ float AirspeedEstimator::calcExpectAs()
 
 	float normVa = sqrtf(via_n*via_n + via_e*via_e + via_d*via_d);
 
-	phi = acosf(vab1/normVa);
+	phi =  57.2958f * acosf(vab1/normVa);
 
 	return vab1;
 
@@ -365,9 +366,9 @@ float AirspeedEstimator::calcEKF(float n, float vPit)
 
 	float ykModel = SlipFn(xk_km1,n);
 	float yk = vPit - ykModel;
-	float Sk = Hk * Pk_km1 * (Hk) + R;
+	float Sk = Hk * Pk_km1 * Hk + R;
 
-	float Kk = Pk_km1 * (Hk) / Sk;
+	float Kk = ( Pk_km1 * Hk )/ Sk;
 	float xk_k = xk_km1 + Kk*yk;
 	float Pk_k = (1 - Kk*Hk)*Pk_km1;
 
@@ -383,6 +384,7 @@ float AirspeedEstimator::calcEKF(float n, float vPit)
 	airspeed_estimator_dat_d.ykmodel = ykModel;
 	airspeed_estimator_dat_d.yk = yk;
 	airspeed_estimator_dat_d.sk = Sk;
+	airspeed_estimator_dat_d.kk = Kk;
 
 	airspeed_estimator_dat_d.ekf_flag = true;
 

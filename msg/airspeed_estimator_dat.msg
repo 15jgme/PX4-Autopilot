@@ -7,6 +7,7 @@ float32 pk_km1
 float32 ykmodel
 float32 yk
 float32 sk
+float32 kk
 #EKF
 
 bool ekf_flag

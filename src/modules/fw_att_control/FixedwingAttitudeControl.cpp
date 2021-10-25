@@ -880,7 +880,7 @@ void FixedwingAttitudeControl::Run()
 				// matrix::Dcmf C_manual = C_roll*C_pitch;
 
 				/*... DCMs for control system ......................................*/
-				_JUAN_flight_mode = 0;
+				_JUAN_flight_mode = 1; // 0 is attitude control, 1 is position control
 
 				if (_JUAN_flight_mode < 1) { //if in juan's flight mode
 					C_ri = C_manual; //set reference

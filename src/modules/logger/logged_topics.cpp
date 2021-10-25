@@ -52,7 +52,7 @@ void LoggedTopics::add_default_topics()
 	add_topic("actuator_controls_3", 100);
 	add_topic("actuator_controls_4", 100);
 	add_topic("actuator_controls_5", 100);
-	add_topic("airspeed_multi_record", 50);
+	// add_topic("airspeed_multi_record", 50);
 	add_topic("airspeed_validated", 200);
 	add_topic("camera_capture");
 	add_topic("camera_trigger");
@@ -125,6 +125,11 @@ void LoggedTopics::add_default_topics()
 
 	//Juan's topic
 	add_topic("juan_attitude_variables", 100);
+
+	//Jackson's topic
+	add_topic("airspeed", 20);
+	add_topic("airspeed_multi_record", 20);
+	add_topic("airspeed_estimator_dat", 20);
 
 	// multi topics
 	add_topic_multi("actuator_outputs", 100, 3);
@@ -224,7 +229,7 @@ void LoggedTopics::add_estimator_replay_topics()
 	add_topic("ekf2_timestamps");
 
 	// current EKF2 subscriptions
-	add_topic("airspeed");
+	// add_topic("airspeed");
 	add_topic("optical_flow");
 	add_topic("sensor_combined");
 	add_topic("sensor_selection");
