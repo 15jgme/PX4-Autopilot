@@ -162,7 +162,6 @@ void AirspeedEstimator::run()
 
 
 	/* advertise estimator topic */
-	struct airspeed_estimator_dat_s airspeed_estimator_dat_d;
 	memset(&airspeed_estimator_dat_d, 0, sizeof(airspeed_estimator_dat_d));
 	orb_advert_t airspeed_estimator_dat_pub = orb_advertise(ORB_ID(airspeed_estimator_dat), &airspeed_estimator_dat_d);
 
@@ -204,6 +203,7 @@ void AirspeedEstimator::run()
 			pitRec = masm.primary_airspeed_ms;
 
 			float VaOut;
+
 			if(ekfSw)
 			{
 				/* ---- EKF ---- */
@@ -229,23 +229,27 @@ void AirspeedEstimator::run()
 				airspeed_d.indicated_airspeed_m_s = VaOut*0.0f;
 				airspeed_d.true_airspeed_m_s = VaOut*0.0f;
 			}
+			/* ---- Protect system ---- */
 
 			airspeed_d.timestamp = hrt_absolute_time();
+			airspeed_estimator_dat_d.timestamp = hrt_absolute_time();
 			airspeed_d.air_temperature_celsius = masm.primary_temperature;
 			airspeed_d.confidence = 1;
-			/* ---- Protect system ---- */
+
+
+			orb_publish(ORB_ID(airspeed), airspeed_pub, &airspeed_d); //Publish
+			orb_publish(ORB_ID(airspeed_estimator_dat), airspeed_estimator_dat_pub, &airspeed_estimator_dat_d); //Publish
 
 		}
 		else
 		{
 			px4_usleep(50);
-			PX4_ERR("MASM: %d ---- ATT: %d ---- POS: %d", fds[1].revents,  fds[2].revents,  fds[3].revents);
+			// PX4_ERR("MASM: %d ---- ATT: %d ---- POS: %d", fds[1].revents,  fds[2].revents,  fds[3].revents);
 
 		}
 
 
-		orb_publish(ORB_ID(airspeed), airspeed_pub, &airspeed_d); //Publish
-		orb_publish(ORB_ID(airspeed_estimator_dat), airspeed_estimator_dat_pub, &airspeed_estimator_dat_d); //Publish
+
 	}
 
 	// orb_unsubscribe(sensor_combined_sub);
@@ -371,7 +375,7 @@ float AirspeedEstimator::calcEKF(float n, float vPit)
 
 	Pkm1_km1 = Pk_k;
 
-	return xk_k;
+
 
 	airspeed_estimator_dat_d.xk_km1 = xk_km1;
 	airspeed_estimator_dat_d.hk = Hk;
@@ -381,5 +385,7 @@ float AirspeedEstimator::calcEKF(float n, float vPit)
 	airspeed_estimator_dat_d.sk = Sk;
 
 	airspeed_estimator_dat_d.ekf_flag = true;
+
+	return xk_k;
 
 }

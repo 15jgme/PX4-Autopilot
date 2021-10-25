@@ -43,7 +43,7 @@
 #include <uORB/topics/airspeed.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_attitude.h>
-#include <uORB/topics/airspeed_estimator_dat.msg>
+#include <uORB/topics/airspeed_estimator_dat.h>
 
 #include <lib/mathlib/mathlib.h>
 #include <matrix/math.hpp>
@@ -131,6 +131,8 @@ private:
 	struct wind_s windEst;
 	struct vehicle_attitude_s att;
 	struct vehicle_local_position_s pos;
+
+	struct airspeed_estimator_dat_s airspeed_estimator_dat_d;
 
 	float Va{10.0f}; // Declare here, only update if we get a new good Va
 	float nRec{0.0f}; //prop Rev/s
