@@ -233,7 +233,8 @@ void AirspeedEstimator::run()
 
 			airspeed_d.timestamp = hrt_absolute_time();
 			airspeed_estimator_dat_d.timestamp = hrt_absolute_time();
-			airspeed_d.air_temperature_celsius = masm.primary_temperature;
+
+			if(PX4_ISFINITE(masm.primary_temperature)){airspeed_d.air_temperature_celsius = masm.primary_temperature;}
 			airspeed_d.confidence = 1;
 
 
@@ -299,10 +300,10 @@ float AirspeedEstimator::calcVa(float Vpit, float n)
 	float B = (p01 + p11*n);
 	float C = (p00 + p10*n + p20*n*n - Vpit);
 
-	solExist = B*B - 4.0f*A*C > 0;
+	solExist = B*B - 4.0f*A*C > 0.0f;
 	// float Va = 10.0f; //TODO should I just declare this in another scope and only write to it if its reasonable?
 
-	if(solExist)
+	if(solExist && (A > 0.0f || A < 0.0f))
 	{
 		Va = (-B + sqrtf(B*B - 4.0f*A*C)) / (2.0f*A);
 
@@ -310,6 +311,8 @@ float AirspeedEstimator::calcVa(float Vpit, float n)
 		{
 			Va = (-B - sqrtf(B*B - 4.0f*A*C)) / (2.0f*A);
 		}
+	}else{
+		Va = 0.0f;
 	}
 	return Va;
 }
@@ -341,7 +344,14 @@ float AirspeedEstimator::calcExpectAs()
 
 	float normVa = sqrtf(via_n*via_n + via_e*via_e + via_d*via_d);
 
-	phi =  57.2958f * acosf(vab1/normVa);
+	if (normVa <= 0.0f)
+	{
+		phi = 0.0f;
+	}else{
+		phi =  57.2958f * acosf(vab1/normVa);
+	}
+
+
 
 	return vab1;
 
@@ -368,7 +378,14 @@ float AirspeedEstimator::calcEKF(float n, float vPit)
 	float yk = vPit - ykModel;
 	float Sk = Hk * Pk_km1 * Hk + R;
 
-	float Kk = ( Pk_km1 * Hk )/ Sk;
+	float Kk = 0.0f;
+	if (Sk > 0.0f)
+	{
+		Kk = ( Pk_km1 * Hk )/ Sk;
+	}else{
+		Kk = 1.0f;
+	}
+
 	float xk_k = xk_km1 + Kk*yk;
 	float Pk_k = (1 - Kk*Hk)*Pk_km1;
 
@@ -377,14 +394,13 @@ float AirspeedEstimator::calcEKF(float n, float vPit)
 	Pkm1_km1 = Pk_k;
 
 
-
-	airspeed_estimator_dat_d.xk_km1 = xk_km1;
-	airspeed_estimator_dat_d.hk = Hk;
-	airspeed_estimator_dat_d.pk_km1 = Pk_km1;
-	airspeed_estimator_dat_d.ykmodel = ykModel;
-	airspeed_estimator_dat_d.yk = yk;
-	airspeed_estimator_dat_d.sk = Sk;
-	airspeed_estimator_dat_d.kk = Kk;
+	if(PX4_ISFINITE(xk_km1)){airspeed_estimator_dat_d.xk_km1 = xk_km1;}
+	if(PX4_ISFINITE(Hk)){airspeed_estimator_dat_d.hk = Hk;}
+	if(PX4_ISFINITE(Pk_km1)){airspeed_estimator_dat_d.pk_km1 = Pk_km1;}
+	if(PX4_ISFINITE(ykModel)){airspeed_estimator_dat_d.ykmodel = ykModel;}
+	if(PX4_ISFINITE(yk)){airspeed_estimator_dat_d.yk = yk;}
+	if(PX4_ISFINITE(Sk)){airspeed_estimator_dat_d.sk = Sk;}
+	if(PX4_ISFINITE(Kk)){airspeed_estimator_dat_d.kk = Kk;}
 
 	airspeed_estimator_dat_d.ekf_flag = true;
 

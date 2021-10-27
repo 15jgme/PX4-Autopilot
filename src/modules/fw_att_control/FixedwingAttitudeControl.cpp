@@ -598,8 +598,8 @@ void FixedwingAttitudeControl::Run()
 				// JUAN: Preparing variables for custom mode transition
 				_previous_yaw = euler_angles.psi();
 				longTurn = true; //start off with a long turn
-				_initial_heading = _previous_yaw;
-
+				// _initial_heading = _previous_yaw;
+				_initial_heading = atan2f(_local_pos.vy, _local_pos.vx); //Use velocity direction instead
 				// if (lockHeadingFlag) {
 				// 	_initial_heading = PI_f / 2.0f;
 
@@ -916,7 +916,7 @@ void FixedwingAttitudeControl::Run()
 						_jackson_dbg_var.c_ri_pre_ff[8] =  C_ri(2, 2);
 					}
 
-					if (false){//(feedforward_flag) {
+					if (feedforward_flag) {
 						wind_estimate_poll(); //update estimate
 						wind_ff_rot_update(); //update R_wind
 						// matrix::Dcmf temp_C_ri = C_ri * R_wind; //avoid any weirdness like in Eigen
@@ -1135,7 +1135,7 @@ void FixedwingAttitudeControl::Run()
 				// float Vs = airspeed2;
 				_rc_sub.update(&_rc_ch); // update rc
 				int sw7 = _rc_ch.channels[7];
-				float Vs = 10.0f;
+				float Vs = 5.0f;
 				float Vmin = 2.0f;
 
 				if(sw7 < -0.1)
@@ -1267,7 +1267,7 @@ void FixedwingAttitudeControl::Run()
 
 
 
-				_juan_att_var.test_variable = 19;
+				_juan_att_var.test_variable = 3.0f;
 
 
 				// matrix::Eulerf euler_ref(C_ri.transpose());
@@ -1545,8 +1545,8 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	// float k_roll_i = 0.0f*0.01f;
 
 	// Added roll gains SITL!
-	float k_roll_p = 0.3f*4.32f;//0.45f*4.32f;
-	float k_roll_y = 0.2f;
+	float k_roll_p = 0.0f*0.3f*4.32f;//0.45f*4.32f;
+	float k_roll_y = 0.0f*0.2f;
 	float max_roll = 30.0f;
 
 
@@ -1563,7 +1563,7 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	// Call JUAN Maneuver generator. This assigns a position setpoint.
 
 	// NOTE!!!!!!!!!!! Check Qground disarm parameters!!!!!!
-	 JUAN_reference_generator(6); //3 == zigzag
+	 JUAN_reference_generator(4); //3 == zigzag
 
 	// Control law
 	float _error_pos_x = _pos_x_ref-_pos_x_est;

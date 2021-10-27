@@ -102,8 +102,8 @@ public:
 	float alpha{0.0f};
 	float phi{0.0f};
 	float phiStart = 25;
-	float alphaStart = 0.3;
-	float alphaEnd = 0.1;
+	float alphaStart = 0.8;
+	float alphaEnd = 0.6;
 
 	// EKF
 	float Q = 10.0f; // wind variance

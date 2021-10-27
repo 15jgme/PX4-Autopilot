@@ -1200,7 +1200,6 @@ void EKF2::PublishWindEstimate(const hrt_abstime &timestamp)
 		// Publish alwas ;)
 		wind_s wind{};
 		wind.timestamp_sample = timestamp;
-
 		const Vector2f wind_vel = _ekf.getWindVelocity();
 		const Vector2f wind_vel_var = _ekf.getWindVelocityVariance();
 		_ekf.getAirspeedInnov(wind.tas_innov);
@@ -1261,14 +1260,14 @@ void EKF2::UpdateAirspeedSample(ekf2_timestamps_s &ekf2_timestamps)
 
 	if (_airspeed_sub.update(&airspeed)) {
 		// The airspeed measurement received via the airspeed.msg topic has not been corrected
-		// for scale favtor errors and requires the ASPD_SCALE correction to be applied.
+		// for scale factor errors and requires the ASPD_SCALE correction to be applied.
 		// This could be avoided if true_airspeed_m_s from the airspeed-validated.msg topic
 		// was used instead, however this would introduce a potential circular dependency
 		// via the wind estimator that uses EKF velocity estimates.
 		const float true_airspeed_m_s = airspeed.true_airspeed_m_s * _airspeed_scale_factor;
 
 		// only set airspeed data if condition for airspeed fusion are met
-		if ((_param_ekf2_arsp_thr.get() > FLT_EPSILON) && (true_airspeed_m_s > _param_ekf2_arsp_thr.get())) {
+		if (true){// fingers crossed JGME ((_param_ekf2_arsp_thr.get() > FLT_EPSILON) && (true_airspeed_m_s > _param_ekf2_arsp_thr.get())) {
 
 			airspeedSample airspeed_sample {
 				.time_us = airspeed.timestamp,

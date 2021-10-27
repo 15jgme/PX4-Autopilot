@@ -150,7 +150,8 @@ void airspeed_slipstream_record_sitl::run()
 
 	if (!calib_flag) //not calibrated
 	{
-		calib_flag = diff_pressure_calib(); //calibrate
+		// calib_flag = diff_pressure_calib(); //calibrate
+		calib_flag = true;
 	}
 
 	/* advertise attitude topic */
