@@ -747,109 +747,109 @@ void FixedwingAttitudeControl::Run()
 
 
 				// Manual attitude end
-				int8_t loopNum = 1;
+				// int8_t loopNum = 1;
 
-				if(loopNum == 0)
-				{
-					/* ........................ Loop profile Pitch...........................*/
-					if (_time_elapsed < 1.0f) { //do nothing for a second
-						_pitch_test_profile = 0.0f;
-						_pitch_rate_reference = 0.0f;
-					} else if (_time_elapsed <3.0f) { //constant pitch rate
-						_pitch_rate_reference = 3.1416f;
-						_pitch_test_profile = _pitch_test_profile + _pitch_rate_reference * _delta_time_attitude;
-					} else { //do nothing
-						_pitch_rate_reference = 0.0f;
-						_pitch_test_profile = 0.0f;
-					}
+				// if(loopNum == 0)
+				// {
+				// 	/* ........................ Loop profile Pitch...........................*/
+				// 	if (_time_elapsed < 1.0f) { //do nothing for a second
+				// 		_pitch_test_profile = 0.0f;
+				// 		_pitch_rate_reference = 0.0f;
+				// 	} else if (_time_elapsed <3.0f) { //constant pitch rate
+				// 		_pitch_rate_reference = 3.1416f;
+				// 		_pitch_test_profile = _pitch_test_profile + _pitch_rate_reference * _delta_time_attitude;
+				// 	} else { //do nothing
+				// 		_pitch_rate_reference = 0.0f;
+				// 		_pitch_test_profile = 0.0f;
+				// 	}
 
-					_yaw_rate_reference = 0.0f;
-					_roll_rate_reference = 0.0f;
-
-				}
-				else if(loopNum == 1)
-				{
-					/* ........................ Loop profile Yaw...........................*/
-					if (_time_elapsed < 1.0f) { //do nothing for a second
-						_yaw_test_profile = 0.0f + _initial_heading;
-						_yaw_rate_reference = 0.0f;
-
-					} else if (_time_elapsed <3.0f) { //constant pitch rate
-						_yaw_rate_reference = 3.1416f/2.0f;
-						_yaw_test_profile = _yaw_test_profile + _yaw_rate_reference * _delta_time_attitude;
-
-					} else { //do nothing
-						_yaw_rate_reference= 0.0f;
-						_yaw_test_profile = 3.1416f + _initial_heading;
-					}
-
-					_pitch_rate_reference = 0.0f;
-					_roll_rate_reference = 0.0f;
-
-				}
-				else if(loopNum == 2)
-				{
-					/* ........................ Loop profile Roll...........................*/
-					if (_time_elapsed < 1.0f) { //do nothing for a second
-						_roll_test_profile = 0.0f;
-						_roll_rate_reference = 0.0f;
-
-					} else if (_time_elapsed <3.0f) { //constant pitch rate
-						_roll_rate_reference = 3.1416f;
-						_roll_test_profile = _roll_test_profile + _roll_rate_reference * _delta_time_attitude;
-
-					} else { //do nothing
-						_roll_rate_reference= 0.0f;
-						_roll_test_profile = 0.0f;
-					}
-
-					_pitch_rate_reference = 0.0f;
-					_yaw_rate_reference = 0.0f;
-
-				}
-
-
-				float _manual_yaw = _yaw_test_profile;
-				float _manual_roll = _roll_test_profile;
-				float _manual_pitch = _pitch_test_profile;
-				float _heading_rate_coordinated = -1.0f;
-				_ground_velocity_corrected = -1.0f;
-				/*.................. End Loop profile ..............................*/
-
-				/*..................  ATA profile   ................................*/
-
-				// if (_time_elapsed < 1.0f){
-				// 	_pitch_rate_reference = 0.0f;
-				//   _roll_rate_reference = 0.0f;
-				// 	_pitch_test_profile = 0.0f;
-				// 	_roll_test_profile = 0.0f;
-				// }
-				// else if (_time_elapsed <2.0f){
-				// 	_pitch_rate_reference = 3.1416f/2.0f;
-				// 	_pitch_test_profile = _pitch_test_profile + _pitch_rate_reference*_delta_time_attitude;
+				// 	_yaw_rate_reference = 0.0f;
 				// 	_roll_rate_reference = 0.0f;
-				// 	_roll_test_profile = 0.0f;
+
 				// }
-				// else if(_time_elapsed <3.0f){
-				// 	_pitch_rate_reference = 3.1416f/2.0f;
-				// 	_roll_rate_reference = 3.1416f;
-				// 	_pitch_test_profile = _pitch_test_profile + _pitch_rate_reference*_delta_time_attitude;
-				// 	_roll_test_profile = _roll_test_profile + _roll_rate_reference*_delta_time_attitude;
+				// else if(loopNum == 1)
+				// {
+				// 	/* ........................ Loop profile Yaw...........................*/
+				// 	if (_time_elapsed < 1.0f) { //do nothing for a second
+				// 		_yaw_test_profile = 0.0f + _initial_heading;
+				// 		_yaw_rate_reference = 0.0f;
+
+				// 	} else if (_time_elapsed <3.0f) { //constant pitch rate
+				// 		_yaw_rate_reference = 3.1416f/2.0f;
+				// 		_yaw_test_profile = _yaw_test_profile + _yaw_rate_reference * _delta_time_attitude;
+
+				// 	} else { //do nothing
+				// 		_yaw_rate_reference= 0.0f;
+				// 		_yaw_test_profile = 3.1416f + _initial_heading;
+				// 	}
+
+				// 	_pitch_rate_reference = 0.0f;
+				// 	_roll_rate_reference = 0.0f;
+
 				// }
-				// else {
-				//  _pitch_rate_reference = 0.0f;
-				//  _roll_rate_reference = 0.0f;
-				// 	_pitch_test_profile = 3.1416f;
-				// 	_roll_test_profile = 3.1415f;
-				// 	// _yaw_test_profile = _previous_yaw+3.1416f;
+				// else if(loopNum == 2)
+				// {
+				// 	/* ........................ Loop profile Roll...........................*/
+				// 	if (_time_elapsed < 1.0f) { //do nothing for a second
+				// 		_roll_test_profile = 0.0f;
+				// 		_roll_rate_reference = 0.0f;
+
+				// 	} else if (_time_elapsed <3.0f) { //constant pitch rate
+				// 		_roll_rate_reference = 3.1416f;
+				// 		_roll_test_profile = _roll_test_profile + _roll_rate_reference * _delta_time_attitude;
+
+				// 	} else { //do nothing
+				// 		_roll_rate_reference= 0.0f;
+				// 		_roll_test_profile = 0.0f;
+				// 	}
+
+				// 	_pitch_rate_reference = 0.0f;
+				// 	_yaw_rate_reference = 0.0f;
+
 				// }
-				// _yaw_rate_reference = 0.0f;
+
 
 				// float _manual_yaw = _yaw_test_profile;
 				// float _manual_roll = _roll_test_profile;
 				// float _manual_pitch = _pitch_test_profile;
 				// float _heading_rate_coordinated = -1.0f;
 				// _ground_velocity_corrected = -1.0f;
+				/*.................. End Loop profile ..............................*/
+
+				/*..................  ATA profile   ................................*/
+
+				if (_time_elapsed < 1.0f){
+					_pitch_rate_reference = 0.0f;
+				  _roll_rate_reference = 0.0f;
+					_pitch_test_profile = 0.0f;
+					_roll_test_profile = 0.0f;
+				}
+				else if (_time_elapsed <2.0f){
+					_pitch_rate_reference = 3.1416f/2.0f;
+					_pitch_test_profile = _pitch_test_profile + _pitch_rate_reference*_delta_time_attitude;
+					_roll_rate_reference = 0.0f;
+					_roll_test_profile = 0.0f;
+				}
+				else if(_time_elapsed <3.0f){
+					_pitch_rate_reference = 3.1416f/2.0f;
+					_roll_rate_reference = 3.1416f;
+					_pitch_test_profile = _pitch_test_profile + _pitch_rate_reference*_delta_time_attitude;
+					_roll_test_profile = _roll_test_profile + _roll_rate_reference*_delta_time_attitude;
+				}
+				else {
+				 _pitch_rate_reference = 0.0f;
+				 _roll_rate_reference = 0.0f;
+					_pitch_test_profile = 3.1416f;
+					_roll_test_profile = 3.1415f;
+					// _yaw_test_profile = _previous_yaw+3.1416f;
+				}
+				_yaw_rate_reference = 0.0f;
+
+				float _manual_yaw = _yaw_test_profile;
+				float _manual_roll = _roll_test_profile;
+				float _manual_pitch = _pitch_test_profile;
+				float _heading_rate_coordinated = -1.0f;
+				_ground_velocity_corrected = -1.0f;
 
 				/*................... End ATA profile...............................*/
 
@@ -1134,7 +1134,7 @@ void FixedwingAttitudeControl::Run()
 				// float airspeed2 = get_airspeed_and_update_scaling();
 				// float Vs = airspeed2;
 				_rc_sub.update(&_rc_ch); // update rc
-				int sw7 = _rc_ch.channels[7];
+				int sw7 = _rc_ch.channels[8];
 				float Vs = 10.0f;
 				float Vmin = 2.0f;
 
