@@ -25,4 +25,4 @@ then
 fi
 
 
-safety_button start
+safety_button start # could kill

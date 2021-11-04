@@ -53,6 +53,7 @@ px4_add_board(
 		uavcan
 	MODULES
 		airspeed_slipstream_record
+		airspeed_estimator
 		airspeed_selector
 		attitude_estimator_q
 		battery_status

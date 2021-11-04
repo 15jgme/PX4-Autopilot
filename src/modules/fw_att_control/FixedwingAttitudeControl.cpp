@@ -1026,26 +1026,26 @@ void FixedwingAttitudeControl::Run()
 				/*..................................................................*/
 
 				/*................Attitude controller gains.........................*/
-				float Kad1 = 0.8f * 0.00706f;
-				float Kad2 = 1.3f*0.5f * 0.07576f;
-				float Kad3 = 0.7f * 0.07736f;
+				// float Kad1 = 0.8f * 0.00706f; GOOD!
+				// float Kad2 = 1.3f*0.5f * 0.07576f;
+				// float Kad3 = 0.7f * 0.07736f;
 
-				float Kap1 = 1.0f * 0.1656f;
-				float Kap2 = 1.5f*1.0f * 1.022f;
-				float Kap3 = 1.0f * 0.6776f;
+				// float Kap1 = 1.0f * 0.1656f;
+				// float Kap2 = 1.5f*1.0f * 1.022f;
+				// float Kap3 = 1.0f * 0.6776f;
 
 				// float Kai1 = 0.0f * 0.8f * 0.1656f;
 				// float Kai2 = 0.0f * 0.8f * 1.022f;
 				// float Kai3 = 0.0f * 0.8f * 0.6776f;
 				/*..................................................................*/
 				/*................Attitude controller gains SITL!.........................*/
-				// float Kad1 = 0.15f * 4.54f * 0.22f * 0.0706f / (0.7f);
-				// float Kad2 = 0.17f *4.54f * 0.22f * 0.6376f / (0.8f);
-				// float Kad3 = 0.2f *4.54f * 0.22f * 0.7736f / (0.8f);
+				float Kad1 = 0.15f * 4.54f * 0.22f * 0.0706f / (0.7f);
+				float Kad2 = 0.17f *4.54f * 0.22f * 0.6376f / (0.8f);
+				float Kad3 = 0.2f *4.54f * 0.22f * 0.7736f / (0.8f);
 
-				// float Kap1 = 0.27f *4.54f * 0.22f * 0.7099f / (0.8f);
-				// float Kap2 = 0.22f *4.54f * 0.22f * 0.35f * 25.5359f / (1.0f);
-				// float Kap3 = 0.3f *4.54f * 0.22f * 0.35f * 38.7187f / (0.8f);
+				float Kap1 = 0.27f *4.54f * 0.22f * 0.7099f / (0.8f);
+				float Kap2 = 0.22f *4.54f * 0.22f * 0.35f * 25.5359f / (1.0f);
+				float Kap3 = 0.3f *4.54f * 0.22f * 0.35f * 38.7187f / (0.8f);
 
 				// float Kai1 = 0.0f * 0.8f * 0.1656f;
 				// float Kai2 = 0.0f * 0.8f * 1.022f;
@@ -1512,26 +1512,26 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	// float KiZ = 0.25f*0.0004f;
 
 	/* --- Real life 2--- */
-	float KpX = 1.0f*3.0f*0.243f;
-	float KpY = 1.0f*3.0f*0.243f;
-	float KpZ = 1.89f;
-	float KdX = 0.7f*3.0f*0.1323f;
-	float KdY = 0.7f*3.0f*0.1323f;
-	float KdZ = 0.06615f;
-	float KiX = 0.25f*0.0008f;
-	float KiY = 0.25f*0.0008f;
-	float KiZ = 0.25f*0.0004f;
-
-	// /* --- SITL --- */
-	// float KpX = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) ) ;
-	// float KpY = 1.25f *  0.54f / ( (1.0f*0.8f*0.8f) ) ;
-	// float KpZ = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) * 1.2f) ;
-	// float KdX = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
-	// float KdY = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
-	// float KdZ = 0.168f / (1.0f*0.8f*0.8f*(1.2f));
+	// float KpX = 1.0f*3.0f*0.243f;
+	// float KpY = 1.0f*3.0f*0.243f;
+	// float KpZ = 1.89f;
+	// float KdX = 0.7f*3.0f*0.1323f;
+	// float KdY = 0.7f*3.0f*0.1323f;
+	// float KdZ = 0.06615f;
 	// float KiX = 0.25f*0.0008f;
 	// float KiY = 0.25f*0.0008f;
 	// float KiZ = 0.25f*0.0004f;
+
+	// /* --- SITL --- */
+	float KpX = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) ) ;
+	float KpY = 1.25f *  0.54f / ( (1.0f*0.8f*0.8f) ) ;
+	float KpZ = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) * 1.2f) ;
+	float KdX = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
+	float KdY = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
+	float KdZ = 0.168f / (1.0f*0.8f*0.8f*(1.2f));
+	float KiX = 0.25f*0.0008f;
+	float KiY = 0.25f*0.0008f;
+	float KiZ = 0.25f*0.0004f;
 
 	/* --- ⛽ integral gains --- */
 	KiX *= 0.0f;
@@ -2088,8 +2088,8 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 		float discrep = 0.0f; //m
 
 		// Center of circle
-		float _x_zero =  _pos_x_exit + (radius - discrep) * cosf(_initial_heading - PI_f/2);
-		float _y_zero = _pos_y_exit + (radius - discrep) * sinf(_initial_heading - PI_f/2);
+		_x_zero =  _pos_x_exit + (radius - discrep) * cosf(_initial_heading - PI_f/2);
+		_y_zero = _pos_y_exit + (radius - discrep) * sinf(_initial_heading - PI_f/2);
 
 		float delX = _x_zero - _pos_x_exit;
 		float delY = _y_zero - _pos_y_exit;
@@ -2192,121 +2192,154 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 
 
 	}
-	// else if(_maneuver_type == 7) //Jackson's path, racetrack
-	// {
-	// 	// float V_n = _initial_vxy;
-	// 	float V_n = 10.0f;
-	// 	float radius = 30.0f; //m
-	// 	float t_runup = 6.0f; //sec
-	// 	float discrep = 0.0f; //m
+	else if(_maneuver_type == 7) //Jackson's path, racetrack
+	{
+		// float V_n = _initial_vxy;
+		float V_n = 13.0f;
+		float run_t = 10.0f;
+		float circ_t = 10.0f;
+		float rad = (V_n*circ_t)/PI_f;
+		float t_man = _time_elapsed;
 
-	// 	// Center of circle
-	// 	float _x_zero =  _pos_x_exit + (radius - discrep) * cosf(_initial_heading - PI_f/2);
-	// 	float _y_zero = _pos_y_exit + (radius - discrep) * sinf(_initial_heading - PI_f/2);
+		if(feedforward_flag)
+		{
+			_juan_att_var.estimated_position_ff_x = _local_pos.x;
+			_juan_att_var.estimated_position_ff_y = _local_pos.y;
+		}
+		else
+		{
+			_juan_att_var.estimated_position_nff_x = _local_pos.x;
+			_juan_att_var.estimated_position_nff_y = _local_pos.y;
+		}
 
-	// 	float delX = _x_zero - _pos_x_exit;
-	// 	float delY = _y_zero - _pos_y_exit;
+		if(lastVtx == 1)
+		{
+			// PX4_INFO("%f", (double)t_man);
+			float vix_rf = V_n;
+			float viy_rf = 0.0f;
+			float viz_rf = 0.0f;
 
-	// 	float maxRot = 3.0f; // maximum number of revolutions
-	// 	float t_man = _time_elapsed;
+			// float pix_rf = vix_rf*t_man;
+			// float piy_rf = 0.0f;
+			// float piz_rf = 0.0f;
 
-	// 	float theta_0 = atan2f(delY, delX) + PI_f;
+			_vel_x_ref = vix_rf*cosf(_initial_heading)	-	viy_rf*sinf(_initial_heading);
+			_vel_y_ref = vix_rf*sinf(_initial_heading)	+	viy_rf*cosf(_initial_heading);
+			_vel_z_ref = viz_rf;
 
-	// 	if(!PX4_ISFINITE(theta_0)){theta_0 = 0.0f; PX4_INFO("Non finite theta_0, using 0 instead");}
+			_pos_x_ref = _pos_x_initial + _vel_x_ref*t_man;
+			_pos_y_ref = _pos_y_initial + _vel_y_ref*t_man;
+			_pos_z_ref = _pos_z_initial;
 
-	// 	// float V_i = 10.0f;
+			if(t_man >= run_t)
+			{
+				lastVtx++;
+				_time_elapsed = 0.0f;
+				_pos_x_initial = _pos_x_ref;
+				_pos_y_initial = _pos_y_ref;
+				_pos_z_initial = _pos_z_ref;
 
-	// 	if(t_man < t_runup)
-	// 	{
-	// 		thrust_add_flag = true;
-	// 		feedforward_flag = true;
-	// 		_vel_x_ref = V_n*cosf(_initial_heading);
-	// 		_vel_y_ref = V_n*sinf(_initial_heading);
-	// 		_vel_z_ref = 0.0f;
+				// _x_zero = pix_rf*cosf(_initial_heading) - (piy_rf - rad)*sinf(_initial_heading) + _pos_x_initial;
+				// _y_zero = pix_rf*sinf(_initial_heading) + (piy_rf - rad)*cosf(_initial_heading) + _pos_y_initial;
+				_x_zero = rad*(-sinf(_initial_heading)) + _pos_x_initial;
+				_y_zero = rad*(cosf(_initial_heading)) + _pos_y_initial;
+				PX4_INFO("%f, %f, %f, %f, %f", (double)_x_zero, (double)_y_zero, (double)_pos_x_initial, (double)_pos_y_initial, (double)rad);
+			}
+		}
+		else if(lastVtx == 2)
+		{
+			float theta_i = V_n/rad * (t_man) + _initial_heading - PI_f/2.0f;
+			_acc_x_ref = 0.0f * -((V_n * V_n)/rad) * cosf(theta_i);
+			_acc_y_ref = 0.0f * -((V_n * V_n)/rad) * sinf(theta_i);
 
-	// 		_pos_x_ref = _pos_x_initial + V_n*cosf(_initial_heading)*t_man;
-	// 		_pos_y_ref = _pos_y_initial + V_n*sinf(_initial_heading)*t_man;
-	// 		_pos_z_ref = _pos_z_initial;
+			_juan_att_var.reference_acceleration_x = _acc_x_ref;
+			_juan_att_var.reference_acceleration_y = _acc_y_ref;
 
-	// 		_pos_x_exit = _pos_x_ref;
-	// 		_pos_y_exit = _pos_y_ref;
-	// 		t_circ = t_man;
-	// 		float eVecN = _pos_x_ref - _local_pos.x;
-	// 		float eVecE = _pos_y_ref - _local_pos.y;
-	// 		_juan_att_var.path_rel_err = eVecN*cosf(_initial_heading + PI_f/2.0f) +  eVecE*sinf(_initial_heading + PI_f/2.0f);
-	// 		_juan_att_var.estimated_position_ff_x = _local_pos.x;
-	// 		_juan_att_var.estimated_position_ff_y = _local_pos.y;
+			_vel_x_ref = -V_n * sinf(theta_i);
+			_vel_y_ref = V_n * cosf(theta_i);
+			_vel_z_ref = 0.0f;
 
-	// 		if(t_man - tLast < 10)
+			_pos_x_ref = _x_zero + rad*cosf(theta_i);
+			_pos_y_ref = _y_zero + rad*sinf(theta_i);
+			_pos_z_ref = _pos_z_initial;
 
-	// 	}
-	// 	else
-	// 	{
-	// 		float theta_i = -V_n/radius * (t_man - t_circ) + theta_0;
-	// 		if (abs(theta_i) < 2.0f * PI_f * maxRot)
-	// 		{
-	// 			_acc_x_ref = 0.0f * -((V_n * V_n)/radius) * cosf(theta_i);
-	// 			_acc_y_ref = 0.0f * -((V_n * V_n)/radius) * sinf(theta_i);
-
-	// 			_juan_att_var.reference_acceleration_x = _acc_x_ref;
-	// 			_juan_att_var.reference_acceleration_y = _acc_y_ref;
-
-	// 			_vel_x_ref = V_n * sinf(theta_i);
-	// 			_vel_y_ref = -V_n * cosf(theta_i);
-	// 			_vel_z_ref = 0.0f;
-
-	// 			_pos_x_ref =_x_zero + radius*cosf(theta_i);
-	// 			_pos_y_ref =_y_zero + radius*sinf(theta_i);
-	// 			_pos_z_ref = _pos_z_initial;
-
-	// 			t_last = t_man;
-
-	// 			if(abs(theta_i) > PI_f * maxRot){
-	// 				feedforward_flag = false;
-	// 				thrust_add_flag = false;
-	// 				_juan_att_var.estimated_position_nff_x = _local_pos.x;
-	// 				_juan_att_var.estimated_position_nff_y = _local_pos.y;
-	// 				if(!exitMsgSent){PX4_INFO("FF off"); exitMsgSent=true;}
-	// 			}else{
-	// 				feedforward_flag = true;
-	// 				_juan_att_var.estimated_position_ff_x = _local_pos.x;
-	// 				_juan_att_var.estimated_position_ff_y = _local_pos.y;
-	// 			}
-
-
-	// 			/* --- ensuring a clean exit --- */
-	// 			t_last = t_man;
-	// 			pos_x_final = _pos_x_ref;
-	// 			pos_y_final = _pos_y_ref;
-	// 			vel_x_final = _vel_x_ref;
-	// 			vel_y_final = _vel_y_ref;
-	// 		}
-	// 		else { //Go into hover
-	// 			// PX4_INFO("DONE!");
-	// 			completeFlag = true;
-	// 			if(!exitMsgSent)
-	// 			{
-	// 				PX4_INFO("Path exiting");
-	// 				exitMsgSent = true;
-	// 			}
-
-	// 			/* ---- just keep swimming ---- */
-	// 			_vel_x_ref = vel_x_final;
-	// 			_vel_y_ref = vel_y_final;
-	// 			_vel_z_ref = 0.0f;
-
-	// 			_pos_x_ref = pos_x_final + vel_x_final*(t_man - t_last); //need some t_end for this
-	// 			_pos_y_ref = pos_y_final + vel_y_final*(t_man - t_last);
-	// 			_pos_z_ref = _pos_z_initial;
-
-	// 			/* ---- reset feedforward stuff ---- */
-	// 			feedforward_flag = false;
-	// 			// _juan_att_var.feedforward_on = true;
-	// 		}
-	// 	}
+			if(t_man >= circ_t)
+			{
+				lastVtx++;
+				_time_elapsed = 0.0f;
+				_pos_x_initial = _pos_x_ref;
+				_pos_y_initial = _pos_y_ref;
+				_pos_z_initial = _pos_z_ref;
+			}
 
 
-	// }
+		}
+		else if(lastVtx == 3)
+		{
+			// PX4_INFO("%f", (double)t_man);
+			float vix_rf = -V_n;
+			float viy_rf = 0.0f;
+			float viz_rf = 0.0f;
+
+			// float pix_rf = vix_rf*t_man;
+			// float piy_rf = 0.0f;
+			// float piz_rf = 0.0f;
+
+			_vel_x_ref = vix_rf*cosf(_initial_heading)	-	viy_rf*sinf(_initial_heading);
+			_vel_y_ref = vix_rf*sinf(_initial_heading)	+	viy_rf*cosf(_initial_heading);
+			_vel_z_ref = viz_rf;
+
+			_pos_x_ref = _pos_x_initial + _vel_x_ref*t_man;
+			_pos_y_ref = _pos_y_initial + _vel_y_ref*t_man;
+			_pos_z_ref = _pos_z_initial;
+
+			if(t_man >= run_t)
+			{
+				lastVtx++;
+				_time_elapsed = 0.0f;
+				_pos_x_initial = _pos_x_ref;
+				_pos_y_initial = _pos_y_ref;
+				_pos_z_initial = _pos_z_ref;
+
+				// _x_zero = pix_rf*cosf(_initial_heading) - (piy_rf - rad)*sinf(_initial_heading) + _pos_x_initial;
+				// _y_zero = pix_rf*sinf(_initial_heading) + (piy_rf - rad)*cosf(_initial_heading) + _pos_y_initial;
+				_x_zero = -rad*(-sinf(_initial_heading)) + _pos_x_initial;
+				_y_zero = -rad*(cosf(_initial_heading)) + _pos_y_initial;
+				PX4_INFO("%f, %f, %f, %f, %f", (double)_x_zero, (double)_y_zero, (double)_pos_x_initial, (double)_pos_y_initial, (double)rad);
+			}
+
+
+		}
+		else if(lastVtx == 4)
+		{
+			float theta_i = V_n/rad * (t_man) + _initial_heading + PI_f/2.0f;
+			_acc_x_ref = 0.0f * -((V_n * V_n)/rad) * cosf(theta_i);
+			_acc_y_ref = 0.0f * -((V_n * V_n)/rad) * sinf(theta_i);
+
+			_juan_att_var.reference_acceleration_x = _acc_x_ref;
+			_juan_att_var.reference_acceleration_y = _acc_y_ref;
+
+			_vel_x_ref = -V_n * sinf(theta_i);
+			_vel_y_ref = V_n * cosf(theta_i);
+			_vel_z_ref = 0.0f;
+
+			_pos_x_ref = _x_zero + rad*cosf(theta_i);
+			_pos_y_ref = _y_zero + rad*sinf(theta_i);
+			_pos_z_ref = _pos_z_initial;
+
+			if(t_man >= circ_t)
+			{
+				lastVtx = 1;
+				_time_elapsed = 0.0f;
+				_pos_x_initial = _pos_x_ref;
+				_pos_y_initial = _pos_y_ref;
+				_pos_z_initial = _pos_z_ref;
+				feedforward_flag = false;
+			}
+
+		}
+
+	}
 
 
 }
