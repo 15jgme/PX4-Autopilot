@@ -1134,9 +1134,15 @@ void FixedwingAttitudeControl::Run()
 				// float airspeed2 = get_airspeed_and_update_scaling();
 				// float Vs = airspeed2;
 				_rc_sub.update(&_rc_ch); // update rc
-				int sw7 = _rc_ch.channels[7];
+				int sw7 = _rc_ch.channels[4];
 				float Vs = 5.0f;
 				float Vmin = 2.0f;
+
+				bool useSlipInCtrl = true;
+				if(useSlipInCtrl)
+				{
+					if(feedforward_flag){sw7 = 1.0f;}else{sw7 = -1.0f;};
+				}
 
 				if(sw7 < -0.1)
 				{
@@ -1512,26 +1518,26 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	// float KiZ = 0.25f*0.0004f;
 
 	/* --- Real life 2--- */
-	// float KpX = 1.0f*3.0f*0.243f;
-	// float KpY = 1.0f*3.0f*0.243f;
-	// float KpZ = 1.89f;
-	// float KdX = 0.7f*3.0f*0.1323f;
-	// float KdY = 0.7f*3.0f*0.1323f;
-	// float KdZ = 0.06615f;
-	// float KiX = 0.25f*0.0008f;
-	// float KiY = 0.25f*0.0008f;
-	// float KiZ = 0.25f*0.0004f;
-
-	// /* --- SITL --- */
-	float KpX = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) ) ;
-	float KpY = 1.25f *  0.54f / ( (1.0f*0.8f*0.8f) ) ;
-	float KpZ = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) * 1.2f) ;
-	float KdX = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
-	float KdY = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
-	float KdZ = 0.168f / (1.0f*0.8f*0.8f*(1.2f));
+	float KpX = 1.0f*3.0f*0.243f;
+	float KpY = 1.0f*3.0f*0.243f;
+	float KpZ = 1.89f;
+	float KdX = 0.7f*3.0f*0.1323f;
+	float KdY = 0.7f*3.0f*0.1323f;
+	float KdZ = 0.06615f;
 	float KiX = 0.25f*0.0008f;
 	float KiY = 0.25f*0.0008f;
 	float KiZ = 0.25f*0.0004f;
+
+	// /* --- SITL --- */
+	// float KpX = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) ) ;
+	// float KpY = 1.25f *  0.54f / ( (1.0f*0.8f*0.8f) ) ;
+	// float KpZ = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) * 1.2f) ;
+	// float KdX = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
+	// float KdY = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
+	// float KdZ = 0.168f / (1.0f*0.8f*0.8f*(1.2f));
+	// float KiX = 0.25f*0.0008f;
+	// float KiY = 0.25f*0.0008f;
+	// float KiZ = 0.25f*0.0004f;
 
 	/* --- ⛽ integral gains --- */
 	KiX *= 0.0f;
@@ -1563,7 +1569,7 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	// Call JUAN Maneuver generator. This assigns a position setpoint.
 
 	// NOTE!!!!!!!!!!! Check Qground disarm parameters!!!!!!
-	 JUAN_reference_generator(4); //3 == zigzag
+	 JUAN_reference_generator(7); //3 == zigzag
 
 	// Control law
 	float _error_pos_x = _pos_x_ref-_pos_x_est;
@@ -1968,9 +1974,9 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	else if(_maneuver_type == 4) //Straight path, turn wff on and off
 	{
 		float t_man = _time_elapsed;
-		float Vel_track1 = 10.0f;
+		float Vel_track1 = 13.0f;
 		// float Vel_track1 = _initial_vxy;
-		float t_switch_ff = 7.0f;
+		float t_switch_ff = 5.0f;
 
 		if(t_man < t_switch_ff){ feedforward_flag = true; }
 		else { feedforward_flag = false; if(!exitMsgSent){{PX4_INFO("Switching to no-feedforward"); exitMsgSent = true;}}}
@@ -2201,6 +2207,11 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 		float rad = (V_n*circ_t)/PI_f;
 		float t_man = _time_elapsed;
 
+		float dh = 0.0f; //Height difference
+		float vz = dh/run_t; //Vertical velocity
+
+		thrust_add_flag = false;
+
 		if(feedforward_flag)
 		{
 			_juan_att_var.estimated_position_ff_x = _local_pos.x;
@@ -2217,7 +2228,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 			// PX4_INFO("%f", (double)t_man);
 			float vix_rf = V_n;
 			float viy_rf = 0.0f;
-			float viz_rf = 0.0f;
+			float viz_rf = -vz;
 
 			// float pix_rf = vix_rf*t_man;
 			// float piy_rf = 0.0f;
@@ -2229,7 +2240,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 
 			_pos_x_ref = _pos_x_initial + _vel_x_ref*t_man;
 			_pos_y_ref = _pos_y_initial + _vel_y_ref*t_man;
-			_pos_z_ref = _pos_z_initial;
+			_pos_z_ref = _pos_z_initial + _vel_z_ref*t_man;
 
 			if(t_man >= run_t)
 			{
@@ -2279,7 +2290,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 			// PX4_INFO("%f", (double)t_man);
 			float vix_rf = -V_n;
 			float viy_rf = 0.0f;
-			float viz_rf = 0.0f;
+			float viz_rf = vz;
 
 			// float pix_rf = vix_rf*t_man;
 			// float piy_rf = 0.0f;
@@ -2291,7 +2302,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 
 			_pos_x_ref = _pos_x_initial + _vel_x_ref*t_man;
 			_pos_y_ref = _pos_y_initial + _vel_y_ref*t_man;
-			_pos_z_ref = _pos_z_initial;
+			_pos_z_ref = _pos_z_initial + _vel_z_ref*t_man;
 
 			if(t_man >= run_t)
 			{

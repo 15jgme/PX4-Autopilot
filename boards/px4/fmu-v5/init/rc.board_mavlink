@@ -5,3 +5,8 @@
 
 # Start MAVLink on the USB port
 mavlink start -d /dev/ttyACM0
+
+
+# Airspeed
+airspeed_slipstream_record start
+airspeed_estimator start

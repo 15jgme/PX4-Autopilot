@@ -116,7 +116,7 @@ private:
 	float air_tube_length=0.656;
 	int32_t air_cmodel = 0;
 
-	uint sensID_1 = 4923657; //Sensor ID for primary airspeed sensor FMU
+	uint sensID_1 = 4923681; //Sensor ID for primary airspeed sensor FMU
 	// uint sensID_1 = 0;
 	bool sens_1_active = true;
 	float ID_1_cal = 0; //Pa
