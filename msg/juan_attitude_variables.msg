@@ -85,6 +85,10 @@ float32 v_e #Ground speed east E
 float32 path_rel_err #Path reletive error (Jackson's modes)
 
 float32 tadd
+float32 tadd2
+
+float32 fv1rn
+float32 fv2rn
 
 float32 vs #slipstream velocity
 float32 vsfilt #slipstream velocity filtered

@@ -265,6 +265,7 @@ private:
 	//Additional thrust
 	bool thrust_add_flag{true};
 	float T_add{0.0f};
+	float T_add2{0.0f};
 
 	// bool flyStrt{true};
 	// bool flyTurn{false};
