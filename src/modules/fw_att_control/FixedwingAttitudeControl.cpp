@@ -750,7 +750,8 @@ void FixedwingAttitudeControl::Run()
 				// _yaw_rate_reference = _heading_rate_coordinated;
 
 
-				// Manual attitude end
+				// Manual attitude end test
+
 				int8_t loopNum = 1;
 
 				if(loopNum == 0)
