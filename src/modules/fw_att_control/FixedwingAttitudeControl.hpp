@@ -258,6 +258,8 @@ private:
 	float vel_x_final = 0;
 	float vel_y_final = 0;
 
+	float theta_i2{0.0f};
+
 	int lastVtx = 1; // for runUp
 	float _x_zero = 0.0f;
 	float _y_zero = 0.0f;

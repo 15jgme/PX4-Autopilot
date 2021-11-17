@@ -1573,7 +1573,7 @@ void FixedwingAttitudeControl::JUAN_position_control()
 
 	// Call JUAN Maneuver generator. This assigns a position setpoint.
 
-	 JUAN_reference_generator(7); //3 == zigzag
+	 JUAN_reference_generator(6); //3 == zigzag
 
 	// Control law
 	float _error_pos_x = _pos_x_ref-_pos_x_est;
@@ -2092,7 +2092,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	else if(_maneuver_type == 6) //Jackson's path, circle
 	{
 		// float V_n = _initial_vxy;
-		float V_n = 7.0f;
+		float V_n = 10.0f;
 		float radius = 30.0f; //m
 		float t_runup = 5.0f; //sec
 		float discrep = 0.0f; //m
@@ -2113,6 +2113,20 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 
 		// float V_i = 10.0f;
 
+
+		float v_wind_N = _wind.windspeed_north;
+		float v_wind_E = _wind.windspeed_east;
+		//Dynamic airspeed stuff
+		bool variableRefSpeed = true; // This enables dynamic airspeed based tracking velocity changes
+		float a_vab = 2.0f*(_vel_x_ref*-v_wind_N  + _vel_y_ref*-v_wind_E);
+		float b_vab = (v_wind_N*v_wind_N + v_wind_E*v_wind_E) - V_n*V_n;
+		if(variableRefSpeed)
+		{
+			V_n = (-a_vab + sqrtf(a_vab*a_vab - 4.0f*b_vab))/2.0f;
+		}
+		_juan_att_var.v_rn = V_n;
+
+
 		if(t_man < t_runup)
 		{
 			thrust_add_flag = true;
@@ -2120,9 +2134,8 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 			_vel_x_ref = V_n*cosf(_initial_heading);
 			_vel_y_ref = V_n*sinf(_initial_heading);
 			_vel_z_ref = 0.0f;
-
-			_pos_x_ref = _pos_x_initial + V_n*cosf(_initial_heading)*t_man;
-			_pos_y_ref = _pos_y_initial + V_n*sinf(_initial_heading)*t_man;
+			_pos_x_ref += V_n*cosf(_initial_heading)*_delta_time_attitude;
+			_pos_y_ref += V_n*sinf(_initial_heading)*_delta_time_attitude;
 			_pos_z_ref = _pos_z_initial;
 
 			_pos_x_exit = _pos_x_ref;
@@ -2134,29 +2147,33 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 			_juan_att_var.estimated_position_ff_x = _local_pos.x;
 			_juan_att_var.estimated_position_ff_y = _local_pos.y;
 
+			theta_i2 = theta_0;
+
 		}
 		else
 		{
-			float theta_i = -V_n/radius * (t_man - t_circ) + theta_0;
-			if (abs(theta_i) < 2.0f * PI_f * maxRot)
+			// float theta_i2 = -V_n/radius * (t_man - t_circ) + theta_0;
+			theta_i2 += (-V_n/radius) * _delta_time_attitude;
+			_juan_att_var.theta_i2 = theta_i2;
+			if (abs(theta_i2) < 2.0f * PI_f * maxRot)
 			{
-				_acc_x_ref = 0.0f * -((V_n * V_n)/radius) * cosf(theta_i);
-				_acc_y_ref = 0.0f * -((V_n * V_n)/radius) * sinf(theta_i);
+				_acc_x_ref = 0.0f * -((V_n * V_n)/radius) * cosf(theta_i2);
+				_acc_y_ref = 0.0f * -((V_n * V_n)/radius) * sinf(theta_i2);
 
 				_juan_att_var.reference_acceleration_x = _acc_x_ref;
 				_juan_att_var.reference_acceleration_y = _acc_y_ref;
 
-				_vel_x_ref = V_n * sinf(theta_i);
-				_vel_y_ref = -V_n * cosf(theta_i);
+				_vel_x_ref = V_n * sinf(theta_i2);
+				_vel_y_ref = -V_n * cosf(theta_i2);
 				_vel_z_ref = 0.0f;
 
-				_pos_x_ref =_x_zero + radius*cosf(theta_i);
-				_pos_y_ref =_y_zero + radius*sinf(theta_i);
+				_pos_x_ref =_x_zero + radius*cosf(theta_i2);
+				_pos_y_ref =_y_zero + radius*sinf(theta_i2);
 				_pos_z_ref = _pos_z_initial;
 
 				t_last = t_man;
 
-				if(abs(theta_i) > PI_f * maxRot){
+				if(abs(theta_i2) > PI_f * maxRot){
 					feedforward_flag = false;
 					thrust_add_flag = false;
 					_juan_att_var.estimated_position_nff_x = _local_pos.x;
@@ -2214,6 +2231,8 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 		float dh = 7.0f; //Height difference
 		float vz = dh/run_t; //Vertical velocity
 
+
+
 		// thrust_add_flag = false;
 
 		if(feedforward_flag)
@@ -2243,9 +2262,9 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 			_vel_x_ref = vix_rf*cosf(_initial_heading)	-	viy_rf*sinf(_initial_heading);
 			_vel_y_ref = vix_rf*sinf(_initial_heading)	+	viy_rf*cosf(_initial_heading);
 			_vel_z_ref = viz_rf;
-			_pos_x_ref = _pos_x_initial + _vel_x_ref*t_man;
-			_pos_y_ref = _pos_y_initial + _vel_y_ref*t_man;
-			_pos_z_ref = _pos_z_initial + _vel_z_ref*t_man;
+			_pos_x_ref += _vel_x_ref*_delta_time_attitude;
+			_pos_y_ref += _vel_y_ref*_delta_time_attitude;
+			_pos_z_ref += _vel_z_ref*_delta_time_attitude;
 
 
 			if(t_man >= run_t)
