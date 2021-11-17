@@ -2116,14 +2116,20 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 
 		float v_wind_N = _wind.windspeed_north;
 		float v_wind_E = _wind.windspeed_east;
+
 		//Dynamic airspeed stuff
 		bool variableRefSpeed = true; // This enables dynamic airspeed based tracking velocity changes
+		_vel_x_ref_n = _vel_x_ref / sqrtf(_vel_x_ref*_vel_x_ref + _vel_y_ref*_vel_y_ref + _vel_z_ref*_vel_z_ref);
+		_vel_y_ref_n = _vel_y_ref / sqrtf(_vel_x_ref*_vel_x_ref + _vel_y_ref*_vel_y_ref + _vel_z_ref*_vel_z_ref);
+
 		float a_vab = 2.0f*(_vel_x_ref*-v_wind_N  + _vel_y_ref*-v_wind_E);
 		float b_vab = (v_wind_N*v_wind_N + v_wind_E*v_wind_E) - V_n*V_n;
+
 		if(variableRefSpeed)
 		{
 			V_n = (-a_vab + sqrtf(a_vab*a_vab - 4.0f*b_vab))/2.0f;
 		}
+
 		_juan_att_var.v_rn = V_n;
 
 
