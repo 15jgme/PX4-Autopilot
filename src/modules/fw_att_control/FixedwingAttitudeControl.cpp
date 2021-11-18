@@ -1694,28 +1694,28 @@ void FixedwingAttitudeControl::JUAN_position_control()
 					}
 				}
 
-				// Roll modifier (airspeed based)
-				float Vas = 8.0f; //m/s
-				float Vae = 6.0f; //m/s
+				// // Roll modifier (airspeed based)
+				// float Vas = 8.0f; //m/s
+				// float Vae = 6.0f; //m/s
 
-				float rollMod = 0.0f;
+				// float rollMod = 0.0f;
 
-				if(_airspeed_sub.get().indicated_airspeed_m_s > Vas)
-				{
+				// if(_airspeed_sub.get().indicated_airspeed_m_s > Vas)
+				// {
 
-					rollMod = 0.0f;
-				}
-				else if (_airspeed_sub.get().indicated_airspeed_m_s < Vae)
-				{
-					rollMod = 1.0f;
-				}
-				else
-				{
-					rollMod = (1/(Vas - Vae)) * (Vas - _airspeed_sub.get().indicated_airspeed_m_s);
-					// PX4_INFO("%f",(double)rollMod);
-				}
+				// 	rollMod = 0.0f;
+				// }
+				// else if (_airspeed_sub.get().indicated_airspeed_m_s < Vae)
+				// {
+				// 	rollMod = 1.0f;
+				// }
+				// else
+				// {
+				// 	rollMod = (1/(Vas - Vae)) * (Vas - _airspeed_sub.get().indicated_airspeed_m_s);
+				// 	// PX4_INFO("%f",(double)rollMod);
+				// }
 
-				roll_com *= rollMod;// killed this
+				// roll_com *= rollMod;// killed this
 
 				// Roll modifier (airspeed based)
 
@@ -2093,7 +2093,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	{
 		// float V_n = _initial_vxy;
 		float V_n = 10.0f;
-		float radius = 30.0f; //m
+		float radius = 15.0f; //m
 		float t_runup = 5.0f; //sec
 		float discrep = 0.0f; //m
 
@@ -2104,7 +2104,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 		float delX = _x_zero - _pos_x_exit;
 		float delY = _y_zero - _pos_y_exit;
 
-		float maxRot = 3.0f; // maximum number of revolutions
+		float maxRot = 4.0f; // maximum number of revolutions
 		float t_man = _time_elapsed;
 
 		float theta_0 = atan2f(delY, delX) + PI_f;
@@ -2119,13 +2119,13 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 
 		//Dynamic airspeed stuff
 		bool variableRefSpeed = true; // This enables dynamic airspeed based tracking velocity changes
-		_vel_x_ref_n = _vel_x_ref / sqrtf(_vel_x_ref*_vel_x_ref + _vel_y_ref*_vel_y_ref + _vel_z_ref*_vel_z_ref);
-		_vel_y_ref_n = _vel_y_ref / sqrtf(_vel_x_ref*_vel_x_ref + _vel_y_ref*_vel_y_ref + _vel_z_ref*_vel_z_ref);
+		float _vel_x_ref_n = _vel_x_ref / sqrtf(_vel_x_ref*_vel_x_ref + _vel_y_ref*_vel_y_ref + _vel_z_ref*_vel_z_ref);
+		float _vel_y_ref_n = _vel_y_ref / sqrtf(_vel_x_ref*_vel_x_ref + _vel_y_ref*_vel_y_ref + _vel_z_ref*_vel_z_ref);
 
-		float a_vab = 2.0f*(_vel_x_ref*-v_wind_N  + _vel_y_ref*-v_wind_E);
+		float a_vab = 2.0f*(_vel_x_ref_n*-v_wind_N  + _vel_y_ref_n*-v_wind_E);
 		float b_vab = (v_wind_N*v_wind_N + v_wind_E*v_wind_E) - V_n*V_n;
 
-		if(variableRefSpeed)
+		if(variableRefSpeed && feedforward_flag)
 		{
 			V_n = (-a_vab + sqrtf(a_vab*a_vab - 4.0f*b_vab))/2.0f;
 		}
