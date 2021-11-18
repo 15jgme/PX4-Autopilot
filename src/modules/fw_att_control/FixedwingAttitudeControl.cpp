@@ -2127,7 +2127,16 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 
 		if(variableRefSpeed && feedforward_flag)
 		{
-			V_n = (-a_vab + sqrtf(a_vab*a_vab - 4.0f*b_vab))/2.0f;
+			if((a_vab*a_vab - 4.0f*b_vab) > 0)
+			{
+				V_n = (-a_vab + sqrtf(a_vab*a_vab - 4.0f*b_vab))/2.0f;
+			}else{
+				V_n = -a_vab/2.0f;
+			}
+			float V_min = 2.0f;
+			if(V_n < V_min){V_n = V_min;}
+
+
 		}
 
 		_juan_att_var.v_rn = V_n;
