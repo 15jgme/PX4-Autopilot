@@ -921,7 +921,7 @@ void FixedwingAttitudeControl::Run()
 						_jackson_dbg_var.c_ri_pre_ff[8] =  C_ri(2, 2);
 					}
 
-					if (feedforward_flag) {
+					if (feedforward_flag && _juan_att_var.flight_mode_granular != 1) {
 						wind_estimate_poll(); //update estimate
 						wind_ff_rot_update(); //update R_wind
 						// matrix::Dcmf temp_C_ri = C_ri * R_wind; //avoid any weirdness like in Eigen
@@ -1278,7 +1278,7 @@ void FixedwingAttitudeControl::Run()
 
 
 
-				_juan_att_var.test_variable = 1.0f;
+				_juan_att_var.test_variable = 10.0f;
 
 
 				// matrix::Eulerf euler_ref(C_ri.transpose());
@@ -2115,7 +2115,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 
 		if(t_man < t_runup)
 		{
-			thrust_add_flag = true;
+			thrust_add_flag = false;
 			feedforward_flag = true;
 			_vel_x_ref = V_n*cosf(_initial_heading);
 			_vel_y_ref = V_n*sinf(_initial_heading);
@@ -2212,7 +2212,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 		float t_man = _time_elapsed;
 
 		// float thetai = 40.0f * 0.0174533f;
-		float dh = 17.0f; //Height difference
+		float dh = 0.0f; //Height difference
 		float vz = dh/run_t; //Vertical velocity
 
 
@@ -2223,7 +2223,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 		{
 			_juan_att_var.estimated_position_ff_x = _local_pos.x;
 			_juan_att_var.estimated_position_ff_y = _local_pos.y;
-			thrust_add_flag = true;
+			thrust_add_flag = false;
 		}
 		else
 		{
@@ -2460,7 +2460,7 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 		float fv1r = CriTemp(0,0);
 		float fv2r = CriTemp(0,1);
 
-		bool dragff = true;
+		bool dragff = false;
 
 		// T_add =	(fv1r * KdX * (v_tild_N - v_N) + fv2r * KdY * (v_tild_E - v_E));
 
