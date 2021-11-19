@@ -1278,7 +1278,7 @@ void FixedwingAttitudeControl::Run()
 
 
 
-				_juan_att_var.test_variable = 3.0f;
+				_juan_att_var.test_variable = 1.0f;
 
 
 				// matrix::Eulerf euler_ref(C_ri.transpose());
@@ -1573,7 +1573,7 @@ void FixedwingAttitudeControl::JUAN_position_control()
 
 	// Call JUAN Maneuver generator. This assigns a position setpoint.
 
-	 JUAN_reference_generator(7); //3 == zigzag
+	 JUAN_reference_generator(6); //3 == zigzag
 
 	// Control law
 	float _error_pos_x = _pos_x_ref-_pos_x_est;
@@ -1694,28 +1694,28 @@ void FixedwingAttitudeControl::JUAN_position_control()
 					}
 				}
 
-				// Roll modifier (airspeed based)
-				float Vas = 8.0f; //m/s
-				float Vae = 6.0f; //m/s
+				// // Roll modifier (airspeed based)
+				// float Vas = 8.0f; //m/s
+				// float Vae = 6.0f; //m/s
 
-				float rollMod = 0.0f;
+				// float rollMod = 0.0f;
 
-				if(_airspeed_sub.get().indicated_airspeed_m_s > Vas)
-				{
+				// if(_airspeed_sub.get().indicated_airspeed_m_s > Vas)
+				// {
 
-					rollMod = 0.0f;
-				}
-				else if (_airspeed_sub.get().indicated_airspeed_m_s < Vae)
-				{
-					rollMod = 1.0f;
-				}
-				else
-				{
-					rollMod = (1/(Vas - Vae)) * (Vas - _airspeed_sub.get().indicated_airspeed_m_s);
-					// PX4_INFO("%f",(double)rollMod);
-				}
+				// 	rollMod = 0.0f;
+				// }
+				// else if (_airspeed_sub.get().indicated_airspeed_m_s < Vae)
+				// {
+				// 	rollMod = 1.0f;
+				// }
+				// else
+				// {
+				// 	rollMod = (1/(Vas - Vae)) * (Vas - _airspeed_sub.get().indicated_airspeed_m_s);
+				// 	// PX4_INFO("%f",(double)rollMod);
+				// }
 
-				roll_com *= rollMod;// killed this
+				// roll_com *= rollMod;// killed this
 
 				// Roll modifier (airspeed based)
 
@@ -2092,7 +2092,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	else if(_maneuver_type == 6) //Jackson's path, circle
 	{
 		// float V_n = _initial_vxy;
-		float V_n = 7.0f;
+		float V_n = 9.0f;
 		float radius = 30.0f; //m
 		float t_runup = 5.0f; //sec
 		float discrep = 0.0f; //m
@@ -2206,13 +2206,16 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	{
 		// float V_n = _initial_vxy;
 		float V_n = 8.0f;
-		float run_t = 5.0f;
+		float run_t = 4.0f;
 		float circ_t = 7.0f;
 		float rad = (V_n*circ_t)/PI_f;
 		float t_man = _time_elapsed;
 
-		float dh = 7.0f; //Height difference
+		// float thetai = 40.0f * 0.0174533f;
+		float dh = 17.0f; //Height difference
 		float vz = dh/run_t; //Vertical velocity
+
+
 
 		// thrust_add_flag = false;
 
