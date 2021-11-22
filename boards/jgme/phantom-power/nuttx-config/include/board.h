@@ -40,7 +40,7 @@
 /************************************************************************************
  * Included Files
  ************************************************************************************/
-
+#include "board_dma_map.h"
 #include <nuttx/config.h>
 
 #ifndef __ASSEMBLY__
@@ -165,6 +165,36 @@
 #define BOARD_TIM12_FREQUENCY   STM32_APB1_TIM12_CLKIN
 #define BOARD_TIM13_FREQUENCY   STM32_APB1_TIM13_CLKIN
 #define BOARD_TIM14_FREQUENCY   STM32_APB1_TIM14_CLKIN
+
+/* SDIO dividers.  Note that slower clocking is required when DMA is disabled
+ * in order to avoid RX overrun/TX underrun errors due to delayed responses
+ * to service FIFOs in interrupt driven mode.  These values have not been
+ * tuned!!!
+ *
+ * SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(118+2)=400 KHz
+ */
+
+#define SDIO_INIT_CLKDIV        (118 << SDIO_CLKCR_CLKDIV_SHIFT)
+
+/* DMA ON:  SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(1+2)=16 MHz
+ * DMA OFF: SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(2+2)=12 MHz
+ */
+
+#ifdef CONFIG_STM32_SDIO_DMA
+#  define SDIO_MMCXFR_CLKDIV    (1 << SDIO_CLKCR_CLKDIV_SHIFT)
+#else
+#  define SDIO_MMCXFR_CLKDIV    (2 << SDIO_CLKCR_CLKDIV_SHIFT)
+#endif
+
+/* DMA ON:  SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(1+2)=16 MHz
+ * DMA OFF: SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(2+2)=12 MHz
+ */
+
+#ifdef CONFIG_STM32_SDIO_DMA
+#  define SDIO_SDXFR_CLKDIV     (1 << SDIO_CLKCR_CLKDIV_SHIFT)
+#else
+#  define SDIO_SDXFR_CLKDIV     (2 << SDIO_CLKCR_CLKDIV_SHIFT)
+#endif
 
 /* Alternate function pin selections ************************************************/
 

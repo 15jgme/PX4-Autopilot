@@ -7,6 +7,8 @@
 # param set-default CBRK_SUPPLY_CHK 894281
 
 param set-default SYS_AUTOSTART 4901
+param set-default SYS_HAS_MAG 1
+
 
 # don't probe external I2C
 param set-default SENS_EXT_I2C_PRB 0

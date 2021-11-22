@@ -52,6 +52,8 @@
  ****************************************************************************************************/
 /* Configuration ************************************************************************************/
 
+
+
 /* Crazyflie GPIOs **********************************************************************************/
 /* LEDs */
 
@@ -162,6 +164,9 @@
 
 #define BOARD_ENABLE_CONSOLE_BUFFER
 #define BOARD_CONSOLE_BUFFER_SIZE (1024*3)
+
+/* This board provides a DMA pool and APIs */
+#define BOARD_DMA_ALLOC_POOL_SIZE 5120
 
 __BEGIN_DECLS
 
