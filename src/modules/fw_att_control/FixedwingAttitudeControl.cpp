@@ -2379,8 +2379,8 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 	// float KdY = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
 
 	/* --- Real life gains --- */
-	float KdX = 0.7f*3.0f*0.1323f;
-	float KdY = 0.7f*3.0f*0.1323f;
+	float KpX = 3.0f*0.243f;
+	float KpY = 3.0f*0.243f;
 
 	/* ---- Wind vector ---- */
 	float v_wind_N = _wind.windspeed_north;
@@ -2456,47 +2456,39 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 
 	if(thrust_add_flag)
 	{
-		matrix::Dcmf CriTemp =  C_ri * R_wind; //Temporarity to get rotated nose vector
-		float fv1r = CriTemp(0,0);
-		float fv2r = CriTemp(0,1);
+		// matrix::Dcmf CriTemp =  C_ri * R_wind; //Temporarity to get rotated nose vector
+		// float fv1r = CriTemp(0,0);
+		// float fv2r = CriTemp(0,1);
 
-		bool dragff = false;
+		bool dragff = true;
 
 		// T_add =	(fv1r * KdX * (v_tild_N - v_N) + fv2r * KdY * (v_tild_E - v_E));
 
 		// // Normalize f vectors (since they're in XY)
 		// float fNorm = sqrt(fv1*fv1 + fv2*fv2);
 		float frNorm = sqrt(fv1r*fv1r + fv2r*fv2r);
-		// float fv1n = fv1/fNorm;
-		// float fv2n = fv2/fNorm;
+		float fv1n = fv1/fNorm;
+		float fv2n = fv2/fNorm;
 
-		float fv1rn = fv1r/frNorm;
-		float fv2rn = fv2r/frNorm;
+		// float fv1rn = fv1r/frNorm;
+		// float fv2rn = fv2r/frNorm;
 
 		// float rotAng = fv1n*fv1rn + fv2n*fv2rn;
-		float rotAng = cosf(abs(_juan_att_var.crab_angle_ff));
+		float rotAng =abs(_juan_att_var.crab_angle_ff);
 		// if(rotAng < cosf(PI_f/3.0f) && rotAng>0.0f){rotAng = cosf(PI_f/3.0f);} //Limit rotation angle to avoid singularity
 		// if(rotAng<0.0f){rotAng = 1;} //Limit rotation angle to avoid singularity
 		// PX4_INFO("tff denom: %f", (double)rotAng);
-		T_add = ThrustN / rotAng - ThrustN; //Step 1
+		if(rotAng>0.5) { T_add = ThrustN / rotAng - ThrustN; }//Step 1
 
 		if(dragff)
 		{
-			T_add2 = fv1rn * KdX * (v_tild_N - v_N) + fv2rn * KdY * (v_tild_E - v_E);
-			T_add += (fv1rn * KdX * (v_tild_N - v_N) + fv2rn * KdY * (v_tild_E - v_E)); //Step 2
+			// T_add2 = fv1rn * KdX * (v_tild_N - v_N) + fv2rn * KdY * (v_tild_E - v_E);
+			T_add2 = fv1n * KdX * (v_tild_N - v_N) + fv2n * KdY * (v_tild_E - v_E);
+			T_add += T_add2; //Step 2
 		}
 
 		// T_add += (fv1n * KdX * (v_tild_N - v_N) + fv2n * KdY * (v_tild_E - v_E)); //Step 2
 
-
-		if(T_add > 0)
-		{
-			T_add *= 1.0f;
-		}
-		else if(T_add < 0)
-		{
-			T_add *= 1.0f;
-		}
 
 		_juan_att_var.tadd = T_add;
 		_juan_att_var.tadd2 = T_add2;
