@@ -2036,7 +2036,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 			}
 			if(turnCount >= 4){
 				feedforward_flag = false;
-				thrust_add_flag = false;
+				thrust_add_flag = true;
 				_juan_att_var.estimated_position_nff_x = _local_pos.x;
 				_juan_att_var.estimated_position_nff_y = _local_pos.y;
 			}else{
@@ -2115,7 +2115,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 
 		if(t_man < t_runup)
 		{
-			thrust_add_flag = false;
+			thrust_add_flag = true;
 			feedforward_flag = true;
 			_vel_x_ref = V_n*cosf(_initial_heading);
 			_vel_y_ref = V_n*sinf(_initial_heading);
