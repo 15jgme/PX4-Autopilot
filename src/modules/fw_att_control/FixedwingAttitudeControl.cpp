@@ -2092,8 +2092,8 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	else if(_maneuver_type == 6) //Jackson's path, circle
 	{
 		// float V_n = _initial_vxy;
-		float V_n = 9.0f;
-		float radius = 30.0f; //m
+		float V_n = 10.0f;
+		float radius = 24.0f; //m
 		float t_runup = 5.0f; //sec
 		float discrep = 0.0f; //m
 
@@ -2205,14 +2205,14 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	else if(_maneuver_type == 7) //Jackson's path, racetrack
 	{
 		// float V_n = _initial_vxy;
-		float V_n = 8.0f;
+		float V_n = 9.0f;
 		float run_t = 4.0f;
 		float circ_t = 7.0f;
 		float rad = (V_n*circ_t)/PI_f;
 		float t_man = _time_elapsed;
 
 		// float thetai = 40.0f * 0.0174533f;
-		float dh = 0.0f; //Height difference
+		float dh = 16.0f; //Height difference
 		float vz = dh/run_t; //Vertical velocity
 
 
@@ -2379,8 +2379,8 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 	// float KdY = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
 
 	/* --- Real life gains --- */
-	float KpX = 3.0f*0.243f;
-	float KpY = 3.0f*0.243f;
+	float KdX = 0.7f*3.0f*0.1323f;
+	float KdY = 0.7f*3.0f*0.1323f;
 
 	/* ---- Wind vector ---- */
 	float v_wind_N = _wind.windspeed_north;
@@ -2465,8 +2465,8 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 		// T_add =	(fv1r * KdX * (v_tild_N - v_N) + fv2r * KdY * (v_tild_E - v_E));
 
 		// // Normalize f vectors (since they're in XY)
-		// float fNorm = sqrt(fv1*fv1 + fv2*fv2);
-		float frNorm = sqrt(fv1r*fv1r + fv2r*fv2r);
+		float fNorm = sqrt(fv1*fv1 + fv2*fv2);
+		// float frNorm = sqrt(fv1r*fv1r + fv2r*fv2r);
 		float fv1n = fv1/fNorm;
 		float fv2n = fv2/fNorm;
 
@@ -2474,11 +2474,14 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 		// float fv2rn = fv2r/frNorm;
 
 		// float rotAng = fv1n*fv1rn + fv2n*fv2rn;
-		float rotAng =abs(_juan_att_var.crab_angle_ff);
-		// if(rotAng < cosf(PI_f/3.0f) && rotAng>0.0f){rotAng = cosf(PI_f/3.0f);} //Limit rotation angle to avoid singularity
+		float rotAng = abs(_juan_att_var.r_wind_rows[0]);
+		// if(rotAng < cosf(PI_f/3.0f) && rotAng>0.0f){rotAng = cosf(PI_f/3.0f);} //Limit rotat
+		// ion angle to avoid singularity
 		// if(rotAng<0.0f){rotAng = 1;} //Limit rotation angle to avoid singularity
 		// PX4_INFO("tff denom: %f", (double)rotAng);
-		if(rotAng>0.5) { T_add = ThrustN / rotAng - ThrustN; }//Step 1
+		T_add = 0.0f;
+		if(rotAng>0.5f) { T_add = ThrustN / rotAng - ThrustN; }//Step 1
+
 
 		if(dragff)
 		{
@@ -2492,8 +2495,8 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 
 		_juan_att_var.tadd = T_add;
 		_juan_att_var.tadd2 = T_add2;
-		_juan_att_var.fv1rn = fv1rn;
-		_juan_att_var.fv2rn = fv2rn;
+		// _juan_att_var.fv1rn = fv1rn;
+		// _juan_att_var.fv2rn = fv2rn;
 
 	}
 	else
