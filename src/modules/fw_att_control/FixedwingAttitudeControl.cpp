@@ -2223,7 +2223,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 		{
 			_juan_att_var.estimated_position_ff_x = _local_pos.x;
 			_juan_att_var.estimated_position_ff_y = _local_pos.y;
-			thrust_add_flag = false;
+			thrust_add_flag = true;
 		}
 		else
 		{
