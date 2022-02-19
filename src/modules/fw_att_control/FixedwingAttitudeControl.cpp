@@ -600,6 +600,7 @@ void FixedwingAttitudeControl::Run()
 				longTurn = true; //start off with a long turn
 				// _initial_heading = _previous_yaw;
 				_initial_heading = atan2f(_local_pos.vy, _local_pos.vx); //Use velocity direction instead
+				ffTrackComplete = false;
 				lastVtx = 1; // rest vertex
 				// if (lockHeadingFlag) {
 				// 	_initial_heading = PI_f / 2.0f;
@@ -1143,7 +1144,7 @@ void FixedwingAttitudeControl::Run()
 				float Vs = 5.0f;
 				float Vmin = 2.0f;
 
-				bool useSlipInCtrl = false;
+				bool useSlipInCtrl = true;
 				if(useSlipInCtrl)
 				{
 					if(feedforward_flag){sw7 = 1.0f;}else{sw7 = -1.0f;};
@@ -1523,11 +1524,11 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	// float KiZ = 0.25f*0.0004f;
 
 	/* --- Real life 2--- */
-	float KpX = 1.0f*3.0f*0.243f;
-	float KpY = 1.0f*3.0f*0.243f;
+	float KpX = 0.64f*1.0f*3.0f*0.243f;
+	float KpY = 0.64f*1.0f*3.0f*0.243f;
 	float KpZ = 1.89f;
-	float KdX = 0.7f*3.0f*0.1323f;
-	float KdY = 0.7f*3.0f*0.1323f;
+	float KdX = 0.832f*0.7f*3.0f*0.1323f;
+	float KdY = 0.832f*0.7f*3.0f*0.1323f;
 	float KdZ = 0.06615f;
 	float KiX = 0.25f*0.0008f;
 	float KiY = 0.25f*0.0008f;
@@ -1573,7 +1574,7 @@ void FixedwingAttitudeControl::JUAN_position_control()
 
 	// Call JUAN Maneuver generator. This assigns a position setpoint.
 
-	 JUAN_reference_generator(6); //3 == zigzag
+	 JUAN_reference_generator(7); //3 == zigzag
 
 	// Control law
 	float _error_pos_x = _pos_x_ref-_pos_x_est;
@@ -1589,8 +1590,8 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	_error_z_int = _error_z_int + _error_pos_z*_delta_time_attitude;
 
 	// Nose vector
-	float Fv1 = 1.0f*0.8f*0.8f*(1.3f*KdX * _error_vel_x + KpX * _error_pos_x + 0.5f*KiX * _error_x_int);
-	float Fv2 = 1.0f*0.8f*0.8f*(1.3f*KdY * _error_vel_y + KpY * _error_pos_y + 0.5f*KiY * _error_y_int);
+	float Fv1 = (KdX * _error_vel_x + KpX * _error_pos_x + 0.5f*KiX * _error_x_int);
+	float Fv2 = (KdY * _error_vel_y + KpY * _error_pos_y + 0.5f*KiY * _error_y_int);
 	float Fv3 = 1.0f*0.8f*0.8f*(1.2f*KdZ * _error_vel_z + 1.2f*KpZ * _error_pos_z + 0.3f*KiZ * _error_z_int) - 0.4f*_gravity_const;
 	float _norm_F = sqrtf(Fv1*Fv1+Fv2*Fv2+Fv3*Fv3);
 	fv1 = Fv1/_norm_F;
@@ -2094,7 +2095,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 		// float V_n = _initial_vxy;
 		float V_n = 10.0f;
 		float radius = 24.0f; //m
-		float t_runup = 5.0f; //sec
+		float t_runup = 3.0f; //sec
 		float discrep = 0.0f; //m
 
 		// Center of circle
@@ -2115,7 +2116,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 
 		if(t_man < t_runup)
 		{
-			thrust_add_flag = true;
+			thrust_add_flag = false;
 			feedforward_flag = true;
 			_vel_x_ref = V_n*cosf(_initial_heading);
 			_vel_y_ref = V_n*sinf(_initial_heading);
@@ -2164,6 +2165,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 					if(!exitMsgSent){PX4_INFO("FF off"); exitMsgSent=true;}
 				}else{
 					feedforward_flag = true;
+					thrust_add_flag = false;
 					_juan_att_var.estimated_position_ff_x = _local_pos.x;
 					_juan_att_var.estimated_position_ff_y = _local_pos.y;
 				}
@@ -2205,14 +2207,14 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	else if(_maneuver_type == 7) //Jackson's path, racetrack
 	{
 		// float V_n = _initial_vxy;
-		float V_n = 9.0f;
+		float V_n = 10.0f;
 		float run_t = 4.0f;
-		float circ_t = 7.0f;
+		float circ_t = 9.0f;
 		float rad = (V_n*circ_t)/PI_f;
 		float t_man = _time_elapsed;
 
 		// float thetai = 40.0f * 0.0174533f;
-		float dh = 16.0f; //Height difference
+		float dh = 10.0f; //Height difference
 		float vz = dh/run_t; //Vertical velocity
 
 
@@ -2264,6 +2266,10 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 				_x_zero = rad*(-sinf(_initial_heading)) + _pos_x_initial;
 				_y_zero = rad*(cosf(_initial_heading)) + _pos_y_initial;
 				// PX4_INFO("%f, %f, %f, %f, %f", (double)_x_zero, (double)_y_zero, (double)_pos_x_initial, (double)_pos_y_initial, (double)rad);
+				if(ffTrackComplete)
+				{
+					feedforward_flag = false;
+				}
 			}
 		}
 		else if(lastVtx == 2)
@@ -2354,7 +2360,8 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 				_pos_x_initial = _pos_x_ref;
 				_pos_y_initial = _pos_y_ref;
 				_pos_z_initial = _pos_z_ref;
-				feedforward_flag = false;
+
+				ffTrackComplete = true;
 			}
 
 		}
@@ -2486,7 +2493,7 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 		if(dragff)
 		{
 			// T_add2 = fv1rn * KdX * (v_tild_N - v_N) + fv2rn * KdY * (v_tild_E - v_E);
-			T_add2 = fv1n * KdX * (v_tild_N - v_N) + fv2n * KdY * (v_tild_E - v_E);
+			T_add2 = 0.45f*(fv1n * KdX * (v_tild_N - v_N) + fv2n * KdY * (v_tild_E - v_E));
 			T_add += T_add2; //Step 2
 		}
 

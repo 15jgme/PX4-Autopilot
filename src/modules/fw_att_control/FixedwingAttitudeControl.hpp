@@ -277,6 +277,7 @@ private:
 	bool completeFlag = false; //flag showing that the desired path is complete
 	bool exitMsgSent = false;
 	float t_circ = 0.0f;
+	bool ffTrackComplete = false;
 	float _pos_x_exit = 0.0f;
 	float _pos_y_exit = 0.0f;
 	matrix::Dcmf R_wind; //Feedforward rotation

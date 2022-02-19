@@ -182,7 +182,7 @@ void AirspeedEstimator::run()
 
 		} else if (fds[1].revents & fds[2].revents & fds[3].revents & POLLIN) {
 
-			bool ekfSw = true; // If false use complimentary filter
+			bool ekfSw = false; // If false use complimentary filter
 
 			/* ---- Copy data ---- */
 			orb_copy(ORB_ID(airspeed_multi_record), masm_sub, &masm);
