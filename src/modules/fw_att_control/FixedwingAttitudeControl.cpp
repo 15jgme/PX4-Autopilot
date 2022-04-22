@@ -1634,7 +1634,8 @@ void FixedwingAttitudeControl::JUAN_position_control()
 					PX4_INFO("%f",(double)rollMod);
 				}
 
-				roll_com *= rollMod;// killed this
+				// roll_com *= rollMod;// killed this
+				roll_com = 0.0f;
 
 				// Roll modifier (airspeed based)
 
@@ -2001,7 +2002,7 @@ void FixedwingAttitudeControl::JUAN_reference_generator(int _maneuver_type)
 	{
 		// float V_n = _initial_vxy;
 		float V_n = 10.0f;
-		float radius = 30.0f; //m
+		float radius = 25.0f; //m
 		float t_runup = 6.0f; //sec
 		float discrep = 0.0f; //m
 
@@ -2205,13 +2206,19 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 
 	if(thrust_add_flag)
 	{
-		// matrix::Dcmf CriTemp =  C_ri * R_wind; //Temporarity to get rotated nose vector
-		// float fv1r = CriTemp(1,1);
-		// float fv2r = CriTemp(1,2);
+		float k_gamma = 1.0;
+		float lim = PI_f/4.0;
 
-		// T_add =	(fv1r * KdX * (v_tild_N - v_N) + fv2r * KdY * (v_tild_E - v_E));
-		T_add =	(fv1 * KdX * (v_tild_N - v_N) + fv2 * KdY * (v_tild_E - v_E));
-		// T_add =	(Fv1 * KdX * (v_tild_N - v_N) + Fv2 * KdY * (v_tild_E - v_E));
+		if(cosf(R_wind(0,0) < lim))
+		{
+			Tff1 = ThrustN*(1/cosf(R_wind(0,0)) - 1);
+		}else{
+			Tff1 = ThrustN*(1/cosf(lim) - 1);
+		}
+
+
+		Tff2 =	k_gamma*(fv1 * KdX * (v_tild_N - v_N) + fv2 * KdY * (v_tild_E - v_E));
+
 
 
 		if(T_add > 0)
