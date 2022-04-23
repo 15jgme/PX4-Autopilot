@@ -879,7 +879,7 @@ void FixedwingAttitudeControl::Run()
 						// matrix::Dcmf temp_C_ri = C_ri * R_wind; //avoid any weirdness like in Eigen
 						// C_ri = temp_C_ri;
 						C_ri = C_ri * R_wind;
-						ThrustN += T_add;
+						ThrustN = ThrustN + Tff1 + Tff2;
 					}
 
 					_juan_att_var.feedforward_on = feedforward_flag;
@@ -983,30 +983,30 @@ void FixedwingAttitudeControl::Run()
 				/*..................................................................*/
 
 				/*................Attitude controller gains.........................*/
-				float Kad1 = 0.8f * 0.00706f;
-				float Kad2 = 0.5f * 0.07576f;
-				float Kad3 = 0.7f * 0.07736f;
+				// float Kad1 = 0.8f * 0.00706f;
+				// float Kad2 = 0.5f * 0.07576f;
+				// float Kad3 = 0.7f * 0.07736f;
 
-				float Kap1 = 1.0f * 0.1656f;
-				float Kap2 = 1.0f * 1.022f;
-				float Kap3 = 1.0f * 0.6776f;
-
-				float Kai1 = 0.0f * 0.8f * 0.1656f;
-				float Kai2 = 0.0f * 0.8f * 1.022f;
-				float Kai3 = 0.0f * 0.8f * 0.6776f;
-				/*..................................................................*/
-				/*................Attitude controller gains SITL!.........................*/
-				// float Kad1 = 0.15f * 4.54f * 0.22f * 0.0706f / (0.7f);
-				// float Kad2 = 0.17f *4.54f * 0.22f * 0.6376f / (0.8f);
-				// float Kad3 = 0.2f *4.54f * 0.22f * 0.7736f / (0.8f);
-
-				// float Kap1 = 0.27f *4.54f * 0.22f * 0.7099f / (0.8f);
-				// float Kap2 = 0.22f *4.54f * 0.22f * 0.35f * 25.5359f / (1.0f);
-				// float Kap3 = 0.3f *4.54f * 0.22f * 0.35f * 38.7187f / (0.8f);
+				// float Kap1 = 1.0f * 0.1656f;
+				// float Kap2 = 1.0f * 1.022f;
+				// float Kap3 = 1.0f * 0.6776f;
 
 				// float Kai1 = 0.0f * 0.8f * 0.1656f;
 				// float Kai2 = 0.0f * 0.8f * 1.022f;
 				// float Kai3 = 0.0f * 0.8f * 0.6776f;
+				/*..................................................................*/
+				/*................Attitude controller gains SITL!.........................*/
+				float Kad1 = 0.15f * 4.54f * 0.22f * 0.0706f / (0.7f);
+				float Kad2 = 0.17f *4.54f * 0.22f * 0.6376f / (0.8f);
+				float Kad3 = 0.2f *4.54f * 0.22f * 0.7736f / (0.8f);
+
+				float Kap1 = 0.27f *4.54f * 0.22f * 0.7099f / (0.8f);
+				float Kap2 = 0.22f *4.54f * 0.22f * 0.35f * 25.5359f / (1.0f);
+				float Kap3 = 0.3f *4.54f * 0.22f * 0.35f * 38.7187f / (0.8f);
+
+				float Kai1 = 0.0f * 0.8f * 0.1656f;
+				float Kai2 = 0.0f * 0.8f * 1.022f;
+				float Kai3 = 0.0f * 0.8f * 0.6776f;
 				/*..................................................................*/
 
 				/* Integral errors */
@@ -1441,26 +1441,26 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	// float KiZ = 0.25f*0.0004f;
 
 	/* --- Real life 2--- */
-	float KpX = 1.0f*3.0f*0.243f;
-	float KpY = 1.0f*3.0f*0.243f;
-	float KpZ = 1.89f;
-	float KdX = 0.7f*3.0f*0.1323f;
-	float KdY = 0.7f*3.0f*0.1323f;
-	float KdZ = 0.06615f;
-	float KiX = 0.25f*0.0008f;
-	float KiY = 0.25f*0.0008f;
-	float KiZ = 0.25f*0.0004f;
-
-	// /* --- SITL --- */
-	// float KpX = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) ) ;
-	// float KpY = 1.25f *  0.54f / ( (1.0f*0.8f*0.8f) ) ;
-	// float KpZ = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) * 1.2f) ;
-	// float KdX = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
-	// float KdY = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
-	// float KdZ = 0.168f / (1.0f*0.8f*0.8f*(1.2f));
+	// float KpX = 1.0f*3.0f*0.243f;
+	// float KpY = 1.0f*3.0f*0.243f;
+	// float KpZ = 1.89f;
+	// float KdX = 0.7f*3.0f*0.1323f;
+	// float KdY = 0.7f*3.0f*0.1323f;
+	// float KdZ = 0.06615f;
 	// float KiX = 0.25f*0.0008f;
 	// float KiY = 0.25f*0.0008f;
 	// float KiZ = 0.25f*0.0004f;
+
+	// /* --- SITL --- */
+	float KpX = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) ) ;
+	float KpY = 1.25f *  0.54f / ( (1.0f*0.8f*0.8f) ) ;
+	float KpZ = 1.25f * 0.54f / ( (1.0f*0.8f*0.8f) * 1.2f) ;
+	float KdX = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
+	float KdY = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
+	float KdZ = 0.168f / (1.0f*0.8f*0.8f*(1.2f));
+	float KiX = 0.25f*0.0008f;
+	float KiY = 0.25f*0.0008f;
+	float KiZ = 0.25f*0.0004f;
 
 	/* --- ⛽ integral gains --- */
 	KiX *= 0.0f;
@@ -2206,14 +2206,14 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 
 	if(thrust_add_flag)
 	{
-		float k_gamma = 1.0;
-		float lim = PI_f/4.0;
+		float k_gamma = 1.0f;
+		float lim = PI_f/4.0f;
 
-		if(cosf(R_wind(0,0) < lim))
+		if(cosf(R_wind(0,0)) < lim)
 		{
-			Tff1 = ThrustN*(1/cosf(R_wind(0,0)) - 1);
+			Tff1 = ThrustN*(1.0f/cosf(R_wind(0,0)) - 1.0f);
 		}else{
-			Tff1 = ThrustN*(1/cosf(lim) - 1);
+			Tff1 = ThrustN*(1.0f/cosf(lim) - 1.0f);
 		}
 
 
