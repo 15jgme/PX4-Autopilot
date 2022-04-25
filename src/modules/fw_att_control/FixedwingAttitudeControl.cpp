@@ -858,8 +858,8 @@ void FixedwingAttitudeControl::Run()
 
 				} else {
 					JUAN_position_control();
-					C_ri = R_roll * C_ri_pos.transpose();
-					// C_ri = C_ri_pos.transpose();
+					// C_ri = R_roll * C_ri_pos.transpose();
+					C_ri = C_ri_pos.transpose();
 
 					if (verbose) {
 						_jackson_dbg_var.c_ri_pre_ff[0] =  C_ri(0, 0);
@@ -1517,6 +1517,7 @@ void FixedwingAttitudeControl::JUAN_position_control()
 	float fv3 = Fv3/_norm_F;
 	// Thrust magnitude (N)
 	ThrustN = _mass_const*_norm_F;
+	_juan_att_var.tfb = ThrustN;
 	// Non-normalized wing vector
 	float Wv1 = -fv2;
 	float Wv2 = fv1;
@@ -2125,12 +2126,13 @@ float FixedwingAttitudeControl::saturate(float value, float min, float max)
 void FixedwingAttitudeControl::wind_ff_rot_update()
 {
 	/* --- SITL GAINS --- */
-	// float KdX = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
-	// float KdY = 0.336f / (1.0f*0.8f*0.8f*(1.3f));
+	float KdX = 0.8f*0.8f*1.3f*(0.336f / (1.0f*0.8f*0.8f*(1.3f)));
+	float KdY = 0.8f*0.8f*1.3f*(0.336f / (1.0f*0.8f*0.8f*(1.3f)));
 
 	/* --- Real life gains --- */
-	float KdX = 0.7f*3.0f*0.1323f;
-	float KdY = 0.7f*3.0f*0.1323f;
+	// float KdX = 0.8f*0.8f*1.3f*0.7f*3.0f*0.1323f;
+	// float KdY = 0.8f*0.8f*1.3f*0.7f*3.0f*0.1323f;
+
 
 	/* ---- Wind vector ---- */
 	float v_wind_N = _wind.windspeed_north;
@@ -2209,25 +2211,28 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 		float k_gamma = 1.0f;
 		float lim = PI_f/4.0f;
 
-		if(cosf(R_wind(0,0)) < lim)
+		if(acosf(R_wind(0,0)) < lim)
 		{
-			Tff1 = ThrustN*(1.0f/cosf(R_wind(0,0)) - 1.0f);
+			Tff1 = ThrustN*(1.0f/R_wind(0,0) - 1.0f);
 		}else{
 			Tff1 = ThrustN*(1.0f/cosf(lim) - 1.0f);
 		}
 
 
-		Tff2 =	k_gamma*(fv1 * KdX * (v_tild_N - v_N) + fv2 * KdY * (v_tild_E - v_E));
+		Tff2 =	k_gamma*(0.45f)*(fv1 * KdX * (v_tild_N - v_N) + fv2 * KdY * (v_tild_E - v_E));
+
+		_juan_att_var.tff1 = Tff1;
+		_juan_att_var.tff2 = Tff2;
 
 
 
-		if(T_add > 0)
-		{
-			T_add *= 1.0f;
-		}
-		else if(T_add < 0)
-		{
-			T_add *= 1.0f;
-		}
+		// if(T_add > 0)
+		// {
+		// 	T_add *= 1.0f;
+		// }
+		// else if(T_add < 0)
+		// {
+		// 	T_add *= 1.0f;
+		// }
 	}
 }
