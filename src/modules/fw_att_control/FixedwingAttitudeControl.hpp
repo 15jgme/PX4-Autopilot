@@ -77,6 +77,7 @@
 #include <uORB/topics/airspeed_multi_record.h> //JACKSON
 #include <math.h>
 #include <mathlib/math/filter/LowPassFilter2p.hpp>
+#include "rtwtypes.h"
 
 
 using matrix::Eulerf;
@@ -282,6 +283,8 @@ private:
 	float _pos_y_exit = 0.0f;
 	matrix::Dcmf R_wind; //Feedforward rotation
 	matrix::Dcmf R_roll; //Roll matrix
+
+	double M1,M2,M3,M4,M5,M6,M7,M8,M9;
 
 
 	bool feedforward_flag = false; //If true wind feedforward on position is enabled

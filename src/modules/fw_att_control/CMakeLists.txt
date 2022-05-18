@@ -36,12 +36,17 @@ px4_add_module(
 	SRCS
 		FixedwingAttitudeControl.cpp
 		FixedwingAttitudeControl.hpp
+		calcCA.h
+		calcCA_types.h
+		MW_target_hardware_resources.h
+		rtwtypes.h
 
 		ecl_controller.cpp
 		ecl_pitch_controller.cpp
 		ecl_roll_controller.cpp
 		ecl_wheel_controller.cpp
 		ecl_yaw_controller.cpp
+		calcCA.c
 	DEPENDS
 		px4_work_queue
 	)

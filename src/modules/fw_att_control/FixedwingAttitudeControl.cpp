@@ -1175,9 +1175,33 @@ void FixedwingAttitudeControl::Run()
 				_juan_att_var.vsfilt = Vsfilt;
 				Vs = Vsfilt;
 
-				float AilDef = 0.7f * tau_1 / (.5f * ro * powf(Vs, 2.0f) * S_area * b_span * Cl_delta_a); //Aileron Deflection (deg)
-				float ElevDef = 0.8f * tau_2 / (.5f * ro * powf(Vs, 2.0f) * S_area * c_bar * Cm_delta_e); //Elevator Deflection (deg)
-				float RudDef = 0.6f * tau_3 / (.5f * ro * powf(Vs, 2.0f) * S_area * b_span * Cn_delta_r); //Rudder Deflection (deg)
+				calcCA(v_meas_tmp, v_meas_tmp, v_meas_tmp, &M1, &M2, &M3, &M4, &M5, &M6, &M7, &M8, &M9); // Update allocation matrix
+				matrix::Matrix3f M;
+
+				M(0,0) = float(M1);
+				M(1,0) = float(M2);
+				M(2,0) = float(M3);
+				M(0,1) = float(M4);
+				M(1,1) = float(M5);
+				M(2,1) = float(M6);
+				M(0,2) = float(M7);
+				M(1,2) = float(M8);
+				M(2,2) = float(M9);
+
+				matrix::Vector3f tau_vec;
+				tau_vec(0) = tau_1;
+				tau_vec(1) = tau_2;
+				tau_vec(2) = tau_3;
+
+				matrix::Vector3f def_mtx = M*tau_vec;
+
+				float AilDef = def_mtx(0);  //Aileron Deflection (deg)
+				float ElevDef = def_mtx(1); //Elevator Deflection (deg)
+				float RudDef = def_mtx(2);  //Rudder Deflection (deg)
+
+				// float AilDef = 0.7f * tau_1 / (.5f * ro * powf(Vs, 2.0f) * S_area * b_span * Cl_delta_a); //Aileron Deflection (deg)
+				// float ElevDef = 0.8f * tau_2 / (.5f * ro * powf(Vs, 2.0f) * S_area * c_bar * Cm_delta_e); //Elevator Deflection (deg)
+				// float RudDef = 0.6f * tau_3 / (.5f * ro * powf(Vs, 2.0f) * S_area * b_span * Cn_delta_r); //Rudder Deflection (deg)
 
 				float outputs_ail = 0.0000016235f * powf(AilDef, 3.0f) - 0.0000009861f * powf(AilDef, 2.0f) + 0.0145866432f * AilDef;
 				float outputs_ele = 0.0000008317f * powf(ElevDef, 3.0f) + 0.0000409759f * powf(ElevDef, 2.0f) + 0.01396963f * ElevDef;
