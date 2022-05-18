@@ -35,7 +35,7 @@
 #define AIRSPEED_SLIPSTREAM_RECORD_HPP
 
 #pragma once
-
+#include "math.h"
 #include <px4_platform_common/module.h>
 #include <px4_platform_common/module_params.h>
 #include <uORB/Subscription.hpp>

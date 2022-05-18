@@ -2463,17 +2463,11 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 
 	if(thrust_add_flag)
 	{
-		// matrix::Dcmf CriTemp =  C_ri * R_wind; //Temporarity to get rotated nose vector
-		// float fv1r = CriTemp(0,0);
-		// float fv2r = CriTemp(0,1);
 
 		bool dragff = true;
 
-		// T_add =	(fv1r * KdX * (v_tild_N - v_N) + fv2r * KdY * (v_tild_E - v_E));
-
 		// // Normalize f vectors (since they're in XY)
 		float fNorm = sqrt(fv1*fv1 + fv2*fv2);
-		// float frNorm = sqrt(fv1r*fv1r + fv2r*fv2r);
 		float fv1n = fv1/fNorm;
 		float fv2n = fv2/fNorm;
 
@@ -2482,10 +2476,7 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 
 		// float rotAng = fv1n*fv1rn + fv2n*fv2rn;
 		float rotAng = abs(_juan_att_var.r_wind_rows[0]);
-		// if(rotAng < cosf(PI_f/3.0f) && rotAng>0.0f){rotAng = cosf(PI_f/3.0f);} //Limit rotat
-		// ion angle to avoid singularity
-		// if(rotAng<0.0f){rotAng = 1;} //Limit rotation angle to avoid singularity
-		// PX4_INFO("tff denom: %f", (double)rotAng);
+
 		T_add = 0.0f;
 		if(rotAng>0.5f) { T_add = ThrustN / rotAng - ThrustN; }//Step 1
 
@@ -2502,8 +2493,7 @@ void FixedwingAttitudeControl::wind_ff_rot_update()
 
 		_juan_att_var.tadd = T_add;
 		_juan_att_var.tadd2 = T_add2;
-		// _juan_att_var.fv1rn = fv1rn;
-		// _juan_att_var.fv2rn = fv2rn;
+
 
 	}
 	else

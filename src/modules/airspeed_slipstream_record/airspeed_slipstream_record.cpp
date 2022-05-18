@@ -222,22 +222,7 @@ void airspeed_slipstream_record::run()
 
 	enum AIRSPEED_SENSOR_MODEL smodel_1;
 
-	switch ((sensID_1 >> 16) & 0xFF) {
-		case DRV_DIFF_PRESS_DEVTYPE_SDP31:
-
-		/* fallthrough */
-		case DRV_DIFF_PRESS_DEVTYPE_SDP32:
-
-		/* fallthrough */
-		case DRV_DIFF_PRESS_DEVTYPE_SDP33:
-			/* fallthrough */
-			smodel_1 = AIRSPEED_SENSOR_MODEL_SDP3X;
-			break;
-
-		default:
-			smodel_1 = AIRSPEED_SENSOR_MODEL_MEMBRANE;
-			break;
-	}
+	smodel_1 = AIRSPEED_SENSOR_MODEL_MEMBRANE; // Always treat this sensor as a membrane type since we do the pressure loss correction
 
 	// enum AIRSPEED_SENSOR_MODEL smodel_2;
 
@@ -328,13 +313,23 @@ void airspeed_slipstream_record::run()
 
 				airspeed_multi_data.air_temperature_celsius = air_temperature_1_celsius;
 
+				float Sair = 110.4f; // K
+				float mu0 = 1.71f * powf(10.0f,-5.0f);
+				float T0 = 273.0f; // K
+				float rho = airdat.baro_pressure_pa / (287.05f*(air_temperature_1_celsius+273.0f));
+
+
+				float beta = 1 / (-5.018f * powf(10.0f,-7.0f) * airspeed_multi_data.primary_differential_pressure_raw_pa - 4.372f * powf(10.0f,-5.0f));
+				float nuair = (mu0/rho) * powf(air_temperature_1_celsius/T0 , 3.0f/2.0f) * ((T0 + Sair)/(air_temperature_1_celsius + Sair));
+				float peff = airspeed_multi_data.primary_differential_pressure_filtered_pa / (1.0f + (nuair * beta));
 
 				// Finite check
 				airspeed_ID_1  = calc_IAS_corrected((enum AIRSPEED_COMPENSATION_MODEL)
 										2,
 										smodel_1, 0.16f, 1.4f,
-										diff_pres_ID_1.differential_pressure_filtered_pa + ID_1_cal, airdat.baro_pressure_pa,
+										peff, airdat.baro_pressure_pa,
 										air_temperature_1_celsius);
+
 				if(PX4_ISFINITE(airspeed_ID_1 )){
 					airspeed_multi_data.primary_airspeed_ms = airspeed_ID_1;
 				}
