@@ -1016,13 +1016,13 @@ void FixedwingAttitudeControl::Run()
 				/*..................................................................*/
 
 				/* Constants used by control system ................................*/
-				float S_area = 0.14274f; //Wing Area (m^2), yak54 = 0.14865
-				float b_span = 0.864f; //Wing Span (m), yak54 = .82
-				float c_bar = 0.21f; //Mean Aerodynamic Chord (m), yak54 =.2107
-				float Cl_delta_a = -0.0006777f; //Aileron Control Derivative Coefficient (/deg)
-				float Cm_delta_e = -0.0117747f; //Elevator Control Derivative Coefficient (/deg)
-				float Cn_delta_r = -0.0035663f; //Rudder Control Derivative Coefficient (/deg)
-				float ro = 1.225f;
+				// float S_area = 0.14274f; //Wing Area (m^2), yak54 = 0.14865
+				// float b_span = 0.864f; //Wing Span (m), yak54 = .82
+				// float c_bar = 0.21f; //Mean Aerodynamic Chord (m), yak54 =.2107
+				// float Cl_delta_a = -0.0006777f; //Aileron Control Derivative Coefficient (/deg)
+				// float Cm_delta_e = -0.0117747f; //Elevator Control Derivative Coefficient (/deg)
+				// float Cn_delta_r = -0.0035663f; //Rudder Control Derivative Coefficient (/deg)
+				// float ro = 1.225f;
 
 				// float AilDef_max = 52.0f; //52.0fMaximum Aileron Deflection (deg)
 				// float ElevDef_max = 59.0f; //35.0fMaximum Elevator Deflection (deg)
@@ -1175,7 +1175,13 @@ void FixedwingAttitudeControl::Run()
 				_juan_att_var.vsfilt = Vsfilt;
 				Vs = Vsfilt;
 
-				calcCA(v_meas_tmp, v_meas_tmp, v_meas_tmp, &M1, &M2, &M3, &M4, &M5, &M6, &M7, &M8, &M9); // Update allocation matrix
+				_masm_sub.update(&_masm);
+				Vs = _masm.primary_airspeed_ms;//MASM reading
+				_airspeed_sub.update();
+				// float _airsp_indi_logged = _airspeed_sub.get().indicated_airspeed_m_s;
+				// float _airsp_true_logged = _airspeed_sub.get().true_airspeed_m_s;
+
+				calcCA(double(_airspeed_sub.get().true_airspeed_m_s), double(_masm.rpm_sens), double(_masm.primary_airspeed_ms), &M1, &M2, &M3, &M4, &M5, &M6, &M7, &M8, &M9); // Update allocation matrix
 				matrix::Matrix3f M;
 
 				M(0,0) = float(M1);

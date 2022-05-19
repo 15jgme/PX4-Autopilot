@@ -78,6 +78,10 @@
 #include <math.h>
 #include <mathlib/math/filter/LowPassFilter2p.hpp>
 #include "rtwtypes.h"
+#include "calcCA.h"
+
+#include <uORB/topics/airspeed_multi_record.h>
+#include <uORB/topics/airspeed.h>
 
 
 using matrix::Eulerf;
@@ -161,9 +165,14 @@ private:
 
 	//JACKSON
 	airspeed_multi_record_s 	_masm{};
+	airspeed_s			_airspeed{};
 	rc_channels_s 			_rc_ch{};
 	wind_s				_wind {};		/**< wind */
 	jackson_debug_variables_s 	_jackson_dbg_var{};	//debugging variables. Not published if verbose flag is false
+
+	float Va{10.0f}; // Declare here, only update if we get a new good Va
+	float nRec{0.0f}; //prop Rev/s
+	float pitRec{0.0f}; //pitot tube recording
 
 	//JUAN
 	vehicle_local_position_setpoint_s _local_pos_sp{}; 		//local position setpoint
