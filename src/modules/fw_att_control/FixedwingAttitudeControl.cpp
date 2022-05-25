@@ -657,9 +657,9 @@ void FixedwingAttitudeControl::Run()
 
 				/* ---- reset feedforward stuff ---- */
 				feedforward_flag = true;
+				thrust_add_flag = true;
 				_acc_x_ref = 0.0f;
 				_acc_y_ref = 0.0f;
-				// _juan_att_var.feedforward_on = true;
 
 
 				_vel_x_ref = _local_pos.vx;
@@ -669,6 +669,8 @@ void FixedwingAttitudeControl::Run()
 				_error_heading_int = 0.0f;
 
 				_JUAN_flight_mode = 0;
+
+				_mix_mode = direct_measure;
 
 				_previous_rpm = 900.0f;
 
@@ -753,9 +755,9 @@ void FixedwingAttitudeControl::Run()
 
 				// Manual attitude end test
 
-				int8_t loopNum = 1;
+				att_mans _att_mans = pitch_loop;
 
-				if(loopNum == 0)
+				if(_att_mans == pitch_loop)
 				{
 					/* ........................ Loop profile Pitch...........................*/
 					if (_time_elapsed < 1.0f) { //do nothing for a second
@@ -773,7 +775,7 @@ void FixedwingAttitudeControl::Run()
 					_roll_rate_reference = 0.0f;
 
 				}
-				else if(loopNum == 1)
+				else if(_att_mans == yaw_spin)
 				{
 					/* ........................ Loop profile Yaw...........................*/
 					if (_time_elapsed < 1.0f) { //do nothing for a second
@@ -793,7 +795,7 @@ void FixedwingAttitudeControl::Run()
 					_roll_rate_reference = 0.0f;
 
 				}
-				else if(loopNum == 2)
+				else if(_att_mans == aileron_roll)
 				{
 					/* ........................ Loop profile Roll...........................*/
 					if (_time_elapsed < 1.0f) { //do nothing for a second
@@ -813,6 +815,14 @@ void FixedwingAttitudeControl::Run()
 					_yaw_rate_reference = 0.0f;
 
 				}
+
+				if(_time_elapsed > 3.0f + 3.0f && man_nums < 2)
+				{
+					_time_elapsed = 0.0f;
+					man_nums++;
+					_mix_mode = (mix_mode)man_nums;
+				}
+
 
 
 				float _manual_yaw = _yaw_test_profile;
@@ -886,7 +896,7 @@ void FixedwingAttitudeControl::Run()
 				// matrix::Dcmf C_manual = C_roll*C_pitch;
 
 				/*... DCMs for control system ......................................*/
-				_JUAN_flight_mode = 1; // 0 is attitude control, 1 is position control
+				_JUAN_flight_mode = 0; // 0 is attitude control, 1 is position control
 
 				if (_JUAN_flight_mode < 1) { //if in juan's flight mode
 					C_ri = C_manual; //set reference
@@ -1016,13 +1026,13 @@ void FixedwingAttitudeControl::Run()
 				/*..................................................................*/
 
 				/* Constants used by control system ................................*/
-				// float S_area = 0.14274f; //Wing Area (m^2), yak54 = 0.14865
-				// float b_span = 0.864f; //Wing Span (m), yak54 = .82
-				// float c_bar = 0.21f; //Mean Aerodynamic Chord (m), yak54 =.2107
-				// float Cl_delta_a = -0.0006777f; //Aileron Control Derivative Coefficient (/deg)
-				// float Cm_delta_e = -0.0117747f; //Elevator Control Derivative Coefficient (/deg)
-				// float Cn_delta_r = -0.0035663f; //Rudder Control Derivative Coefficient (/deg)
-				// float ro = 1.225f;
+				float S_area = 0.14274f; //Wing Area (m^2), yak54 = 0.14865
+				float b_span = 0.864f; //Wing Span (m), yak54 = .82
+				float c_bar = 0.21f; //Mean Aerodynamic Chord (m), yak54 =.2107
+				float Cl_delta_a = -0.0006777f; //Aileron Control Derivative Coefficient (/deg)
+				float Cm_delta_e = -0.0117747f; //Elevator Control Derivative Coefficient (/deg)
+				float Cn_delta_r = -0.0035663f; //Rudder Control Derivative Coefficient (/deg)
+				float ro = 1.225f;
 
 				// float AilDef_max = 52.0f; //52.0fMaximum Aileron Deflection (deg)
 				// float ElevDef_max = 59.0f; //35.0fMaximum Elevator Deflection (deg)
@@ -1049,9 +1059,10 @@ void FixedwingAttitudeControl::Run()
 				float Kad2 = 0.17f *4.54f * 0.22f * 0.6376f / (0.8f);
 				float Kad3 = 0.2f *4.54f * 0.22f * 0.7736f / (0.8f);
 
-				float Kap1 = 0.27f *4.54f * 0.22f * 0.7099f / (0.8f);
-				float Kap2 = 0.22f *4.54f * 0.22f * 0.35f * 25.5359f / (1.0f);
-				float Kap3 = 0.3f *4.54f * 0.22f * 0.35f * 38.7187f / (0.8f);
+				// First gain on the left is to compensate for new mixer
+				float Kap1 = 4.85f * 0.27f *4.54f * 0.22f * 0.7099f / (0.8f);
+				float Kap2 = 1.53f * 0.22f *4.54f * 0.22f * 0.35f * 25.5359f / (1.0f);
+				float Kap3 = 2.04f * 0.3f *4.54f * 0.22f * 0.35f * 38.7187f / (0.8f);
 
 				// float Kai1 = 0.0f * 0.8f * 0.1656f;
 				// float Kai2 = 0.0f * 0.8f * 1.022f;
@@ -1181,7 +1192,22 @@ void FixedwingAttitudeControl::Run()
 				// float _airsp_indi_logged = _airspeed_sub.get().indicated_airspeed_m_s;
 				// float _airsp_true_logged = _airspeed_sub.get().true_airspeed_m_s;
 
-				calcCA(double(_airspeed_sub.get().true_airspeed_m_s), double(_masm.rpm_sens), double(_masm.primary_airspeed_ms), &M1, &M2, &M3, &M4, &M5, &M6, &M7, &M8, &M9); // Update allocation matrix
+
+				if(_mix_mode == direct_measure)
+				{
+					calcCA(double(_airspeed_sub.get().true_airspeed_m_s), double(_masm.rpm_sens), double(_masm.primary_airspeed_ms), &M1, &M2, &M3, &M4, &M5, &M6, &M7, &M8, &M9); // Update allocation matrix
+				}else if(_mix_mode == mt_model)
+				{
+					float Vtot = sqrtf(_local_pos.vx * _local_pos.vx + _local_pos.vy * _local_pos.vy + _local_pos.vz * _local_pos.vz);
+					float Faero = (2)*(0.0157f*Vtot*Vtot - 0.0524f*Vtot + 0.5583f); // (1) should be replaced by Kaero
+					float T2 = Faero + 0.45f*9.81f*sinf(euler_now.theta());
+					if(T2 < 0.0f){T2 = 0.0f;}
+					float u = C_bi(0, 0) * _local_pos.vx + C_bi(0, 1) * _local_pos.vy + C_bi(0, 2) * _local_pos.vz;
+					Vs = sqrt(u*u + (2.0f*T2)/(1.225f * 0.05067f));
+					calcCA(double(u), double(_masm.rpm_sens), double(Vs), &M1, &M2, &M3, &M4, &M5, &M6, &M7, &M8, &M9); // Update allocation matrix
+				}
+				//Add SE option here
+
 				matrix::Matrix3f M;
 
 				M(0,0) = float(M1);
@@ -1204,6 +1230,11 @@ void FixedwingAttitudeControl::Run()
 				float AilDef = def_mtx(0);  //Aileron Deflection (deg)
 				float ElevDef = def_mtx(1); //Elevator Deflection (deg)
 				float RudDef = def_mtx(2);  //Rudder Deflection (deg)
+
+				PX4_INFO("======================================");
+				PX4_INFO("%f ,%f, %f",double(M(0,0)), double(0.7f  / (.5f * ro * powf(Vs, 2.0f) * S_area * b_span * Cl_delta_a)), double(M(0,0)/(0.7f  / (.5f * ro * powf(Vs, 2.0f) * S_area * b_span * Cl_delta_a))));
+				PX4_INFO("%f ,%f, %f",double(M(1,1)), double(0.8f / (.5f * ro * powf(Vs, 2.0f) * S_area * c_bar * Cm_delta_e)), double(M(1,1)/(0.8f / (.5f * ro * powf(Vs, 2.0f) * S_area * c_bar * Cm_delta_e))));
+				PX4_INFO("%f ,%f, %f",double(M(2,2)), double(0.6f / (.5f * ro * powf(Vs, 2.0f) * S_area * b_span * Cn_delta_r)), double(M(2,2)/(0.6f / (.5f * ro * powf(Vs, 2.0f) * S_area * b_span * Cn_delta_r))));
 
 				// float AilDef = 0.7f * tau_1 / (.5f * ro * powf(Vs, 2.0f) * S_area * b_span * Cl_delta_a); //Aileron Deflection (deg)
 				// float ElevDef = 0.8f * tau_2 / (.5f * ro * powf(Vs, 2.0f) * S_area * c_bar * Cm_delta_e); //Elevator Deflection (deg)

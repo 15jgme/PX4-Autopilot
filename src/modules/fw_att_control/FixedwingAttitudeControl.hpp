@@ -174,6 +174,12 @@ private:
 	float nRec{0.0f}; //prop Rev/s
 	float pitRec{0.0f}; //pitot tube recording
 
+	enum att_mans {pitch_loop, yaw_spin, aileron_roll};
+	enum mix_mode {direct_measure, mt_model, se_model};
+	int man_nums = 0;
+
+	mix_mode _mix_mode = mt_model;
+
 	//JUAN
 	vehicle_local_position_setpoint_s _local_pos_sp{}; 		//local position setpoint
 	juan_attitude_variables_s _juan_att_var{}; 			// JUAN custom attitude control variables
