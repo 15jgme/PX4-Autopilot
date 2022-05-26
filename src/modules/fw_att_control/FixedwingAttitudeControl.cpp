@@ -755,7 +755,7 @@ void FixedwingAttitudeControl::Run()
 
 				// Manual attitude end test
 
-				att_mans _att_mans = pitch_loop;
+				att_mans _att_mans = pitch_loop; // This changes the maneuver!
 
 				if(_att_mans == pitch_loop)
 				{
