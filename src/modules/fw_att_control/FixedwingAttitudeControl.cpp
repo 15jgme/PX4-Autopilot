@@ -816,7 +816,7 @@ void FixedwingAttitudeControl::Run()
 
 				}
 
-				if(_time_elapsed > 3.0f + 3.0f && man_nums < 2)
+				if(_time_elapsed > 3.0f + 3.0f && man_nums < 3)
 				{
 					_time_elapsed = 0.0f;
 					man_nums++;
@@ -1204,6 +1204,11 @@ void FixedwingAttitudeControl::Run()
 					if(T2 < 0.0f){T2 = 0.0f;}
 					float u = C_bi(0, 0) * _local_pos.vx + C_bi(0, 1) * _local_pos.vy + C_bi(0, 2) * _local_pos.vz;
 					Vs = sqrt(u*u + (2.0f*T2)/(1.225f * 0.05067f));
+					calcCA(double(u), double(_masm.rpm_sens), double(Vs), &M1, &M2, &M3, &M4, &M5, &M6, &M7, &M8, &M9); // Update allocation matrix
+				}else if(_mix_mode == se_model)
+				{
+					float u = C_bi(0, 0) * _local_pos.vx + C_bi(0, 1) * _local_pos.vy + C_bi(0, 2) * _local_pos.vz;
+					Vs = slipstreamSimp(double(u), double(_masm.rpm_sens));
 					calcCA(double(u), double(_masm.rpm_sens), double(Vs), &M1, &M2, &M3, &M4, &M5, &M6, &M7, &M8, &M9); // Update allocation matrix
 				}
 				//Add SE option here

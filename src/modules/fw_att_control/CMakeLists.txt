@@ -38,8 +38,12 @@ px4_add_module(
 		FixedwingAttitudeControl.hpp
 		calcCA.h
 		calcCA_types.h
+		slipstreamSimp.h
+		slipstreamSimp_types.h
 		MW_target_hardware_resources.h
 		rtwtypes.h
+		rt_nonfinite.h
+
 
 		ecl_controller.cpp
 		ecl_pitch_controller.cpp
@@ -47,6 +51,9 @@ px4_add_module(
 		ecl_wheel_controller.cpp
 		ecl_yaw_controller.cpp
 		calcCA.c
+		slipstreamSimp.c
+		rt_nonfinite.c
+
 	DEPENDS
 		px4_work_queue
 	)

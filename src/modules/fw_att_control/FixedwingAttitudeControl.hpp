@@ -79,6 +79,7 @@
 #include <mathlib/math/filter/LowPassFilter2p.hpp>
 #include "rtwtypes.h"
 #include "calcCA.h"
+#include "slipstreamSimp.h"
 
 #include <uORB/topics/airspeed_multi_record.h>
 #include <uORB/topics/airspeed.h>
