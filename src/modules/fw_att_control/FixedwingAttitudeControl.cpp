@@ -913,7 +913,13 @@ void FixedwingAttitudeControl::Run()
 					matrix::Vector3f _omega_reference = C_e2w * _reference_euler_rate; // reference angular velocity in reference coord
 					_omega_reference_body =  C_br_alt * _omega_reference; // reference angular velocity in body coord
 					/*..................................................................*/
-					_throttle_out = _manual_control_setpoint.z;
+
+					float omega_t = 8700;
+					float thrust_PWM = saturate(1.6572f * powf(10.0f, -5.0f) * powf(omega_t, 2.0f) + .0166f * omega_t + 1121.8f, 1000.0f,
+								    2000.0f);
+					_throttle_out = (thrust_PWM - 1000.0f) / 1000.0f;
+
+					// _throttle_out = _manual_control_setpoint.z;
 
 				} else {
 					JUAN_position_control();
