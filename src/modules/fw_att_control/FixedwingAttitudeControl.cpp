@@ -1198,10 +1198,20 @@ void FixedwingAttitudeControl::Run()
 				// float _airsp_indi_logged = _airspeed_sub.get().indicated_airspeed_m_s;
 				// float _airsp_true_logged = _airspeed_sub.get().true_airspeed_m_s;
 
+				float min_vs_vel = 3.0f; // m/s
 
 				if(_mix_mode == direct_measure)
 				{
-					calcCA(double(_airspeed_sub.get().true_airspeed_m_s), double(_masm.rpm_sens), double(_masm.primary_airspeed_ms), &M1, &M2, &M3, &M4, &M5, &M6, &M7, &M8, &M9); // Update allocation matrix
+					float fs = _airspeed_sub.get().true_airsp_mixeed_m_s; if(fs < min_vs_vel){fs = min_vs_vel;}
+					float sl = _masm.primary_airspeed_ms; if(sl < min_vs_vel){sl = min_vs_vel;}
+
+					calcCA(double(fs), double(_masm.rpm_sens), double(sl), &M1, &M2, &M3, &M4, &M5, &M6, &M7, &M8, &M9); // Update allocation matrix
+
+					_juan_att_var.motor_rpm = _masm.rpm_sens;
+					_juan_att_var.freestream_ms = fs;
+					_juan_att_var.tail_ms = sl;
+
+					_juan_att_var.mixer_mode = int(_mix_mode);
 				}else if(_mix_mode == mt_model)
 				{
 					float Vtot = sqrtf(_local_pos.vx * _local_pos.vx + _local_pos.vy * _local_pos.vy + _local_pos.vz * _local_pos.vz);
@@ -1210,12 +1220,32 @@ void FixedwingAttitudeControl::Run()
 					if(T2 < 0.0f){T2 = 0.0f;}
 					float u = C_bi(0, 0) * _local_pos.vx + C_bi(0, 1) * _local_pos.vy + C_bi(0, 2) * _local_pos.vz;
 					Vs = sqrt(u*u + (2.0f*T2)/(1.225f * 0.05067f));
-					calcCA(double(u), double(_masm.rpm_sens), double(Vs), &M1, &M2, &M3, &M4, &M5, &M6, &M7, &M8, &M9); // Update allocation matrix
+
+					float fs = u; if(fs < min_vs_vel){fs = min_vs_vel;}
+					float sl = Vs; if(sl < min_vs_vel){sl = min_vs_vel;}
+
+					calcCA(double(fs), double(_masm.rpm_sens), double(sl), &M1, &M2, &M3, &M4, &M5, &M6, &M7, &M8, &M9); // Update allocation matrix
+
+					_juan_att_var.motor_rpm = _masm.rpm_sens;
+					_juan_att_var.freestream_ms = fs;
+					_juan_att_var.tail_ms = sl;
+
+					_juan_att_var.mixer_mode = int(_mix_mode);
 				}else if(_mix_mode == se_model)
 				{
+
 					float u = C_bi(0, 0) * _local_pos.vx + C_bi(0, 1) * _local_pos.vy + C_bi(0, 2) * _local_pos.vz;
 					Vs = slipstreamSimp(double(u), double(_masm.rpm_sens));
-					calcCA(double(u), double(_masm.rpm_sens), double(Vs), &M1, &M2, &M3, &M4, &M5, &M6, &M7, &M8, &M9); // Update allocation matrix
+
+					float fs = u; if(fs < min_vs_vel){fs = min_vs_vel;}
+					float sl = Vs; if(sl < min_vs_vel){sl = min_vs_vel;}
+					calcCA(double(fs), double(_masm.rpm_sens), double(sl), &M1, &M2, &M3, &M4, &M5, &M6, &M7, &M8, &M9); // Update allocation matrix
+
+					_juan_att_var.motor_rpm = _masm.rpm_sens;
+					_juan_att_var.freestream_ms = fs;
+					_juan_att_var.tail_ms = sl;
+
+					_juan_att_var.mixer_mode = int(_mix_mode);
 				}
 				//Add SE option here
 

@@ -92,3 +92,7 @@ float32 fv2rn
 
 float32 vs #slipstream velocity
 float32 vsfilt #slipstream velocity filtered
+
+float32 mixer_mode #
+float32 freestream_ms
+float32 tail_ms
