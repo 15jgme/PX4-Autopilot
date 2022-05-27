@@ -175,7 +175,7 @@ private:
 	float nRec{0.0f}; //prop Rev/s
 	float pitRec{0.0f}; //pitot tube recording
 
-	enum att_mans {pitch_loop, yaw_spin, aileron_roll};
+	enum att_mans {pitch_loop, yaw_spin, aileron_roll, inverted_pitch_loop, stall_spin, zurabatic};
 	enum mix_mode {direct_measure, mt_model, se_model};
 	int man_nums = 0;
 
