@@ -755,7 +755,9 @@ void FixedwingAttitudeControl::Run()
 
 				// Manual attitude end test
 
-				att_mans _att_mans = pitch_loop; // This changes the maneuver!
+
+				att_mans _att_mans = inverted_pitch_loop; //hard code manoeuver (default pitch_loop)
+
 
 				if(_att_mans == pitch_loop)
 				{
@@ -815,8 +817,91 @@ void FixedwingAttitudeControl::Run()
 					_yaw_rate_reference = 0.0f;
 
 				}
+				else if(_att_mans == inverted_pitch_loop) //90 deg pitch and roll up, vertical 540 deg yaw loop, then 360 roll out
+				{
+					/* ........................ Loop profile Roll...........................*/
+					if (_time_elapsed < 1.0f) { //do nothing for a second
+						_yaw_test_profile = 0.0f;
+						_roll_test_profile = 0.0f;
+						_roll_rate_reference = 0.0f;
 
-				if(_time_elapsed > 3.0f + 3.0f && man_nums < 3)
+					} else if (_time_elapsed <2.0f) { //go straight up with 90 deg roll
+						_roll_test_profile = 3.1416f;
+						_pitch_test_profile = 0;
+
+					} else if (_time_elapsed <4.0f) { //constant pitch rate
+						_pitch_rate_reference = 3.1416f;
+						_pitch_test_profile = _pitch_test_profile + _pitch_rate_reference * _delta_time_attitude;
+
+					} else { //do nothing
+						_roll_rate_reference= 0.0f;
+						_roll_test_profile = 0.0f;
+						_pitch_rate_reference = 0.0f;
+						_pitch_test_profile = 0.0f;
+					}
+
+					_pitch_rate_reference = 0.0f;
+					_yaw_rate_reference = 0.0f;
+
+				}
+				else if(_att_mans == zurabatic) //90 deg pitch and roll up, vertical 540 deg yaw loop, then 360 roll out
+				{
+					/* ........................ Loop profile Roll...........................*/
+					if (_time_elapsed < 1.0f) { //do nothing for a second
+						_yaw_test_profile = 0.0f;
+						_roll_test_profile = 0.0f;
+						_roll_rate_reference = 0.0f;
+
+					} else if (_time_elapsed <10.0f) { //go straight up with 90 deg roll
+						_roll_test_profile = 3.1416f/2.0f;
+						_pitch_test_profile = 3.1416f/2.0f;
+
+					} else if (_time_elapsed <18.5f) { //aerial loop, takes about 5 seconds
+						_pitch_rate_reference = 3.1416f/3.0f;
+						_pitch_test_profile = _pitch_test_profile + _pitch_rate_reference * _delta_time_attitude;
+
+					} else if (_time_elapsed <19.0f) { //aerial loop, takes about 5 seconds
+						_pitch_test_profile = -3.1416f/2.0f;
+
+					} else if (_time_elapsed <21.0f) { //aerial loop, takes about 5 seconds
+						_yaw_rate_reference = 3.1416f;
+						_yaw_test_profile = _yaw_test_profile + _yaw_rate_reference * _delta_time_attitude;
+
+					} else { //do nothing
+						_roll_rate_reference= 0.0f;
+						_roll_test_profile = 0.0f;
+						_pitch_rate_reference = 0.0f;
+						_pitch_test_profile = 0.0f;
+					}
+
+					_pitch_rate_reference = 0.0f;
+					_yaw_rate_reference = 0.0f;
+
+				}
+				else if(_att_mans == stall_spin) //90 deg pitch and roll up, vertical 540 deg yaw loop, then 360 roll out
+				{
+					/* ........................ Loop profile Yaw...........................*/
+					if (_time_elapsed < 1.0f) { //do nothing for a second
+						_yaw_test_profile = 0.0f;
+						_yaw_rate_reference = 0.0f;
+
+					} else if (_time_elapsed <10.0f) { //tail whip
+						_yaw_test_profile = 3.1416f/4.0f;
+						_pitch_test_profile = -3.1416f/4.0f;
+						_roll_test_profile = 3.1416f/4.0f;
+
+
+					} else { //do nothing
+						_yaw_rate_reference= 0.0f;
+						_yaw_test_profile = 0.0f;
+					}
+
+					_pitch_rate_reference = 0.0f;
+					_roll_rate_reference = 0.0f;
+
+				}
+
+				if(_time_elapsed > 25.0f && man_nums < 3) //long delay
 				{
 					_time_elapsed = 0.0f;
 					man_nums++;
