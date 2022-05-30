@@ -755,7 +755,7 @@ void FixedwingAttitudeControl::Run()
 
 				// Manual attitude end test
 
-				att_mans _att_mans = zurabatic; //hard code manoeuver (default pitch_loop)
+				att_mans _att_mans = inverted_pitch_loop; //hard code manoeuver (default pitch_loop)
 
 				if(_att_mans == pitch_loop)
 				{
